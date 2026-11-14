@@ -70,7 +70,14 @@ void main() {
     await pumpApp(tester);
     await tester.tap(find.byTooltip('More'));
     await tester.pumpAndSettle();
-    for (final label in ['Deadlines', 'Inbox', 'Focus', 'Review', 'Settings']) {
+    for (final label in [
+      'Deadlines',
+      'Inbox',
+      'Focus',
+      'Review',
+      'Settings',
+      'Reminders',
+    ]) {
       expect(find.text(label), findsOneWidget);
     }
     await tester.tap(find.text('Inbox'));

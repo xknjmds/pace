@@ -17,6 +17,7 @@ class TodayScreen extends ConsumerWidget {
     'Focus': Routes.focus,
     'Review': Routes.review,
     'Settings': Routes.settings,
+    'Reminders': Routes.notifications,
   };
 
   @override
