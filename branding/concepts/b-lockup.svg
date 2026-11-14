@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 758 256" width="758" height="256" role="img" aria-labelledby="t">
+  <title id="t">PACE lockup b</title>
+  <g transform="translate(-12.87 51.13) scale(0.6435)">
+  <path fill="#C9C9C9" d="M31.25 176 H58 A14 14 0 0 0 72 162 V142 A14 14 0 0 1 86 128 H170 A14 14 0 0 0 184 114 V94 A14 14 0 0 1 198 80 H224.75 A108 108 0 0 0 31.25 176 Z"/>
+  <path fill="#111" d="M31.25 176 H58 A14 14 0 0 0 72 162 V142 A14 14 0 0 1 86 128 H170 A14 14 0 0 0 184 114 V94 A14 14 0 0 1 198 80 H224.75 A108 108 0 0 1 31.25 176 Z"/>
+  </g>
+  <path fill="none" stroke="#111" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" d="M202.0 192 V75 H251.0 A33 33 0 0 1 251.0 141 H202.0"/>
+  <path fill="none" stroke="#111" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" d="M344.0 192 L392.46 75 L440.93 192 M361.40 150 H423.53"/>
+  <path fill="none" stroke="#111" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" d="M596.79 92.13 A58.5 58.5 0 1 0 596.79 174.87"/>
+  <path fill="none" stroke="#111" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" d="M735.9259735953042 75 H669.9259735953042 V192 H735.9259735953042 M669.9259735953042 133.5 H723.9259735953042"/>
+</svg>

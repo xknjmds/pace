@@ -1,0 +1,87 @@
+# CLAUDE.md
+
+**App name:** PACE (Progress Always Comes Eventually)
+**Android package ID:** `com.el.pace`
+**Tone:** calm, steady, forgiving. Copy and UI should never shame or rush the user.
+
+Personal routine and productivity app. Single user, Android only, offline-first.
+Read `PLAN.md` for milestones and acceptance criteria. Work on one milestone at a time.
+
+## Purpose
+
+The owner has no daily system: inconsistent wake and sleep times, late to school,
+skipped breakfast, forgotten submissions, procrastination, and is recovering from burnout.
+The app is an external memory and a nudge, not a to-do list. Every feature must answer:
+"does this help the owner start the right thing at the right time?"
+
+## Stack
+
+- Flutter + Dart, **Android only** (do not add iOS code or config)
+- State: Riverpod
+- Database: Drift (SQLite), local only, no backend, no accounts
+- Notifications: `flutter_local_notifications` + `timezone` + `flutter_timezone`
+- Home widget: `home_widget`
+- Permissions: `permission_handler`
+- Verify current package docs and Android exact-alarm rules before implementing notifications
+
+## Structure
+
+The Flutter project lives in `pace_app/`; paths below are relative to it.
+
+```
+lib/
+  core/        db, notifications, time utils, theme
+  features/
+    routine/   leave-by planner, wake anchor, sleep log
+    deadlines/ tasks, reminder rules
+    today/     Today screen
+    inbox/     quick capture
+    focus/     "just start" timer
+    review/    evening check-in, weekly view
+  main.dart
+test/          mirrors lib/
+```
+
+## Rules
+
+1. **Scheduling logic is pure Dart.** Functions like `computeLeaveByPlan` and
+   `computeReminderTimes` take plain inputs and return plain outputs. No Flutter,
+   Drift, or plugin imports. Always unit test them.
+2. **Notifications are rebuilt from data.** Store every scheduled notification in the
+   `scheduled_notifications` table with an owner id. To change reminders, cancel by owner
+   and reschedule. Never hand-manage notification ids elsewhere.
+3. **Offline-first.** No network calls in v1.
+4. **Fast to use.** Opening the app to marking something done must take a few taps.
+   Today screen answers "what do I do right now?" immediately.
+5. **Forgiving by design.** No punishment, no red failure states, no streaks that reset
+   to zero. Use positive counts such as "days done this week."
+6. **Low-energy mode** must be respected by every screen that lists items.
+7. Keep widgets small and feature-local. Shared UI goes in `core/`.
+8. Use Drift migrations for every schema change. Never edit an existing migration.
+9. **Sync-ready schema.** Every table has `updated_at` (UTC, bumped by the DAO on every write)
+   and nullable `deleted_at`. Deletes are soft: DAOs set `deleted_at` and every read filters
+   it out. New tables use a text UUID v4 primary key from `core/db/uuid.dart` (`settings` and
+   `daily_logs` keep their natural keys). No `user_id` until M11.
+
+## v1 scope
+
+Must: leave-by planner, deadline tracker with escalating reminders, Today screen,
+quick capture (inbox + widget), "just start" timer.
+Should: evening check-in with wind-down and sleep log, low-energy mode, weekly view.
+
+## Non-goals (do not build)
+
+Punishment or demerit system, app blocking, iOS, workouts, analytics, notes, finance,
+calendar sync, daily Bible verse, social features. Google Classroom import
+is optional and must never be required for the app to work.
+Cloud sync and accounts are not in v1 (planned as M11 for the SaaS version); v1 only keeps
+the schema sync-ready, see rule 9.
+
+## Workflow
+
+- Plan first, then implement. Keep each change to one milestone.
+- Before finishing a task: `dart format .`, `flutter analyze`, `flutter test`.
+- Commit after each completed milestone with a clear message.
+- Notification behavior must be verified on a real device, not just the emulator.
+  If it cannot be verified, say so explicitly instead of claiming it works.
+- Ask before adding any new dependency.

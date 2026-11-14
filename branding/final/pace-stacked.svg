@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 386 256" width="386" height="256" role="img" aria-labelledby="t">
+  <title id="t">PACE logo, stacked</title>
+  <g transform="translate(104.72 -9.52) scale(0.6897)">
+  <rect x="88" y="37" width="72" height="44" rx="22" fill="#35665A"/>
+  <rect x="72" y="93" width="124" height="50" rx="25" fill="#35665A"/>
+  <rect x="40" y="155" width="176" height="56" rx="28" fill="#35665A"/>
+  </g>
+  <g transform="translate(16.30 124.32) scale(0.62)">
+  <path fill="none" stroke="#35665A" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" d="M11 192 V75 H60 A33 33 0 0 1 60 141 H11"/>
+  <path fill="none" stroke="#35665A" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" d="M153 192 L201.46 75 L249.93 192 M170.40 150 H232.53"/>
+  <path fill="none" stroke="#35665A" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" d="M408.35 91.07 A60.0 60.0 0 1 0 408.35 175.93"/>
+  <path fill="none" stroke="#35665A" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" d="M547.9259735953042 75 H481.92597359530424 V192 H547.9259735953042 M481.92597359530424 133.5 H535.9259735953042"/>
+  </g>
+</svg>

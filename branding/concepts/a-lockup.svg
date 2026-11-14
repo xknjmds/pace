@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 755 256" width="755" height="256" role="img" aria-labelledby="t">
+  <title id="t">PACE lockup a</title>
+  <g transform="translate(-30.89 23.84) scale(0.7722)">
+  <rect x="40" y="180" width="176" height="52" rx="26" fill="#111"/>
+  <rect x="66" y="116" width="124" height="52" rx="26" fill="#111"/>
+  <rect x="94" y="52" width="68" height="52" rx="26" fill="#111"/>
+  </g>
+  <path fill="none" stroke="#111" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" d="M198.91111111111113 192 V75 H247.91111111111113 A33 33 0 0 1 247.91111111111113 141 H198.91111111111113"/>
+  <path fill="none" stroke="#111" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" d="M340.91111111111115 192 L389.37 75 L437.84 192 M358.31 150 H420.44"/>
+  <path fill="none" stroke="#111" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" d="M593.70 92.13 A58.5 58.5 0 1 0 593.70 174.87"/>
+  <path fill="none" stroke="#111" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" d="M732.8370847064155 75 H666.8370847064155 V192 H732.8370847064155 M666.8370847064155 133.5 H720.8370847064155"/>
+</svg>

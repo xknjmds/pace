@@ -1,0 +1,37 @@
+{
+  "brand": "PACE",
+  "tagline": "Progress Always Comes Eventually",
+  "brief": "A personal routine app for one person recovering from burnout: an external memory and a gentle nudge, not a to-do list. It must feel calm, steady and forgiving, and never shame or rush.",
+  "adjectives": ["calm", "steady", "patient", "forgiving"],
+  "criteria": "Success: avoids productivity clichés (checkmarks, rockets, clocks, rings, arrows, blue), reads at 16 px and as an Android icon, works in one colour, feels quiet.",
+  "industry": "consumer-app",
+  "nav": ["Today", "Deadlines", "Inbox", "Review"],
+  "brand_color": "#35665A",
+  "tile_color": "#35665A",
+  "greyscale": false,
+  "designer": "Studio",
+  "round": 2,
+  "concepts": [
+    {
+      "name": "Cairn",
+      "symbol": "final/pace-symbol.svg",
+      "lockup": "final/pace-horizontal.svg",
+      "symbol_on_tile": "final/pace-symbol-on-tile.svg",
+      "lockup_on_dark": "final/pace-horizontal-on-dark.svg",
+      "idea": "Stones stacked one at a time: a trail marker that says you are on the path.",
+      "rationale": [
+        "A cairn marks a route, it does not measure or judge, which matches an app that nudges instead of scoring",
+        "Three soft pills with gentle offsets: hand-stacked, calm, not a chart or a staircase",
+        "Reads at 16 px and as a one-colour silhouette; a wider-gap cut is used for icons",
+        "Moss green and warm sand sit apart from the blue and multicolour productivity category",
+        "The wordmark is constructed monoline letters on the same stroke logic, so symbol and name are one system"
+      ]
+    }
+  ],
+  "recommendation": "Cairn, in Moss #35665A on white or Sand #F3EEE6, with the Sand cairn on a Moss tile as the Android icon.",
+  "next_steps": [
+    "Drop the Android assets into the Flutter project at milestone M1",
+    "Set the tagline in the app's UI font under the stacked lockup on the empty Today screen",
+    "Run a trademark search and reverse image search before any public release"
+  ]
+}

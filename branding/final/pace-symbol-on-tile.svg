@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="t">
+  <title id="t">PACE app icon</title>
+  <rect width="256" height="256" rx="56" fill="#35665A"/>
+  <g transform="translate(37 37) scale(0.71)">
+  <rect x="92" y="31" width="72" height="44" rx="22" fill="#F3EEE6"/>
+  <rect x="66" y="93" width="124" height="50" rx="25" fill="#F3EEE6"/>
+  <rect x="40" y="161" width="176" height="56" rx="28" fill="#F3EEE6"/>
+  </g>
+</svg>
