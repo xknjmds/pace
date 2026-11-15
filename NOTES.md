@@ -81,3 +81,19 @@ adb shell cmd appops get com.el.pace SCHEDULE_EXACT_ALARM
   M2 checks pass; the `ReminderResponseRouter` in `core/notifications` is the seam.
 - **"Not today" writes a `reminder_mutes` row** and re-plans. Nothing is logged, nothing is
   marked done, and the next week's reminder appears as soon as it enters the 7-day window.
+
+## M5. Deadline tracker
+
+### Decisions
+
+- **Nudge times.** Three days before and one day before land at 19:00; the morning-of nudge
+  lands 30 minutes after the target wake time so it never shares a minute with the wake
+  reminder; the last one is two hours before the due time. Nudges already past, after the
+  deadline itself, on a muted day, or on the same minute as another are dropped. A deadline
+  under two hours away may get no nudge at all, by design.
+- **Owner id is the task id.** Submitting cancels the owner; editing re-plans it; "Not today"
+  (notification button or tile menu) writes a `reminder_mutes` row for that task and day and
+  re-plans. The task stays pending.
+- **Past due is quieter, not louder.** The "Still open" section uses a tinted surface and an
+  italic subtitle, never the error colour. Low-energy mode shows only tasks due within 48
+  hours and hides the Submitted list.

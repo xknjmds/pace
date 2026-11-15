@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/notifications/notification_gateway.dart';
 import 'core/notifications/notification_providers.dart';
 import 'core/notifications/reminder_response_router.dart';
+import 'features/deadlines/application/deadline_providers.dart';
 import 'features/routine/application/routine_providers.dart';
 
 /// Builds the app's provider container and brings reminders in line with
@@ -19,9 +20,11 @@ Future<ProviderContainer> bootstrap(
   container ??= containerFor(gateway);
   await container.read(reminderSchedulerProvider).rebuildAll();
   await container.read(routineRemindersProvider).resync();
+  await container.read(deadlineRemindersProvider).resyncAll();
 
   final router = ReminderResponseRouter([
     container.read(routineRemindersProvider).handle,
+    container.read(deadlineRemindersProvider).handle,
   ]);
   final launch = await gateway.launchResponse();
   if (launch != null) await router.dispatch(launch);

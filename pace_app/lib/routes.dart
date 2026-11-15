@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import 'core/notifications/ui/notification_setup_screen.dart';
 import 'core/widgets/coming_soon_screen.dart';
+import 'features/deadlines/ui/deadlines_screen.dart';
 import 'features/routine/ui/routine_settings_screen.dart';
 import 'features/today/ui/today_screen.dart';
 
@@ -17,7 +18,7 @@ abstract final class Routes {
 
   static Map<String, WidgetBuilder> get table => {
     today: (_) => const TodayScreen(),
-    deadlines: (_) => const ComingSoonScreen(title: 'Deadlines'),
+    deadlines: (_) => const DeadlinesScreen(),
     inbox: (_) => const ComingSoonScreen(title: 'Inbox'),
     focus: (_) => const ComingSoonScreen(title: 'Focus'),
     review: (_) => const ComingSoonScreen(title: 'Review'),

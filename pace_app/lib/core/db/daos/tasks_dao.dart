@@ -39,6 +39,17 @@ class TasksDao extends DatabaseAccessor<AppDatabase> with _$TasksDaoMixin {
   Stream<List<Task>> watchPending() =>
       (_live..where((t) => t.status.equalsValue(TaskStatus.pending))).watch();
 
+  /// Submitted tasks, most recently due first.
+  Stream<List<Task>> watchSubmitted() =>
+      (select(tasks)
+            ..where(
+              (t) =>
+                  t.deletedAt.isNull() &
+                  t.status.equalsValue(TaskStatus.submitted),
+            )
+            ..orderBy([(t) => OrderingTerm.desc(t.dueAt)]))
+          .watch();
+
   /// Pending tasks due at or before [instant], soonest first.
   Future<List<Task>> pendingDueBy(DateTime instant) =>
       (_live..where(
