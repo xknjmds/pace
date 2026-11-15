@@ -1,0 +1,124 @@
+import '../../../core/time/local_time.dart';
+import '../../routine/domain/morning_plan.dart';
+import '../../routine/domain/routine_reminder_planner.dart';
+
+/// One routine step as Today shows it.
+class RoutineStepItem {
+  const RoutineStepItem({
+    required this.step,
+    required this.at,
+    required this.done,
+  });
+
+  final RoutineStep step;
+  final LocalTime at;
+  final bool done;
+
+  String get label => switch (step) {
+    RoutineStep.wake => 'Up',
+    RoutineStep.eat => 'Eat',
+    RoutineStep.leave => 'Leave',
+  };
+}
+
+sealed class RoutineStatus {
+  const RoutineStatus();
+}
+
+class NoClassToday extends RoutineStatus {
+  const NoClassToday();
+}
+
+class MorningDoesNotFit extends RoutineStatus {
+  const MorningDoesNotFit();
+}
+
+/// The usual case: steps in order, [next] is the first one not done.
+class StepsRemaining extends RoutineStatus {
+  const StepsRemaining({required this.steps, required this.next});
+
+  final List<RoutineStepItem> steps;
+  final RoutineStepItem next;
+}
+
+/// Past the planned wake by more than the threshold and not up yet:
+/// one card, one action, an arrival time. No red, no "late".
+class RunningLate extends RoutineStatus {
+  const RunningLate({required this.plan, required this.steps});
+
+  final LatePlan plan;
+  final List<RoutineStepItem> steps;
+
+  String get title => switch (plan.action) {
+    LateAction.getReady => 'Get ready, leave by ${plan.leaveAt.format24()}',
+    LateAction.leaveNow => 'Leave now',
+  };
+
+  String get subtitle => plan.onTime
+      ? 'You still arrive on time, ${plan.arriveAt.format24()}.'
+      : 'You arrive about ${plan.arriveAt.format24()}.';
+}
+
+class RoutineAllDone extends RoutineStatus {
+  const RoutineAllDone();
+}
+
+/// Pure: what Today says about the morning routine right now.
+///
+/// After the first class has been under way for an hour the late card
+/// stops making sense, so the plain step list returns.
+RoutineStatus routineStatus({
+  required DateTime now,
+  required MorningInputs inputs,
+  required bool wakeDone,
+  required bool eatDone,
+  required bool leaveDone,
+  required int lateThresholdMinutes,
+  required bool lowEnergy,
+}) {
+  final plan = computeLeaveByPlan(inputs);
+  switch (plan) {
+    case NoClassMorning():
+      return const NoClassToday();
+    case ImpossibleMorning():
+      return const MorningDoesNotFit();
+    case LeaveByPlan():
+      break;
+  }
+
+  final steps = [
+    RoutineStepItem(step: RoutineStep.wake, at: plan.wake, done: wakeDone),
+    if (!lowEnergy)
+      RoutineStepItem(step: RoutineStep.eat, at: plan.eatStart, done: eatDone),
+    RoutineStepItem(step: RoutineStep.leave, at: plan.leave, done: leaveDone),
+  ];
+  final remaining = steps.where((s) => !s.done);
+  if (remaining.isEmpty) return const RoutineAllDone();
+
+  final nowM = now.hour * 60 + now.minute;
+  final wakeDeadline = plan.wake.minutesSinceMidnight + lateThresholdMinutes;
+  final classOver = plan.firstClass.minutesSinceMidnight + 60;
+  if (!wakeDone && nowM > wakeDeadline && nowM < classOver) {
+    return RunningLate(
+      plan: computeLatePlan(
+        now: LocalTime(nowM),
+        firstClass: plan.firstClass,
+        commuteMinutes: inputs.commuteMinutes,
+        prepMinutes: inputs.prepMinutes,
+      ),
+      steps: steps,
+    );
+  }
+  return StepsRemaining(steps: steps, next: remaining.first);
+}
+
+/// Pure: the one-line look ahead, or null when tomorrow has no class.
+String? tomorrowPreview(MorningInputs tomorrow) {
+  final plan = computeLeaveByPlan(tomorrow);
+  return switch (plan) {
+    LeaveByPlan p =>
+      'Tomorrow: class ${p.firstClass.format24()}, '
+          'leave by ${p.leave.format24()}',
+    _ => null,
+  };
+}

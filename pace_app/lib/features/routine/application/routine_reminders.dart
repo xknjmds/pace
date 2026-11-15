@@ -1,9 +1,9 @@
 import '../../../core/db/app_database.dart';
 import '../../../core/notifications/reminder_actions.dart';
 import '../../../core/notifications/reminder_scheduler.dart';
-import '../../../core/time/local_time.dart';
 import '../domain/morning_plan.dart';
 import '../domain/routine_reminder_planner.dart';
+import 'morning_inputs.dart';
 
 /// Keeps the wake, eat and leave reminders in step with settings, the week's
 /// schedule and "Not today" mutes, and applies what the owner does with them.
@@ -32,18 +32,7 @@ class RoutineReminders {
   Future<Map<int, MorningInputs>> inputsByWeekday() async {
     final settings = await db.settingsDao.get();
     final rows = await db.weekdayScheduleDao.getAll();
-    return {
-      for (final r in rows)
-        r.weekday: MorningInputs(
-          firstClass: r.firstClassMinutes == null
-              ? null
-              : LocalTime(r.firstClassMinutes!),
-          commuteMinutes: r.commuteMinutes,
-          prepMinutes: r.prepMinutes,
-          breakfastMinutes: settings.breakfastMinutes,
-          targetWake: LocalTime(settings.targetWakeMinutes),
-        ),
-    };
+    return {for (final r in rows) r.weekday: morningInputsFor(settings, r)};
   }
 
   /// Recomputes the next seven days and replaces every routine owner's

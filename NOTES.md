@@ -97,3 +97,21 @@ adb shell cmd appops get com.el.pace SCHEDULE_EXACT_ALARM
 - **Past due is quieter, not louder.** The "Still open" section uses a tinted surface and an
   italic subtitle, never the error colour. Low-energy mode shows only tasks due within 48
   hours and hides the Submitted list.
+
+## M6. Today screen
+
+### Decisions
+
+- **One pure function decides the routine card** (`features/today/domain/today_model.dart`):
+  no class, does not fit, steps remaining with the next one named, running late, or all
+  done. The late card appears only while the owner is not up, more than
+  `late_threshold_minutes` past the planned wake, and less than an hour into the first class;
+  after that the plain step list returns. Its copy never contains the word "late".
+- **"I'm out the door"** on the late card logs wake and marks the routine done in one tap;
+  breakfast stays open so the owner can still log it.
+- **Step chips call the same `done` path as the notification buttons**, so Today and the
+  lock screen agree on what was logged.
+- **Due soon** shows pending tasks due within 48 hours, overdue included, capped at three
+  with an "and N more" line. The top-3 picker allows at most three and saves to `daily_logs`.
+- **Low-energy mode** hides Top 3, the eat step and the tomorrow line; the toggle stays on
+  Today. Verified to fit a 360x640 phone without scrolling in the widget tests.
