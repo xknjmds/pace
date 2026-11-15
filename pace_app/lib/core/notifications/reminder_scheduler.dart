@@ -1,5 +1,6 @@
 import '../db/app_database.dart';
 import 'notification_gateway.dart';
+import 'reminder_actions.dart';
 
 /// The one place that both writes `scheduled_notifications` and talks to
 /// Android (CLAUDE.md rule 2). Features never touch notification ids: they
@@ -65,6 +66,7 @@ class ReminderScheduler {
     title: row.title,
     body: row.body,
     fireAt: row.fireAt,
-    payload: '${row.kind.name}:${row.ownerId}',
+    payload: reminderPayload(row.kind, row.ownerId),
+    actions: actionsFor(row.kind, row.ownerId),
   );
 }

@@ -1,5 +1,8 @@
 import 'package:pace/core/notifications/notification_gateway.dart';
+import 'dart:async';
+
 import 'package:pace/core/notifications/notification_permissions.dart';
+import 'package:pace/core/notifications/reminder_actions.dart';
 
 /// In-memory gateway. Requests flip the matching flag so tests can drive
 /// the setup flow without Android.
@@ -13,7 +16,19 @@ class FakeNotificationGateway implements NotificationGateway {
   bool grantOnRequest;
   int initializeCalls = 0;
   int openSettingsCalls = 0;
-  final scheduled = <int, ({String title, String body, DateTime fireAt})>{};
+  final scheduled =
+      <
+        int,
+        ({
+          String title,
+          String body,
+          DateTime fireAt,
+          String? payload,
+          List<ReminderAction> actions,
+        })
+      >{};
+  final responseController = StreamController<ReminderResponse>.broadcast();
+  ReminderResponse? launch;
   final cancelled = <int>[];
 
   @override
@@ -50,8 +65,15 @@ class FakeNotificationGateway implements NotificationGateway {
     required String body,
     required DateTime fireAt,
     String? payload,
+    List<ReminderAction> actions = const [],
   }) async {
-    scheduled[id] = (title: title, body: body, fireAt: fireAt);
+    scheduled[id] = (
+      title: title,
+      body: body,
+      fireAt: fireAt,
+      payload: payload,
+      actions: actions,
+    );
     return state.exactAlarmsAllowed ? ScheduleMode.exact : ScheduleMode.inexact;
   }
 
@@ -66,4 +88,10 @@ class FakeNotificationGateway implements NotificationGateway {
     for (final e in scheduled.entries)
       PendingReminder(id: e.key, title: e.value.title, body: e.value.body),
   ];
+
+  @override
+  Stream<ReminderResponse> get responses => responseController.stream;
+
+  @override
+  Future<ReminderResponse?> launchResponse() async => launch;
 }

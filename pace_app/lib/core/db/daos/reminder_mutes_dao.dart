@@ -66,6 +66,16 @@ class ReminderMutesDao extends DatabaseAccessor<AppDatabase>
     return row != null && row.deletedAt == null;
   }
 
+  /// Live mutes for days [from] to [to] inclusive.
+  Future<List<ReminderMute>> between(DateTime from, DateTime to) =>
+      (select(reminderMutes)..where(
+            (t) =>
+                t.deletedAt.isNull() &
+                t.date.isBiggerOrEqualValue(dateKey(from)) &
+                t.date.isSmallerOrEqualValue(dateKey(to)),
+          ))
+          .get();
+
   Future<List<ReminderMute>> mutesOn(DateTime day) => (select(
     reminderMutes,
   )..where((t) => t.date.equals(dateKey(day)) & t.deletedAt.isNull())).get();

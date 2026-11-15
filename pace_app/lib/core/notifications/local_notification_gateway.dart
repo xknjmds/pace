@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -8,6 +10,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'notification_gateway.dart';
 import 'notification_channels.dart';
 import 'notification_permissions.dart';
+import 'reminder_actions.dart';
 
 /// [NotificationGateway] backed by flutter_local_notifications on Android.
 class LocalNotificationGateway implements NotificationGateway {
@@ -15,6 +18,10 @@ class LocalNotificationGateway implements NotificationGateway {
     : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
 
   final FlutterLocalNotificationsPlugin _plugin;
+  final _responses = StreamController<ReminderResponse>.broadcast();
+
+  @override
+  Stream<ReminderResponse> get responses => _responses.stream;
 
   AndroidFlutterLocalNotificationsPlugin? get _android => _plugin
       .resolvePlatformSpecificImplementation<
@@ -27,6 +34,9 @@ class LocalNotificationGateway implements NotificationGateway {
     await _plugin.initialize(
       settings: const InitializationSettings(
         android: AndroidInitializationSettings('ic_stat_pace'),
+      ),
+      onDidReceiveNotificationResponse: (r) => _responses.add(
+        ReminderResponse(payload: r.payload, actionId: r.actionId),
       ),
     );
     await _android?.createNotificationChannel(
@@ -49,6 +59,14 @@ class LocalNotificationGateway implements NotificationGateway {
       // right instant because we convert from an absolute DateTime.
       debugPrint('PACE: could not resolve local time zone: $e');
     }
+  }
+
+  @override
+  Future<ReminderResponse?> launchResponse() async {
+    final details = await _plugin.getNotificationAppLaunchDetails();
+    final r = details?.notificationResponse;
+    if (details?.didNotificationLaunchApp != true || r == null) return null;
+    return ReminderResponse(payload: r.payload, actionId: r.actionId);
   }
 
   @override
@@ -87,6 +105,7 @@ class LocalNotificationGateway implements NotificationGateway {
     required String body,
     required DateTime fireAt,
     String? payload,
+    List<ReminderAction> actions = const [],
   }) async {
     final exact = await _android?.canScheduleExactNotifications() ?? false;
     final mode = exact ? ScheduleMode.exact : ScheduleMode.inexact;
@@ -96,7 +115,7 @@ class LocalNotificationGateway implements NotificationGateway {
       body: body,
       payload: payload,
       scheduledDate: tz.TZDateTime.from(fireAt, tz.local),
-      notificationDetails: const NotificationDetails(
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           NotificationChannels.reminders,
           NotificationChannels.remindersName,
@@ -104,6 +123,17 @@ class LocalNotificationGateway implements NotificationGateway {
           importance: Importance.high,
           priority: Priority.high,
           category: AndroidNotificationCategory.reminder,
+          actions: [
+            for (final a in actions)
+              // Opens the app, which applies the action. Background-isolate
+              // handling can replace this once verified on a device.
+              AndroidNotificationAction(
+                a.id,
+                a.label,
+                showsUserInterface: true,
+                cancelNotification: true,
+              ),
+          ],
         ),
       ),
       androidScheduleMode: switch (mode) {

@@ -55,3 +55,29 @@ adb shell cmd appops get com.el.pace SCHEDULE_EXACT_ALARM
 - **Time zone:** `flutter_timezone` resolves the device zone for `timezone`; if the name is
   unknown the gateway logs and keeps UTC, which is still correct because reminders are
   scheduled from an absolute instant.
+
+## M4. Leave-by planner
+
+### Still to check on the phone
+
+| Check | Result | Notes |
+|---|---|---|
+| Wake, eat, leave fire at the times shown in Settings | not yet run | |
+| "Done", "10 more minutes", "Not today" buttons work from the lock screen | not yet run | each opens the app, see below |
+
+### Decisions
+
+- **Morning order is wake, free time, breakfast, getting ready, leave**, laid out backwards
+  from the first class. The target wake time is kept whenever it is early enough, because a
+  steady wake time is the point; when it is too late the plan uses the latest workable time
+  and says so gently. When there is no free time, breakfast folds into the wake reminder so
+  two notifications do not land on the same minute.
+- **Reminders are planned seven days ahead, one owner per weekday** (`"1"` to `"7"`), and
+  re-planned on every launch and after every settings or schedule change. A snooze is a
+  separate owner (`"1:snooze"`) so it cannot stack and does not disturb the plan.
+- **Notification buttons open the app**, which then applies the action in the main isolate.
+  Handling them in the plugin's background isolate (no app launch) needs database and plugin
+  access from that isolate and could not be verified without a device. Revisit after the
+  M2 checks pass; the `ReminderResponseRouter` in `core/notifications` is the seam.
+- **"Not today" writes a `reminder_mutes` row** and re-plans. Nothing is logged, nothing is
+  marked done, and the next week's reminder appears as soon as it enters the 7-day window.

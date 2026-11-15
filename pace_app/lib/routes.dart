@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import 'core/notifications/ui/notification_setup_screen.dart';
 import 'core/widgets/coming_soon_screen.dart';
+import 'features/routine/ui/routine_settings_screen.dart';
 import 'features/today/ui/today_screen.dart';
 
 /// Named routes. Today is home; everything else is reached from it.
@@ -20,7 +21,7 @@ abstract final class Routes {
     inbox: (_) => const ComingSoonScreen(title: 'Inbox'),
     focus: (_) => const ComingSoonScreen(title: 'Focus'),
     review: (_) => const ComingSoonScreen(title: 'Review'),
-    settings: (_) => const ComingSoonScreen(title: 'Settings'),
+    settings: (_) => const RoutineSettingsScreen(),
     notifications: (_) => const NotificationSetupScreen(),
   };
 }

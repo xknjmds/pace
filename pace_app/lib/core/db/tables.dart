@@ -4,6 +4,9 @@ import 'package:drift/drift.dart';
 
 import 'uuid.dart';
 
+export '../notifications/reminder_draft.dart';
+export '../time/date_key.dart';
+
 /// Columns every table carries so a later sync layer can diff and merge rows
 /// (CLAUDE.md rule 9). Rows are never hard-deleted: DAOs set [deletedAt] and
 /// every read filters it out.
@@ -137,16 +140,4 @@ class StringListConverter extends TypeConverter<List<String>, String> {
 
   @override
   String toSql(List<String> value) => jsonEncode(value);
-}
-
-/// A reminder that is about to be scheduled: when, and what it says.
-typedef ReminderDraft = ({DateTime fireAt, String title, String body});
-
-/// `yyyy-MM-dd` for the local calendar day of [day]. Key of `daily_logs`
-/// and `reminder_mutes`.
-String dateKey(DateTime day) {
-  final l = day.isUtc ? day.toLocal() : day;
-  return '${l.year.toString().padLeft(4, '0')}-'
-      '${l.month.toString().padLeft(2, '0')}-'
-      '${l.day.toString().padLeft(2, '0')}';
 }

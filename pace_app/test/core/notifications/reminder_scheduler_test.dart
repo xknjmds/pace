@@ -81,6 +81,8 @@ void main() {
       title: 'stale',
       body: '',
       fireAt: DateTime.utc(2026, 11, 20),
+      payload: null,
+      actions: const [],
     );
     t.now = DateTime.utc(2026, 11, 14, 8);
 

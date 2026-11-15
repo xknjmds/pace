@@ -1,4 +1,5 @@
 import 'notification_permissions.dart';
+import 'reminder_actions.dart';
 
 /// A pending reminder as Android knows it.
 class PendingReminder {
@@ -40,9 +41,16 @@ abstract interface class NotificationGateway {
     required String body,
     required DateTime fireAt,
     String? payload,
+    List<ReminderAction> actions = const [],
   });
 
   Future<void> cancel(int id);
 
   Future<List<PendingReminder>> pending();
+
+  /// Taps and button presses while the app is running or being resumed.
+  Stream<ReminderResponse> get responses;
+
+  /// The response that launched the app from a cold start, if any.
+  Future<ReminderResponse?> launchResponse();
 }
