@@ -6,7 +6,7 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 import 'notification_gateway.dart';
-import 'notification_ids.dart';
+import 'notification_channels.dart';
 import 'notification_permissions.dart';
 
 /// [NotificationGateway] backed by flutter_local_notifications on Android.

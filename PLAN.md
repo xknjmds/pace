@@ -15,7 +15,7 @@ criteria. Milestone 2 is the riskiest, so it comes before any feature work.
 | inbox_items | id, text, created_at, processed |
 | daily_logs | date, top3_task_ids, bed_logged_at, wake_logged_at, eat_done_at, routine_done |
 | focus_sessions | id, task_id (nullable), started_at, duration_minutes, completed |
-| scheduled_notifications | id, kind, owner_id, fire_at |
+| scheduled_notifications | id, notification_id (the int handed to Android, never reused), kind, owner_id, fire_at, title, body |
 | reminder_mutes | id, kind, owner_id, date ("not today" for one reminder owner on one day) |
 
 Every table also carries `updated_at` and nullable `deleted_at` (soft deletes, filtered out of

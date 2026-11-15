@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pace/core/notifications/notification_ids.dart';
+import 'package:drift/native.dart';
+import 'package:pace/core/db/app_database.dart';
+import 'package:pace/core/db/database_provider.dart';
 import 'package:pace/core/notifications/notification_permissions.dart';
 import 'package:pace/core/notifications/notification_providers.dart';
 import 'package:pace/core/notifications/ui/notification_setup_screen.dart';
@@ -12,6 +14,10 @@ import 'fake_notification_gateway.dart';
 
 void main() {
   final frozen = DateTime(2026, 11, 14, 6, 30);
+  late AppDatabase db;
+
+  setUp(() => db = AppDatabase(NativeDatabase.memory()));
+  tearDown(() => db.close());
 
   Future<FakeNotificationGateway> pump(
     WidgetTester tester, {
@@ -30,6 +36,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          appDatabaseProvider.overrideWithValue(db),
           notificationGatewayProvider.overrideWithValue(gateway),
           clockProvider.overrideWithValue(() => frozen),
         ],
@@ -112,20 +119,27 @@ void main() {
     expect(gateway.openSettingsCalls, 1);
   });
 
-  testWidgets('test reminder is scheduled one minute ahead with the fixed id', (
+  testWidgets('test reminder is scheduled one minute ahead through the table', (
     tester,
   ) async {
     final gateway = await pump(tester, state: NotificationPermissions.all);
     await tapText(tester, 'Send test reminder');
 
-    final r = gateway.scheduled[NotificationIds.spikeTest];
-    expect(r, isNotNull);
-    expect(r!.fireAt, frozen.add(NotificationSetupScreen.testLead));
+    final r = gateway.scheduled.values.single;
+    // Stored as UTC; compare the instant, not the DateTime flavour.
+    expect(
+      r.fireAt.isAtSameMomentAs(frozen.add(NotificationSetupScreen.testLead)),
+      isTrue,
+    );
+    final row = (await db.scheduledNotificationsDao.getLive()).single;
+    expect(row.kind, ReminderKind.test);
+    expect(gateway.scheduled.keys.single, row.notificationId);
     expect(find.text('Test reminder set for 06:31.'), findsOneWidget);
     expect(find.text('Reminders waiting: 1'), findsOneWidget);
 
     await tapText(tester, 'Cancel it');
-    expect(gateway.cancelled, [NotificationIds.spikeTest]);
+    expect(gateway.cancelled, [row.notificationId]);
+    expect(await db.scheduledNotificationsDao.getLive(), isEmpty);
     expect(find.text('Reminders waiting: 0'), findsOneWidget);
     expect(find.textContaining('Test reminder set for'), findsNothing);
   });

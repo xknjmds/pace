@@ -9,10 +9,12 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final notifications = LocalNotificationGateway();
   await notifications.initialize();
+  final container = ProviderContainer(
+    overrides: [notificationGatewayProvider.overrideWithValue(notifications)],
+  );
+  // Android is told exactly what the table says, every launch (rule 2).
+  await container.read(reminderSchedulerProvider).rebuildAll();
   runApp(
-    ProviderScope(
-      overrides: [notificationGatewayProvider.overrideWithValue(notifications)],
-      child: const PaceApp(),
-    ),
+    UncontrolledProviderScope(container: container, child: const PaceApp()),
   );
 }

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../time/clock.dart';
 import '../../time/local_time.dart';
-import '../notification_ids.dart';
+import '../../db/app_database.dart';
 import '../notification_permissions.dart';
 import '../notification_providers.dart';
 
@@ -55,29 +55,37 @@ class _NotificationSetupScreenState
     if (mounted) _refresh();
   }
 
+  /// Owner id for the one test reminder this screen manages.
+  static const _owner = 'reminders-screen';
+
   Future<void> _sendTest() async {
-    final gateway = ref.read(notificationGatewayProvider);
     final fireAt = ref
         .read(clockProvider)()
         .add(NotificationSetupScreen.testLead);
-    final mode = await gateway.schedule(
-      id: NotificationIds.spikeTest,
-      title: 'PACE test reminder',
-      body: 'It arrived. Reminders work on this phone.',
-      fireAt: fireAt,
-    );
+    final exact =
+        ref.read(notificationPermissionsProvider).value?.exactAlarmsAllowed ??
+        false;
+    await ref
+        .read(reminderSchedulerProvider)
+        .replaceOwner(ReminderKind.test, _owner, [
+          (
+            fireAt: fireAt,
+            title: 'PACE test reminder',
+            body: 'It arrived. Reminders work on this phone.',
+          ),
+        ]);
     if (!mounted) return;
     setState(() {
       _testFireAt = fireAt;
-      _testMode = mode;
+      _testMode = exact ? ScheduleMode.exact : ScheduleMode.inexact;
     });
     _refresh();
   }
 
   Future<void> _cancelTest() async {
     await ref
-        .read(notificationGatewayProvider)
-        .cancel(NotificationIds.spikeTest);
+        .read(reminderSchedulerProvider)
+        .cancelOwner(ReminderKind.test, _owner);
     if (!mounted) return;
     setState(() {
       _testFireAt = null;

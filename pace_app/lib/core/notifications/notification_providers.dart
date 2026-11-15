@@ -1,7 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../db/database_provider.dart';
+import '../time/clock.dart';
 import 'notification_gateway.dart';
 import 'notification_permissions.dart';
+import 'reminder_scheduler.dart';
 
 /// The app's notification gateway. `main` overrides this with an initialised
 /// [LocalNotificationGateway]; tests override it with a fake. Reading it
@@ -21,4 +24,13 @@ final notificationPermissionsProvider = FutureProvider<NotificationPermissions>(
 /// Reminders Android still holds for us.
 final pendingRemindersProvider = FutureProvider<List<PendingReminder>>(
   (ref) => ref.watch(notificationGatewayProvider).pending(),
+);
+
+/// Schedules reminders through the table and the gateway together.
+final reminderSchedulerProvider = Provider<ReminderScheduler>(
+  (ref) => ReminderScheduler(
+    db: ref.watch(appDatabaseProvider),
+    gateway: ref.watch(notificationGatewayProvider),
+    now: ref.watch(clockProvider),
+  ),
 );
