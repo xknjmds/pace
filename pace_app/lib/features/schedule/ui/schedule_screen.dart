@@ -10,6 +10,7 @@ import '../../../core/time/clock.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/time_button.dart';
+import '../../../core/widgets/undo_snack.dart';
 import '../../routine/ui/routine_settings_screen.dart' show weekdayNames;
 import '../application/schedule_providers.dart';
 import '../domain/schedule_parser.dart';
@@ -179,7 +180,16 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                     if (b.weekday == d) b,
                 ],
                 onTap: _edit,
-                onDelete: (b) => ref.read(scheduleServiceProvider).remove(b.id),
+                onDelete: (b) async {
+                  final service = ref.read(scheduleServiceProvider);
+                  await service.remove(b.id);
+                  if (!context.mounted) return;
+                  showUndo(
+                    context,
+                    message: 'Removed ${quoted(b.subject)}.',
+                    onUndo: () => service.restore(b.id),
+                  );
+                },
               ),
             ],
             if (lowEnergy)

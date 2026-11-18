@@ -63,6 +63,19 @@ void main() {
     expect(motion.decorative, isFalse);
   });
 
+  testWidgets('done check: with reduced motion the check fades, never grows', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(DoneCheck(onDone: () {}), reduced: true));
+    await tester.tap(find.byTooltip('Submitted'));
+    await tester.pump(const Duration(milliseconds: 80)); // mid-fill
+    // The check's box keeps the circle's full 24 px the whole time; the
+    // old grow-in drew it at 60–100 % of that.
+    final check = tester.getRect(find.byIcon(Icons.check_rounded));
+    expect(check.width, closeTo(24, .01));
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('entrance is skipped in low-energy mode', (tester) async {
     await tester.pumpWidget(
       _app(const FadeSlideIn(child: Text('hi')), calm: true),

@@ -8,6 +8,7 @@ import '../../../core/theme/pace_pastels.dart';
 import '../../../core/theme/pace_tokens.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/widgets/section_header.dart';
+import '../../../core/widgets/undo_snack.dart';
 import '../application/finance_providers.dart';
 import '../domain/budget_summary.dart';
 import '../domain/money.dart';
@@ -253,10 +254,20 @@ class _MoneyScreenState extends ConsumerState<MoneyScreen> {
                             IconButton(
                               tooltip: 'Remove',
                               icon: const Icon(Icons.close_rounded),
-                              onPressed: () => ref
-                                  .read(appDatabaseProvider)
-                                  .financeDao
-                                  .removeExpense(e.id),
+                              onPressed: () async {
+                                final dao = ref
+                                    .read(appDatabaseProvider)
+                                    .financeDao;
+                                await dao.removeExpense(e.id);
+                                if (!context.mounted) return;
+                                showUndo(
+                                  context,
+                                  message:
+                                      'Removed ${money(e.amountMinor)} · '
+                                      '${e.category}.',
+                                  onUndo: () => dao.restoreExpense(e.id),
+                                );
+                              },
                             ),
                           ],
                         ),

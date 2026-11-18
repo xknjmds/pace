@@ -91,4 +91,13 @@ class TasksDao extends DatabaseAccessor<AppDatabase> with _$TasksDaoMixin {
       (update(tasks)..where((t) => t.id.equals(id))).write(
         TasksCompanion(deletedAt: Value(db.now()), updatedAt: Value(db.now())),
       );
+
+  /// Undoes [remove].
+  Future<void> restore(String id) =>
+      (update(tasks)..where((t) => t.id.equals(id))).write(
+        TasksCompanion(
+          deletedAt: const Value(null),
+          updatedAt: Value(db.now()),
+        ),
+      );
 }

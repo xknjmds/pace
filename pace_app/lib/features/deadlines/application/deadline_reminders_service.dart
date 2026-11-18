@@ -104,6 +104,12 @@ class DeadlineReminders {
     await db.tasksDao.remove(taskId);
   }
 
+  /// Undoes [remove]: the task comes back with its reminders re-planned.
+  Future<void> restore(String taskId) async {
+    await db.tasksDao.restore(taskId);
+    await resyncTask(taskId);
+  }
+
   /// Silences this task's reminders for [day] only.
   Future<void> notToday(String taskId, DateTime day) async {
     await db.reminderMutesDao.mute(ReminderKind.deadline, taskId, day);

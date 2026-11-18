@@ -11,6 +11,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/tuck.dart';
 import '../../../core/widgets/fade_slide_in.dart';
 import '../../../core/widgets/section_header.dart';
+import '../../../core/widgets/undo_snack.dart';
 import '../../deadlines/application/deadline_providers.dart';
 import '../../deadlines/ui/task_edit_sheet.dart';
 import '../../shell/shell_tabs.dart';
@@ -217,7 +218,15 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                               Icons.close_rounded,
                               color: scheme.onSurfaceVariant,
                             ),
-                            onPressed: () => capture.remove(item.id),
+                            onPressed: () async {
+                              await capture.remove(item.id);
+                              if (!context.mounted) return;
+                              showUndo(
+                                context,
+                                message: 'Deleted ${quoted(item.body)}.',
+                                onUndo: () => capture.restore(item.id),
+                              );
+                            },
                           ),
                         ],
                       ),

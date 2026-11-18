@@ -46,6 +46,8 @@ class _DoneCheckState extends State<DoneCheck>
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final s = widget.size;
+    // Reduced motion: the check fades in without growing.
+    final reduced = PaceMotion.of(context).reduced;
     return IconButton(
       tooltip: widget.tooltip,
       visualDensity: VisualDensity.compact,
@@ -68,7 +70,7 @@ class _DoneCheckState extends State<DoneCheck>
               child: Opacity(
                 opacity: v,
                 child: Transform.scale(
-                  scale: .6 + .4 * v,
+                  scale: reduced ? 1 : .6 + .4 * v,
                   child: Icon(
                     Icons.check_rounded,
                     size: s * .7,

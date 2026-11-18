@@ -48,6 +48,15 @@ class FinanceDao extends DatabaseAccessor<AppDatabase> with _$FinanceDaoMixin {
         ),
       );
 
+  /// Undoes [removeExpense].
+  Future<void> restoreExpense(String id) =>
+      (update(expenses)..where((t) => t.id.equals(id))).write(
+        ExpensesCompanion(
+          deletedAt: const Value(null),
+          updatedAt: Value(db.now()),
+        ),
+      );
+
   SimpleSelectStatement<$BudgetsTable, Budget> get _budget => select(budgets)
     ..where((t) => t.deletedAt.isNull())
     ..orderBy([(t) => OrderingTerm.desc(t.updatedAt)])

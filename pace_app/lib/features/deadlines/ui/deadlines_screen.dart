@@ -12,6 +12,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/tuck.dart';
 import '../../../core/widgets/fade_slide_in.dart';
 import '../../../core/widgets/section_header.dart';
+import '../../../core/widgets/undo_snack.dart';
 import '../../../routes.dart';
 import '../../shell/home_shell.dart';
 import '../../shell/shell_tabs.dart';
@@ -103,7 +104,15 @@ class DeadlinesScreen extends ConsumerWidget {
         onTap: () => _addOrEdit(context, ref, task: t),
         onSubmitted: () => service.markSubmitted(t.id),
         onNotToday: () => service.notToday(t.id, now),
-        onDelete: () => service.remove(t.id),
+        onDelete: () async {
+          await service.remove(t.id);
+          if (!context.mounted) return;
+          showUndo(
+            context,
+            message: 'Deleted ${quoted(t.title)}.',
+            onUndo: () => service.restore(t.id),
+          );
+        },
         onJustStart: () => _justStart(context, t),
       ),
     );

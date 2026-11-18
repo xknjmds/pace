@@ -141,6 +141,37 @@ void main() {
     await unmount(tester);
   });
 
+  testWidgets('with reduced motion the states cross-fade without scaling', (
+    tester,
+  ) async {
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    await pump(tester);
+    await tester.tap(find.byKey(const ValueKey('focus-start')));
+    // Flutter already shortens animations under this flag, so sample every
+    // millisecond through the swap: nothing may ever be mid-scale (a
+    // resting press-scale sits at exactly 1).
+    final scaling = find.descendant(
+      of: find.byType(AnimatedSwitcher),
+      matching: find.byWidgetPredicate(
+        (w) => w is ScaleTransition && w.scale.value != 1.0,
+      ),
+    );
+    var sawSwap = false;
+    for (var i = 0; i < 400; i++) {
+      await tester.pump(const Duration(milliseconds: 1));
+      if (find.byKey(const ValueKey('focus-remaining')).evaluate().isNotEmpty) {
+        sawSwap = true;
+      }
+      expect(scaling, findsNothing, reason: 'scaled at ${i}ms');
+    }
+    expect(sawSwap, isTrue);
+    await tester.pumpAndSettle();
+    expect(find.text('10:00'), findsOneWidget);
+    await unmount(tester);
+  });
+
   testWidgets('without reminders the countdown says to keep PACE open', (
     tester,
   ) async {

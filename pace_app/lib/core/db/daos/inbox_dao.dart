@@ -43,4 +43,13 @@ class InboxDao extends DatabaseAccessor<AppDatabase> with _$InboxDaoMixin {
           updatedAt: Value(db.now()),
         ),
       );
+
+  /// Undoes [remove].
+  Future<void> restore(String id) =>
+      (update(inboxItems)..where((t) => t.id.equals(id))).write(
+        InboxItemsCompanion(
+          deletedAt: const Value(null),
+          updatedAt: Value(db.now()),
+        ),
+      );
 }

@@ -49,6 +49,15 @@ class ClassBlocksDao extends DatabaseAccessor<AppDatabase>
   Future<void> remove(String id) =>
       (update(classBlocks)..where((t) => t.id.equals(id))).write(_deleted());
 
+  /// Undoes [remove].
+  Future<void> restore(String id) =>
+      (update(classBlocks)..where((t) => t.id.equals(id))).write(
+        ClassBlocksCompanion(
+          deletedAt: const Value(null),
+          updatedAt: Value(db.now()),
+        ),
+      );
+
   /// An image import replaces every earlier image-sourced block and keeps
   /// the ones typed in by hand.
   Future<void> replaceImported(List<ClassBlocksCompanion> blocks) =>

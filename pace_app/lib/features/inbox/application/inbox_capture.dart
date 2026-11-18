@@ -38,6 +38,12 @@ class InboxCapture {
     await publishCount();
   }
 
+  /// Undoes [remove].
+  Future<void> restore(String id) async {
+    await db.inboxDao.restore(id);
+    await publishCount();
+  }
+
   /// The item has become a task (or been dealt with) and leaves the inbox.
   Future<void> markProcessed(String id) async {
     await db.inboxDao.markProcessed(id);

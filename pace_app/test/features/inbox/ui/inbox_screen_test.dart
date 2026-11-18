@@ -103,12 +103,18 @@ void main() {
     await unmount(tester);
   });
 
-  testWidgets('delete removes an item', (tester) async {
+  testWidgets('delete removes an item and offers undo', (tester) async {
     await db.inboxDao.add('maybe later');
     await pump(tester);
     await tester.tap(find.byTooltip('Delete'));
     await tester.pumpAndSettle();
     expect(await db.inboxDao.getUnprocessed(), isEmpty);
+    expect(find.text('Deleted ‘maybe later’.'), findsOneWidget);
+
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+    expect((await db.inboxDao.getUnprocessed()).single.body, 'maybe later');
+    expect(find.text('maybe later'), findsOneWidget);
     await unmount(tester);
   });
 

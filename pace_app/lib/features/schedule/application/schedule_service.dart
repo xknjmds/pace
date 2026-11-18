@@ -83,6 +83,12 @@ class ScheduleService {
     await publishWidget();
   }
 
+  /// Undoes [remove].
+  Future<void> restore(String id) async {
+    await db.classBlocksDao.restore(id);
+    await publishWidget();
+  }
+
   /// Sends the week's blocks, the next week of calendar events and the
   /// low-energy flag to the widget.
   Future<void> publishWidget() async {

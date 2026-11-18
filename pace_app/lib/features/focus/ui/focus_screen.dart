@@ -339,12 +339,15 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                       duration: PaceMotion.emphasized,
                       switchInCurve: PaceMotion.easeOut,
                       switchOutCurve: Curves.easeIn,
+                      // Reduced motion: the states only cross-fade.
                       transitionBuilder: (child, a) => FadeTransition(
                         opacity: a,
-                        child: ScaleTransition(
-                          scale: Tween(begin: .97, end: 1.0).animate(a),
-                          child: child,
-                        ),
+                        child: PaceMotion.of(context).reduced
+                            ? child
+                            : ScaleTransition(
+                                scale: Tween(begin: .97, end: 1.0).animate(a),
+                                child: child,
+                              ),
                       ),
                       child: body,
                     ),
