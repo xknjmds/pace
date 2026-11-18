@@ -4,10 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/db/app_database.dart';
 import '../../../core/db/settings_provider.dart';
+import '../../../core/theme/pace_tokens.dart';
 import '../../../core/time/clock.dart';
+import '../../../core/widgets/done_check.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/fade_slide_in.dart';
+import '../../../core/widgets/section_header.dart';
+import '../../../routes.dart';
+import '../../shell/home_shell.dart';
+import '../../shell/shell_tabs.dart';
 import '../application/deadline_providers.dart';
 import '../domain/deadline_reminders.dart';
-import '../../../routes.dart';
 import 'task_edit_sheet.dart';
 
 /// Pending deadlines, past-due ones first, then what has been submitted.
@@ -57,6 +64,12 @@ class DeadlinesScreen extends ConsumerWidget {
     }
   }
 
+  static void _justStart(BuildContext context, Task t) {
+    if (!HomeShell.open(context, ShellTab.focus, taskId: t.id)) {
+      Navigator.of(context).pushNamed(Routes.focus, arguments: t.id);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final now = ref.watch(clockProvider)();
@@ -65,6 +78,7 @@ class DeadlinesScreen extends ConsumerWidget {
     final submitted = ref.watch(submittedTasksProvider).value ?? const <Task>[];
     final service = ref.read(deadlineRemindersProvider);
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
 
     final shown = lowEnergy
         ? pending
@@ -76,108 +90,114 @@ class DeadlinesScreen extends ConsumerWidget {
     final overdue = shown.where((t) => !t.dueAt.toLocal().isAfter(now));
     final upcoming = shown.where((t) => t.dueAt.toLocal().isAfter(now));
 
+    var i = 0;
+    Widget tile(Task t, {required bool pastDue}) => FadeSlideIn(
+      key: ValueKey('enter-${t.id}'),
+      index: i++,
+      child: _TaskTile(
+        task: t,
+        now: now,
+        pastDue: pastDue,
+        onTap: () => _addOrEdit(context, ref, task: t),
+        onSubmitted: () => service.markSubmitted(t.id),
+        onNotToday: () => service.notToday(t.id, now),
+        onDelete: () => service.remove(t.id),
+        onJustStart: () => _justStart(context, t),
+      ),
+    );
+
     return Scaffold(
       appBar: AppBar(title: const Text('Deadlines')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _addOrEdit(context, ref),
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.add_rounded),
         label: const Text('Add'),
       ),
       body: SafeArea(
         child: shown.isEmpty && submitted.isEmpty
             ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Text(
-                    lowEnergy
-                        ? 'Nothing due in the next two days.'
-                        : 'No deadlines yet. Add one when you get it.',
-                    style: theme.textTheme.bodyLarge,
-                    textAlign: TextAlign.center,
-                  ),
+                child: SingleChildScrollView(
+                  child: lowEnergy
+                      ? const EmptyState(
+                          title: 'Nothing due in the next two days.',
+                          message: 'Low-energy mode shows only what is close.',
+                        )
+                      : const EmptyState(
+                          title: 'No deadlines yet',
+                          message:
+                              'Add one when you get it. PACE will nudge you '
+                              'gently as it gets close.',
+                        ),
                 ),
               )
             : ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+                padding: PaceSpace.screen,
                 children: [
                   if (lowEnergy)
                     Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Text(
-                        'Low-energy mode: only the next two days.',
-                        style: theme.textTheme.bodySmall,
+                      padding: const EdgeInsets.only(top: 4, bottom: 4),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.spa_outlined,
+                            size: 18,
+                            color: scheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Low-energy mode: only the next two days.',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   if (overdue.isNotEmpty) ...[
-                    _Label('Still open'),
-                    for (final t in overdue)
-                      _TaskTile(
-                        task: t,
-                        now: now,
-                        pastDue: true,
-                        onTap: () => _addOrEdit(context, ref, task: t),
-                        onSubmitted: () => service.markSubmitted(t.id),
-                        onNotToday: () => service.notToday(t.id, now),
-                        onDelete: () => service.remove(t.id),
-                        onJustStart: () => Navigator.of(
-                          context,
-                        ).pushNamed(Routes.focus, arguments: t.id),
-                      ),
+                    const SectionHeader('Still open'),
+                    for (final t in overdue) tile(t, pastDue: true),
                   ],
                   if (upcoming.isNotEmpty) ...[
-                    _Label('Coming up'),
-                    for (final t in upcoming)
-                      _TaskTile(
-                        task: t,
-                        now: now,
-                        pastDue: false,
-                        onTap: () => _addOrEdit(context, ref, task: t),
-                        onSubmitted: () => service.markSubmitted(t.id),
-                        onNotToday: () => service.notToday(t.id, now),
-                        onDelete: () => service.remove(t.id),
-                        onJustStart: () => Navigator.of(
-                          context,
-                        ).pushNamed(Routes.focus, arguments: t.id),
-                      ),
+                    const SectionHeader('Coming up'),
+                    for (final t in upcoming) tile(t, pastDue: false),
                   ],
                   if (submitted.isNotEmpty && !lowEnergy) ...[
-                    _Label('Submitted'),
-                    for (final t in submitted)
-                      ListTile(
-                        leading: Icon(
-                          Icons.check_circle,
-                          color: theme.colorScheme.primary,
-                        ),
-                        title: Text(
-                          t.title,
-                          style: TextStyle(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        subtitle: Text(describeDue(t.dueAt, now)),
-                        trailing: TextButton(
-                          onPressed: () => service.markPending(t.id),
-                          child: const Text('Reopen'),
-                        ),
+                    const SectionHeader('Submitted'),
+                    Card(
+                      child: Column(
+                        children: [
+                          for (final (n, t) in submitted.indexed) ...[
+                            if (n > 0) const Divider(indent: 56),
+                            ListTile(
+                              key: ValueKey('done-${t.id}'),
+                              leading: Icon(
+                                Icons.check_circle_rounded,
+                                color: scheme.primary,
+                              ),
+                              title: Text(
+                                t.title,
+                                style: TextStyle(
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                              subtitle: Text(describeDue(t.dueAt, now)),
+                              trailing: TextButton(
+                                onPressed: () => service.markPending(t.id),
+                                child: const Text('Reopen'),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
+                    ),
                   ],
                 ],
               ),
       ),
     );
   }
-}
-
-class _Label extends StatelessWidget {
-  const _Label(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
-    child: Text(text, style: Theme.of(context).textTheme.titleSmall),
-  );
 }
 
 class _TaskTile extends StatelessWidget {
@@ -204,41 +224,119 @@ class _TaskTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final subject = task.subject;
+    final due = task.dueAt.toLocal();
+    // Due within a day gets a small warm marker; nothing is ever red.
+    final soon = !pastDue && due.difference(now) < const Duration(hours: 24);
     return Card(
       key: ValueKey('task-${task.id}'),
-      // Past due is quieter, not louder: a tinted surface and an outline.
-      color: pastDue ? theme.colorScheme.surfaceContainerHigh : null,
-      child: ListTile(
+      // Past due is quieter, not louder: a tinted surface.
+      color: pastDue ? scheme.surfaceContainerHigh : null,
+      child: InkWell(
         onTap: onTap,
-        leading: IconButton(
-          tooltip: 'Submitted',
-          icon: const Icon(Icons.radio_button_unchecked),
-          onPressed: onSubmitted,
-        ),
-        title: Text(task.title),
-        subtitle: Text(
-          [
-            describeDue(task.dueAt, now),
-            if (subject != null && subject.isNotEmpty) subject,
-          ].join(' · '),
-          style: pastDue ? const TextStyle(fontStyle: FontStyle.italic) : null,
-        ),
-        trailing: PopupMenuButton<String>(
-          tooltip: 'More',
-          onSelected: (v) => switch (v) {
-            'just_start' => onJustStart(),
-            'not_today' => onNotToday(),
-            'delete' => onDelete(),
-            _ => null,
-          },
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'just_start', child: Text('Just start')),
-            PopupMenuItem(value: 'not_today', child: Text('Not today')),
-            PopupMenuItem(value: 'delete', child: Text('Delete')),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(6, 8, 0, 8),
+          child: Row(
+            children: [
+              DoneCheck(onDone: onSubmitted),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      task.title,
+                      style: theme.textTheme.titleMedium,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        if (soon) ...[
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              color: scheme.tertiary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Flexible(
+                          child: Text(
+                            [
+                              describeDue(task.dueAt, now),
+                              if (subject != null && subject.isNotEmpty)
+                                subject,
+                            ].join(' · '),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: soon
+                                  ? scheme.tertiary
+                                  : scheme.onSurfaceVariant,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuButton<String>(
+                tooltip: 'More',
+                icon: Icon(
+                  Icons.more_vert_rounded,
+                  color: scheme.onSurfaceVariant,
+                ),
+                onSelected: (v) => switch (v) {
+                  'just_start' => onJustStart(),
+                  'not_today' => onNotToday(),
+                  'delete' => onDelete(),
+                  _ => null,
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(
+                    value: 'just_start',
+                    child: _MenuRow(Icons.play_arrow_rounded, 'Just start'),
+                  ),
+                  PopupMenuItem(
+                    value: 'not_today',
+                    child: _MenuRow(Icons.snooze_rounded, 'Not today'),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: _MenuRow(Icons.delete_outline_rounded, 'Delete'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
+
+class _MenuRow extends StatelessWidget {
+  const _MenuRow(this.icon, this.label);
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(
+        icon,
+        size: 20,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+      const SizedBox(width: 12),
+      Text(label),
+    ],
+  );
 }

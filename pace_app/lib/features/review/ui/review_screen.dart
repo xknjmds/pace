@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/db/settings_provider.dart';
+import '../../../core/theme/pace_tokens.dart';
 import '../../../core/time/local_time.dart';
+import '../../../core/widgets/section_header.dart';
 import '../../../routes.dart';
 import '../application/review_providers.dart';
 import '../domain/weekly_summary.dart';
@@ -31,122 +33,269 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     final nightsVisible = !lowEnergy || _showNights;
     final avgSleep = summary.averageSleep;
 
+    final scheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Review')),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          padding: PaceSpace.screen,
           children: [
             Card(
-              child: ListTile(
-                leading: const Icon(Icons.nights_stay_outlined),
-                title: const Text('Evening check-in'),
-                subtitle: const Text('Look at tomorrow, then rest.'),
-                trailing: const Icon(Icons.chevron_right),
+              color: scheme.secondaryContainer,
+              child: InkWell(
                 onTap: () => Navigator.of(context).pushNamed(Routes.checkIn),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 16, 12, 16),
+                  child: Row(
+                    children: [
+                      _IconBadge(
+                        Icons.nights_stay_outlined,
+                        color: scheme.onSecondaryContainer,
+                        background: scheme.surfaceContainerLowest.withValues(
+                          alpha: .6,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Evening check-in',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: scheme.onSecondaryContainer,
+                              ),
+                            ),
+                            Text(
+                              'Look at tomorrow, then rest.',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: scheme.onSecondaryContainer.withValues(
+                                  alpha: .8,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: scheme.onSecondaryContainer,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 16, 8, 8),
-              child: Text('Last 7 days', style: theme.textTheme.titleSmall),
-            ),
+            const SectionHeader('Last 7 days'),
             Card(
               child: Column(
                 children: [
-                  ListTile(
+                  _Stat(
                     key: const ValueKey('routine-days'),
-                    leading: const Icon(Icons.check_circle_outline),
-                    title: Text(
-                      summary.routineDays == 0
-                          ? 'No routine days logged yet'
-                          : 'Routine done on ${summary.routineDays} '
-                                '${summary.routineDays == 1 ? 'day' : 'days'}',
-                    ),
+                    badge: summary.routineDays == 0
+                        ? const _IconBadge(Icons.check_circle_outline_rounded)
+                        : _NumberBadge(summary.routineDays),
+                    title: summary.routineDays == 0
+                        ? 'No routine days logged yet'
+                        : 'Routine done on ${summary.routineDays} '
+                              '${summary.routineDays == 1 ? 'day' : 'days'}',
                   ),
-                  ListTile(
+                  const Divider(indent: 72),
+                  _Stat(
                     key: const ValueKey('average-wake'),
-                    leading: const Icon(Icons.wb_sunny_outlined),
-                    title: Text(
-                      summary.averageWake == null
-                          ? 'No wake times logged yet'
-                          : 'Up around ${summary.averageWake!.format24()} '
-                                'on average',
+                    badge: _IconBadge(
+                      Icons.wb_sunny_outlined,
+                      color: scheme.onTertiaryContainer,
+                      background: scheme.tertiaryContainer,
                     ),
+                    title: summary.averageWake == null
+                        ? 'No wake times logged yet'
+                        : 'Up around ${summary.averageWake!.format24()} '
+                              'on average',
                     subtitle: summary.wakeDays == 0
-                        ? const Text('Tap "I\'m up" on Today to log one.')
-                        : Text(
-                            'From ${summary.wakeDays} '
-                            '${summary.wakeDays == 1 ? 'morning' : 'mornings'}',
-                          ),
+                        ? 'Tap "I\'m up" on Today to log one.'
+                        : 'From ${summary.wakeDays} '
+                              '${summary.wakeDays == 1 ? 'morning' : 'mornings'}',
                   ),
-                  ListTile(
+                  const Divider(indent: 72),
+                  _Stat(
                     key: const ValueKey('average-sleep'),
-                    leading: const Icon(Icons.bedtime_outlined),
-                    title: Text(
-                      avgSleep == null
-                          ? 'No full nights logged yet'
-                          : 'About ${formatSleep(avgSleep)} of sleep a night',
+                    badge: _IconBadge(
+                      Icons.bedtime_outlined,
+                      color: scheme.onSecondaryContainer,
+                      background: scheme.secondaryContainer,
                     ),
+                    title: avgSleep == null
+                        ? 'No full nights logged yet'
+                        : 'About ${formatSleep(avgSleep)} of sleep a night',
                   ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 16, 8, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text('Sleep log', style: theme.textTheme.titleSmall),
-                  ),
-                  if (lowEnergy && summary.sleep.isNotEmpty)
-                    TextButton(
+            SectionHeader(
+              'Sleep log',
+              action: lowEnergy && summary.sleep.isNotEmpty
+                  ? TextButton(
                       onPressed: () =>
                           setState(() => _showNights = !_showNights),
                       child: Text(_showNights ? 'Hide' : 'Show'),
-                    ),
-                ],
-              ),
+                    )
+                  : null,
             ),
-            if (summary.sleep.isEmpty)
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Text(
-                  'Nothing yet. "Going to bed" in the evening and "I\'m up" '
-                  'in the morning fill this in.',
-                  style: theme.textTheme.bodyMedium,
-                ),
-              )
-            else if (nightsVisible)
-              Card(
-                child: Column(
-                  children: [
-                    for (final e in summary.sleep)
-                      ListTile(
-                        dense: true,
-                        title: Text('${_weekdays[e.night.weekday - 1]} night'),
-                        subtitle: Text(
-                          '${e.bedAt == null ? 'bed not logged' : 'bed ${_hm(e.bedAt!)}'}'
-                          ' · '
-                          '${e.wakeAt == null ? 'up not logged' : 'up ${_hm(e.wakeAt!)}'}',
-                        ),
-                        trailing: e.slept == null
-                            ? null
-                            : Text(formatSleep(e.slept!)),
+            AnimatedSize(
+              duration: PaceMotion.standard,
+              curve: PaceMotion.easeOut,
+              alignment: Alignment.topCenter,
+              child: summary.sleep.isEmpty
+                  ? _Note(
+                      'Nothing yet. "Going to bed" in the evening and "I\'m up" '
+                      'in the morning fill this in.',
+                    )
+                  : nightsVisible
+                  ? Card(
+                      child: Column(
+                        children: [
+                          for (final (i, e) in summary.sleep.indexed) ...[
+                            if (i > 0) const Divider(indent: 16, endIndent: 16),
+                            ListTile(
+                              title: Text(
+                                '${_weekdays[e.night.weekday - 1]} night',
+                              ),
+                              subtitle: Text(
+                                '${e.bedAt == null ? 'bed not logged' : 'bed ${_hm(e.bedAt!)}'}'
+                                ' · '
+                                '${e.wakeAt == null ? 'up not logged' : 'up ${_hm(e.wakeAt!)}'}',
+                              ),
+                              trailing: e.slept == null
+                                  ? null
+                                  : Text(
+                                      formatSleep(e.slept!),
+                                      style: theme.textTheme.titleMedium
+                                          ?.copyWith(color: scheme.primary),
+                                    ),
+                            ),
+                          ],
+                        ],
                       ),
-                  ],
-                ),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Text(
-                  '${summary.sleep.length} '
-                  '${summary.sleep.length == 1 ? 'night' : 'nights'} logged.',
-                  style: theme.textTheme.bodyMedium,
-                ),
-              ),
+                    )
+                  : _Note(
+                      '${summary.sleep.length} '
+                      '${summary.sleep.length == 1 ? 'night' : 'nights'} logged.',
+                    ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _Note extends StatelessWidget {
+  const _Note(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+      child: Text(
+        text,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
+class _Stat extends StatelessWidget {
+  const _Stat({
+    super.key,
+    required this.badge,
+    required this.title,
+    this.subtitle,
+  });
+
+  final Widget badge;
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      child: Row(
+        children: [
+          badge,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: theme.textTheme.titleMedium),
+                if (subtitle != null)
+                  Text(
+                    subtitle!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IconBadge extends StatelessWidget {
+  const _IconBadge(this.icon, {this.color, this.background});
+
+  final IconData icon;
+  final Color? color;
+  final Color? background;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: background ?? scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(PaceRadius.s),
+      ),
+      child: Icon(icon, size: 22, color: color ?? scheme.onPrimaryContainer),
+    );
+  }
+}
+
+/// A count shown big: the number of good days, never a gap.
+class _NumberBadge extends StatelessWidget {
+  const _NumberBadge(this.value);
+
+  final int value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      width: 40,
+      height: 40,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: scheme.primary,
+        borderRadius: BorderRadius.circular(PaceRadius.s),
+      ),
+      child: Text(
+        '$value',
+        style: theme.textTheme.titleLarge?.copyWith(color: scheme.onPrimary),
       ),
     );
   }

@@ -311,7 +311,9 @@ void main() {
   ) async {
     await mondayClass();
     await pumpApp(tester, DateTime(2026, 11, 15, 10));
-    await tester.scrollUntilVisible(find.byType(Switch), 200);
+    // Scroll to the end, past the write-it-down button.
+    await tester.drag(find.byType(ListView), const Offset(0, -600));
+    await tester.pumpAndSettle();
     await tester.tap(find.byType(Switch));
     await tester.pumpAndSettle();
     final kinds = gateway.scheduled.values

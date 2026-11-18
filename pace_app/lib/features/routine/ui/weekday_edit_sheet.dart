@@ -89,7 +89,7 @@ class _WeekdayEditSheetState extends State<WeekdayEditSheet> {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         24,
-        16,
+        0,
         24,
         24 + MediaQuery.viewInsetsOf(context).bottom,
       ),
@@ -97,7 +97,7 @@ class _WeekdayEditSheetState extends State<WeekdayEditSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(widget.weekdayName, style: theme.textTheme.titleLarge),
+          Text(widget.weekdayName, style: theme.textTheme.headlineSmall),
           const SizedBox(height: 8),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,

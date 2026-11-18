@@ -4,7 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/db/settings_provider.dart';
 import '../../../core/platform/platform_features.dart';
+import '../../../core/theme/pace_tokens.dart';
 import '../../../core/time/clock.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/fade_slide_in.dart';
+import '../../../core/widgets/section_header.dart';
 import '../../deadlines/application/deadline_providers.dart';
 import '../../deadlines/ui/task_edit_sheet.dart';
 import '../../shell/shell_tabs.dart';
@@ -91,42 +95,69 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     final theme = Theme.of(context);
     final hideList = lowEnergy && !_showAllInLowEnergy && items.isNotEmpty;
 
+    final scheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Inbox')),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          padding: PaceSpace.screen,
           children: [
-            TextField(
-              key: const ValueKey('capture-field'),
-              controller: _text,
-              focusNode: _focus,
-              autofocus: widget.startCapturing,
-              textCapitalization: TextCapitalization.sentences,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _add(),
-              decoration: InputDecoration(
-                hintText: 'What is on your mind?',
-                suffixIcon: IconButton(
-                  tooltip: 'Add',
-                  icon: const Icon(Icons.arrow_upward),
-                  onPressed: _add,
+            Card(
+              color: scheme.primaryContainer,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Write it down, sort it later.',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: scheme.onPrimaryContainer,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      key: const ValueKey('capture-field'),
+                      controller: _text,
+                      focusNode: _focus,
+                      autofocus: widget.startCapturing,
+                      textCapitalization: TextCapitalization.sentences,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _add(),
+                      decoration: InputDecoration(
+                        hintText: 'What is on your mind?',
+                        fillColor: scheme.surfaceContainerLowest,
+                        suffixIcon: Padding(
+                          padding: const EdgeInsets.all(6),
+                          child: IconButton.filled(
+                            tooltip: 'Add',
+                            icon: Icon(
+                              Icons.arrow_upward_rounded,
+                              color: scheme.onPrimary,
+                            ),
+                            onPressed: _add,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 16),
             if (items.isEmpty)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  'Inbox is clear.',
-                  style: theme.textTheme.bodyLarge,
-                  textAlign: TextAlign.center,
-                ),
+              const EmptyState(
+                title: 'Inbox is clear.',
+                message:
+                    'Anything you write above waits here until you '
+                    'decide what it is.',
+                cairnSize: 56,
               )
             else if (hideList)
               Card(
+                color: scheme.secondaryContainer,
                 child: ListTile(
+                  leading: const Icon(Icons.spa_outlined),
                   title: Text(
                     '${items.length} ${items.length == 1 ? 'thing' : 'things'} '
                     'waiting. They can wait.',
@@ -137,41 +168,63 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                   ),
                 ),
               )
-            else
-              for (final item in items)
-                Card(
+            else ...[
+              SectionHeader(
+                '${items.length} waiting',
+                padding: const EdgeInsets.fromLTRB(4, 16, 4, 6),
+              ),
+              for (final (i, item) in items.indexed)
+                FadeSlideIn(
                   key: ValueKey('inbox-${item.id}'),
-                  child: ListTile(
-                    title: Text(item.body),
-                    trailing: Wrap(
-                      spacing: 0,
-                      children: [
-                        IconButton(
-                          tooltip: 'Make a deadline',
-                          icon: const Icon(Icons.event_outlined),
-                          onPressed: () => _toDeadline(item),
-                        ),
-                        IconButton(
-                          tooltip: 'Delete',
-                          icon: const Icon(Icons.close),
-                          onPressed: () => capture.remove(item.id),
-                        ),
-                      ],
+                  index: i,
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 6, 4, 6),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.body,
+                              style: theme.textTheme.bodyLarge,
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Make a deadline',
+                            icon: Icon(
+                              Icons.event_available_outlined,
+                              color: scheme.primary,
+                            ),
+                            onPressed: () => _toDeadline(item),
+                          ),
+                          IconButton(
+                            tooltip: 'Delete',
+                            icon: Icon(
+                              Icons.close_rounded,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                            onPressed: () => capture.remove(item.id),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-            const SizedBox(height: 24),
-            if (settings != null && features.reminders)
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Capture from the notification shade'),
-                subtitle: const Text(
-                  'Keeps a quiet notification with a reply field, so a '
-                  'thought can be saved without opening PACE.',
+            ],
+            if (settings != null && features.reminders) ...[
+              const SizedBox(height: 16),
+              Card(
+                child: SwitchListTile(
+                  secondary: const Icon(Icons.notifications_none_rounded),
+                  title: const Text('Capture from the notification shade'),
+                  subtitle: const Text(
+                    'Keeps a quiet notification with a reply field, so a '
+                    'thought can be saved without opening PACE.',
+                  ),
+                  value: settings.captureShortcutEnabled,
+                  onChanged: capture.setShortcutEnabled,
                 ),
-                value: settings.captureShortcutEnabled,
-                onChanged: capture.setShortcutEnabled,
               ),
+            ],
           ],
         ),
       ),

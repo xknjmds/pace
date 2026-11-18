@@ -6,6 +6,9 @@ import '../../../core/db/database_provider.dart';
 import '../../../core/db/settings_provider.dart';
 import '../../../core/notifications/notification_providers.dart';
 import '../../../core/platform/platform_features.dart';
+import '../../../core/theme/pace_tokens.dart';
+import '../../../core/widgets/animated_cairn.dart';
+import '../../../core/widgets/press_scale.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/time/local_time.dart';
 import '../../../routes.dart';
@@ -36,6 +39,14 @@ enum _Step { tomorrow, top3, alarm, finish }
 class _CheckInScreenState extends ConsumerState<CheckInScreen> {
   int _index = 0;
   bool _done = false;
+
+  /// Which way the last step change went, so the slide matches it.
+  bool _forward = true;
+
+  void _go(int to) => setState(() {
+    _forward = to > _index;
+    _index = to;
+  });
 
   List<_Step> _steps(bool lowEnergy) => [
     _Step.tomorrow,
@@ -101,7 +112,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
 
     final body = switch (step) {
       _Step.tomorrow => [
-        Text('Tomorrow', style: theme.textTheme.headlineSmall),
+        _StepTitle(Icons.wb_twilight_rounded, 'Tomorrow'),
         const SizedBox(height: 12),
         Text(
           switch (morning) {
@@ -120,18 +131,32 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
             style: theme.textTheme.bodyMedium,
           )
         else ...[
-          Text('Coming up', style: theme.textTheme.titleSmall),
-          for (final t in due)
-            ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              title: Text(t.title),
-              subtitle: Text(describeDue(t.dueAt, now)),
+          Text(
+            'Coming up',
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
+          ),
+          const SizedBox(height: 6),
+          Card(
+            child: Column(
+              children: [
+                for (final t in due)
+                  ListTile(
+                    leading: Icon(
+                      Icons.event_note_outlined,
+                      color: theme.colorScheme.primary,
+                    ),
+                    title: Text(t.title),
+                    subtitle: Text(describeDue(t.dueAt, now)),
+                  ),
+              ],
+            ),
+          ),
         ],
       ],
       _Step.top3 => [
-        Text('Top 3 for tomorrow', style: theme.textTheme.headlineSmall),
+        _StepTitle(Icons.flag_outlined, 'Top 3 for tomorrow'),
         const SizedBox(height: 12),
         if (top3Ids.isEmpty)
           Text(
@@ -147,7 +172,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
                 leading: const Icon(Icons.flag_outlined, size: 20),
                 title: Text(t.title),
               ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         OutlinedButton(
           onPressed: () async {
             final picked = await showModalBottomSheet<List<String>>(
@@ -166,7 +191,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
         ),
       ],
       _Step.alarm => [
-        Text('Wake reminder', style: theme.textTheme.headlineSmall),
+        _StepTitle(Icons.alarm_rounded, 'Wake reminder'),
         const SizedBox(height: 12),
         Text(
           'Tomorrow at ${_hm(plan.wakeAt)}.',
@@ -209,10 +234,17 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
         ),
       ],
       _Step.finish => [
-        Text(
-          _done ? 'Sleep well.' : 'That is everything.',
-          style: theme.textTheme.headlineSmall,
-        ),
+        if (_done) ...[
+          const SizedBox(height: 24),
+          const Center(child: AnimatedCairn(size: 88)),
+          const SizedBox(height: 28),
+          Text(
+            'Sleep well.',
+            style: theme.textTheme.headlineMedium,
+            textAlign: TextAlign.center,
+          ),
+        ] else
+          _StepTitle(Icons.bedtime_outlined, 'That is everything.'),
         const SizedBox(height: 12),
         Text(
           _done
@@ -220,14 +252,19 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
               : 'Bed around ${_hm(plan.bedtime)} gives you '
                     '${settings.sleepTargetMinutes ~/ 60} hours.',
           style: theme.textTheme.bodyLarge,
+          textAlign: _done ? TextAlign.center : TextAlign.start,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
         if (!_done)
-          FilledButton(
-            key: const ValueKey('going-to-bed'),
-            onPressed: () => _goToBed(night),
-            child: const Text('Going to bed'),
+          PressScale(
+            child: FilledButton.icon(
+              key: const ValueKey('going-to-bed'),
+              onPressed: () => _goToBed(night),
+              icon: const Icon(Icons.bedtime_rounded),
+              label: const Text('Going to bed'),
+            ),
           ),
+        const SizedBox(height: 4),
         TextButton(
           onPressed: () => Navigator.of(context).maybePop(),
           child: Text(_done ? 'Close' : 'Not yet'),
@@ -235,16 +272,68 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
       ],
     };
 
+    final motion = PaceMotion.of(context);
+    final scheme = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: Text('Check-in ${index + 1} of ${steps.length}')),
+      appBar: AppBar(
+        title: Text('Check-in ${index + 1} of ${steps.length}'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(12),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            child: Row(
+              children: [
+                for (var i = 0; i < steps.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 6),
+                  Expanded(
+                    child: AnimatedContainer(
+                      duration: PaceMotion.standard,
+                      curve: PaceMotion.easeOut,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: i <= index
+                            ? scheme.primary
+                            : scheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-                children: body,
+              child: AnimatedSwitcher(
+                duration: PaceMotion.emphasized,
+                switchInCurve: PaceMotion.easeOut,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, a) {
+                  // The incoming step slides from the side we are heading to.
+                  final incoming = child.key == ValueKey(step);
+                  final dx = motion.offset(.06) * (_forward ? 1 : -1);
+                  return FadeTransition(
+                    opacity: a,
+                    child: SlideTransition(
+                      position: Tween(
+                        begin: Offset(incoming ? dx : -dx, 0),
+                        end: Offset.zero,
+                      ).animate(a),
+                      child: child,
+                    ),
+                  );
+                },
+                child: ListView(
+                  key: ValueKey(step),
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                  children: body,
+                ),
               ),
             ),
             if (!isLast)
@@ -254,20 +343,56 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
                   children: [
                     if (index > 0)
                       TextButton(
-                        onPressed: () => setState(() => _index = index - 1),
+                        onPressed: () => _go(index - 1),
                         child: const Text('Back'),
                       ),
                     const Spacer(),
-                    FilledButton(
-                      key: const ValueKey('check-in-next'),
-                      onPressed: () => setState(() => _index = index + 1),
-                      child: const Text('Next'),
+                    PressScale(
+                      child: FilledButton.icon(
+                        key: const ValueKey('check-in-next'),
+                        onPressed: () => _go(index + 1),
+                        icon: const Icon(Icons.arrow_forward_rounded),
+                        iconAlignment: IconAlignment.end,
+                        label: const Text('Next'),
+                      ),
                     ),
                   ],
                 ),
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StepTitle extends StatelessWidget {
+  const _StepTitle(this.icon, this.text);
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: scheme.primaryContainer,
+              borderRadius: BorderRadius.circular(PaceRadius.s),
+            ),
+            child: Icon(icon, color: scheme.onPrimaryContainer),
+          ),
+          const SizedBox(height: 14),
+          Text(text, style: theme.textTheme.headlineSmall),
+        ],
       ),
     );
   }

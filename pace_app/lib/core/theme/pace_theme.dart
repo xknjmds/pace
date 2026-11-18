@@ -70,7 +70,10 @@ abstract final class PaceTheme {
     return _base(scheme);
   }
 
-  static TextTheme _text(TextTheme t) {
+  static TextTheme _text(TextTheme colors) {
+    // Sizes come in here (not at localisation time) so component styles
+    // built from this theme carry them too.
+    final t = Typography.englishLike2021.merge(colors);
     TextStyle s(TextStyle? x, FontWeight w, [double tracking = 0]) =>
         x!.copyWith(fontWeight: w, letterSpacing: tracking);
     return t.copyWith(
@@ -166,8 +169,10 @@ abstract final class PaceTheme {
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: scheme.primary,
         foregroundColor: scheme.onPrimary,
-        elevation: 2,
-        highlightElevation: 4,
+        elevation: 0,
+        focusElevation: 0,
+        hoverElevation: 1,
+        highlightElevation: 0,
         shape: const StadiumBorder(),
         extendedTextStyle: buttonText,
       ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/pace_tokens.dart';
 import '../../../core/time/local_time.dart';
+import '../../../core/widgets/press_scale.dart';
 
 /// What the sheet hands back.
 class TaskEdit {
@@ -103,13 +105,29 @@ class _TaskEditSheetState extends State<TaskEditSheet> {
     );
   }
 
+  static const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  static const _months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
       padding: EdgeInsets.fromLTRB(
         24,
-        16,
+        0,
         24,
         24 + MediaQuery.viewInsetsOf(context).bottom,
       ),
@@ -119,49 +137,115 @@ class _TaskEditSheetState extends State<TaskEditSheet> {
         children: [
           Text(
             widget.initial == null ? 'New deadline' : 'Edit deadline',
-            style: theme.textTheme.titleLarge,
+            style: theme.textTheme.headlineSmall,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           TextField(
             key: const ValueKey('task-title'),
             controller: _title,
             autofocus: widget.initial == null,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(labelText: 'What'),
+            decoration: const InputDecoration(
+              labelText: 'What',
+              prefixIcon: Icon(Icons.edit_note_rounded),
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           TextField(
             key: const ValueKey('task-subject'),
             controller: _subject,
             textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(labelText: 'Subject (optional)'),
+            decoration: const InputDecoration(
+              labelText: 'Subject (optional)',
+              prefixIcon: Icon(Icons.school_outlined),
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Due'),
-                  subtitle: Text('${_due.day}/${_due.month}/${_due.year}'),
+                child: _PickerField(
+                  icon: Icons.calendar_today_rounded,
+                  label: 'Due',
+                  value:
+                      '${_weekdays[_due.weekday - 1]} ${_due.day} '
+                      '${_months[_due.month - 1]}',
                   onTap: _pickDate,
                 ),
               ),
+              const SizedBox(width: 10),
               Expanded(
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Time'),
-                  subtitle: Text(
-                    LocalTime.of(_due.hour, _due.minute).format24(),
-                  ),
+                child: _PickerField(
+                  icon: Icons.schedule_rounded,
+                  label: 'Time',
+                  value: LocalTime.of(_due.hour, _due.minute).format24(),
                   onTap: _pickTime,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          FilledButton(onPressed: _save, child: const Text('Save')),
+          const SizedBox(height: 20),
+          PressScale(
+            child: FilledButton(onPressed: _save, child: const Text('Save')),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+/// A filled field that opens a picker: small label over the value.
+class _PickerField extends StatelessWidget {
+  const _PickerField({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Material(
+      color: scheme.surfaceContainerHigh.withValues(alpha: .7),
+      borderRadius: BorderRadius.circular(PaceRadius.m),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: scheme.onSurfaceVariant),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      value,
+                      style: theme.textTheme.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

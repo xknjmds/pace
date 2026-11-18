@@ -6,7 +6,10 @@
     android:background="@drawable/pace_widget_background"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:padding="12dp">
+    android:paddingStart="16dp"
+    android:paddingTop="10dp"
+    android:paddingEnd="10dp"
+    android:paddingBottom="10dp">
 
     <LinearLayout
         android:layout_width="0dp"
@@ -14,33 +17,50 @@
         android:layout_weight="1"
         android:orientation="vertical">
 
-        <TextView
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/widget_title"
-            android:textColor="@color/pace_widget_accent"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginEnd="6dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/widget_cairn" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.08"
+                android:text="@string/widget_title"
+                android:textColor="@color/pace_widget_accent"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/widget_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/widget_inbox_clear"
+            android:layout_marginTop="2dp"
             android:textColor="@color/pace_widget_text"
-            android:textSize="13sp" />
+            android:textSize="14sp" />
     </LinearLayout>
 
     <TextView
         android:id="@+id/widget_capture"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_height="44dp"
         android:background="@drawable/pace_widget_button"
         android:contentDescription="@string/widget_capture_description"
         android:gravity="center"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
         android:text="@string/widget_capture"
         android:textColor="@color/pace_widget_on_accent"
-        android:textSize="14sp" />
+        android:textSize="14sp"
+        android:textStyle="bold" />
 </LinearLayout>

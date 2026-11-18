@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../theme/pace_theme.dart';
-import 'cairn_mark.dart';
+import 'animated_cairn.dart';
+import 'pace_wordmark.dart';
 
 /// Shown instead of the app on a platform PACE is not built for (iOS).
 class UnsupportedPlatformApp extends StatelessWidget {
@@ -24,8 +25,10 @@ class UnsupportedPlatformApp extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const CairnMark(size: 72),
-                    const SizedBox(height: 24),
+                    const AnimatedCairn(size: 80),
+                    const SizedBox(height: 20),
+                    const PaceWordmark(height: 22),
+                    const SizedBox(height: 32),
                     Text(
                       'PACE does not run here yet',
                       style: theme.textTheme.headlineSmall,
@@ -35,7 +38,9 @@ class UnsupportedPlatformApp extends StatelessWidget {
                     Text(
                       'It runs on Android, in a web browser and on Windows, '
                       'macOS and Linux.',
-                      style: theme.textTheme.bodyLarge,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],

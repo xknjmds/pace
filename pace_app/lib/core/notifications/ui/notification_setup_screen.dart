@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../theme/pace_tokens.dart';
+import '../../widgets/empty_state.dart';
+import '../../widgets/press_scale.dart';
+import '../../widgets/section_header.dart';
+
 import '../../platform/platform_features.dart';
 import '../../time/clock.dart';
 import '../../time/local_time.dart';
@@ -100,14 +105,13 @@ class _NotificationSetupScreenState
     if (!ref.watch(platformFeaturesProvider).reminders) {
       return Scaffold(
         appBar: AppBar(title: const Text('Reminders')),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Text(
-              'Reminders and their buttons are part of the Android app. '
-              'Everything else works here.',
-              style: Theme.of(context).textTheme.bodyLarge,
-              textAlign: TextAlign.center,
+        body: const Center(
+          child: SingleChildScrollView(
+            child: EmptyState(
+              title: 'Reminders live on your phone',
+              message:
+                  'Reminders and their buttons are part of the Android app. '
+                  'Everything else works here.',
             ),
           ),
         ),
@@ -123,15 +127,18 @@ class _NotificationSetupScreenState
       appBar: AppBar(title: const Text('Reminders')),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          padding: PaceSpace.screen,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
               child: Text(
                 'PACE works by nudging you at the right moment. For that, '
                 'Android needs three things from you. Each one is optional, '
                 'but reminders are less reliable without them.',
-                style: theme.textTheme.bodyLarge,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.45,
+                ),
               ),
             ),
             _StepCard(
@@ -169,10 +176,10 @@ class _NotificationSetupScreenState
               action: 'Turn off optimisation',
               onPressed: () => _run(gateway.requestBatteryUnrestricted),
             ),
-            const SizedBox(height: 16),
+            const SectionHeader('Check it works'),
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(18),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -200,9 +207,11 @@ class _NotificationSetupScreenState
                       runSpacing: 4,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        FilledButton(
-                          onPressed: p.canNotify ? _sendTest : null,
-                          child: const Text('Send test reminder'),
+                        PressScale(
+                          child: FilledButton(
+                            onPressed: p.canNotify ? _sendTest : null,
+                            child: const Text('Send test reminder'),
+                          ),
                         ),
                         if (_testFireAt != null)
                           TextButton(
@@ -258,21 +267,43 @@ class _StepCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
+    final scheme = theme.colorScheme;
+    return AnimatedContainer(
       key: ValueKey(step),
+      duration: PaceMotion.standard,
+      curve: PaceMotion.easeOut,
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      decoration: BoxDecoration(
+        color: done ? scheme.primaryContainer : scheme.surfaceContainerLow,
+        borderRadius: PaceRadius.cardAll,
+        border: Border.all(
+          color: done
+              ? Colors.transparent
+              : scheme.outlineVariant.withValues(alpha: .6),
+        ),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(
-                  done ? Icons.check_circle : Icons.radio_button_unchecked,
-                  color: done
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.outline,
-                  semanticLabel: done ? 'Done' : 'Not yet',
+                AnimatedSwitcher(
+                  duration: PaceMotion.standard,
+                  transitionBuilder: (child, a) => FadeTransition(
+                    opacity: a,
+                    child: ScaleTransition(
+                      scale: Tween(begin: .8, end: 1.0).animate(a),
+                      child: child,
+                    ),
+                  ),
+                  child: Icon(
+                    done ? Icons.check_circle : Icons.radio_button_unchecked,
+                    key: ValueKey(done),
+                    color: done ? scheme.primary : scheme.outline,
+                    semanticLabel: done ? 'Done' : 'Not yet',
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -281,15 +312,27 @@ class _StepCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text(why, style: theme.textTheme.bodyMedium),
+            Text(
+              why,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: done
+                    ? scheme.onPrimaryContainer.withValues(alpha: .8)
+                    : scheme.onSurfaceVariant,
+              ),
+            ),
             if (!done) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               Wrap(
                 spacing: 8,
                 runSpacing: 4,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  FilledButton.tonal(onPressed: onPressed, child: Text(action)),
+                  PressScale(
+                    child: FilledButton.tonal(
+                      onPressed: onPressed,
+                      child: Text(action),
+                    ),
+                  ),
                   ?secondary,
                 ],
               ),

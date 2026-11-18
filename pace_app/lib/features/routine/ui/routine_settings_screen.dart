@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/pace_tokens.dart';
+import '../../../core/widgets/section_header.dart';
+
 import '../../../core/db/app_database.dart';
 import '../../../core/db/database_provider.dart';
 import '../../../core/db/settings_provider.dart';
@@ -273,20 +276,59 @@ class RoutineSettingsScreen extends ConsumerWidget {
           );
     String hm(DateTime t) => LocalTime.of(t.hour, t.minute).format24();
     String day(DateTime d) => '${d.day}/${d.month}';
+    final value = theme.textTheme.titleMedium?.copyWith(
+      color: theme.colorScheme.primary,
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: settings == null
           ? const SizedBox.shrink()
           : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
               children: [
-                _SectionLabel('Mornings'),
+                const SectionHeader(
+                  'Week',
+                  padding: EdgeInsets.fromLTRB(4, 8, 4, 6),
+                ),
+                Card(
+                  child: Column(
+                    children: [
+                      for (final weekday in weekdayNames.keys)
+                        ListTile(
+                          key: ValueKey('weekday-$weekday'),
+                          leading: _DayBadge(
+                            weekdayNames[weekday]!.substring(0, 2),
+                            hasClass:
+                                byWeekday[weekday]?.firstClassMinutes != null,
+                          ),
+                          title: Text(weekdayNames[weekday]!),
+                          subtitle: Text(
+                            _summary(
+                              settings,
+                              byWeekday[weekday],
+                              weekday,
+                              now,
+                            ),
+                          ),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () => _editWeekday(
+                            context,
+                            ref,
+                            weekday,
+                            byWeekday[weekday],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SectionHeader('Mornings'),
                 Card(
                   child: Column(
                     children: [
                       ListTile(
                         key: const ValueKey('wake-time'),
+                        leading: const Icon(Icons.wb_sunny_outlined),
                         title: const Text('Wake time'),
                         subtitle: Text(
                           shift == null
@@ -298,26 +340,27 @@ class RoutineSettingsScreen extends ConsumerWidget {
                                     ', there by '
                                     '${day(shiftReachesGoalOn(shift))}.',
                         ),
-                        trailing: Text(
-                          wakeToday!.format24(),
-                          style: theme.textTheme.titleMedium,
-                        ),
+                        trailing: Text(wakeToday!.format24(), style: value),
                         onTap: () => _pickWakeTime(context, ref, settings),
                       ),
                       if (shift == null)
                         ListTile(
                           key: const ValueKey('start-shift'),
+                          leading: const Icon(Icons.trending_down_rounded),
                           title: const Text('Move it earlier, gradually'),
                           subtitle: const Text(
                             '15 minutes every 3 days. A missed night does '
                             'not undo anything.',
                           ),
-                          trailing: const Icon(Icons.chevron_right),
+                          trailing: const Icon(Icons.chevron_right_rounded),
                           onTap: () => _startShift(context, ref, wakeToday),
                         )
                       else
                         ListTile(
                           key: const ValueKey('stop-shift'),
+                          leading: const Icon(
+                            Icons.pause_circle_outline_rounded,
+                          ),
                           title: const Text('Stay at this time'),
                           subtitle: Text(
                             'Keep ${wakeToday.format24()} and stop moving.',
@@ -326,6 +369,7 @@ class RoutineSettingsScreen extends ConsumerWidget {
                         ),
                       ListTile(
                         key: const ValueKey('weekend-leeway'),
+                        leading: const Icon(Icons.weekend_outlined),
                         title: const Text('Weekend lie-in'),
                         subtitle: const Text(
                           'Saturday and Sunday stay within an hour.',
@@ -334,41 +378,43 @@ class RoutineSettingsScreen extends ConsumerWidget {
                           settings.weekendLeewayMinutes == 0
                               ? 'None'
                               : '+${settings.weekendLeewayMinutes} min',
-                          style: theme.textTheme.titleMedium,
+                          style: value,
                         ),
                         onTap: () => _editLeeway(context, ref, settings),
                       ),
                       ListTile(
+                        leading: const Icon(Icons.restaurant_outlined),
                         title: const Text('Breakfast'),
                         subtitle: const Text('Time set aside to eat.'),
                         trailing: Text(
                           '${settings.breakfastMinutes} min',
-                          style: theme.textTheme.titleMedium,
+                          style: value,
                         ),
                         onTap: () => _editBreakfast(context, ref, settings),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                _SectionLabel('Evenings'),
+                const SectionHeader('Evenings'),
                 Card(
                   child: Column(
                     children: [
                       ListTile(
                         key: const ValueKey('sleep-target'),
+                        leading: const Icon(Icons.bedtime_outlined),
                         title: const Text('Sleep target'),
                         subtitle: Text(
                           'Bed around ${hm(tonight!.bedtime)} tonight.',
                         ),
                         trailing: Text(
                           _hours(settings.sleepTargetMinutes),
-                          style: theme.textTheme.titleMedium,
+                          style: value,
                         ),
                         onTap: () => _editSleep(context, ref, settings),
                       ),
                       ListTile(
                         key: const ValueKey('wind-down'),
+                        leading: const Icon(Icons.nights_stay_outlined),
                         title: const Text('Wind down'),
                         subtitle: Text(
                           features.reminders
@@ -378,18 +424,18 @@ class RoutineSettingsScreen extends ConsumerWidget {
                         ),
                         trailing: Text(
                           '${settings.windDownLeadMinutes} min before',
-                          style: theme.textTheme.titleMedium,
+                          style: value,
                         ),
                         onTap: () => _editWindDown(context, ref, settings),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                _SectionLabel('Energy'),
+                const SectionHeader('Energy'),
                 Card(
                   child: SwitchListTile(
                     key: const ValueKey('low-energy-setting'),
+                    secondary: const Icon(Icons.spa_outlined),
                     title: const Text('Low-energy mode'),
                     subtitle: const Text(
                       'Only wake, leave and what is due in two days. Other '
@@ -399,48 +445,39 @@ class RoutineSettingsScreen extends ConsumerWidget {
                     onChanged: (on) => ref.read(setLowEnergyProvider)(on),
                   ),
                 ),
-                const SizedBox(height: 16),
-                _SectionLabel('Week'),
-                Card(
-                  child: Column(
-                    children: [
-                      for (final weekday in weekdayNames.keys)
-                        ListTile(
-                          key: ValueKey('weekday-$weekday'),
-                          title: Text(weekdayNames[weekday]!),
-                          subtitle: Text(
-                            _summary(
-                              settings,
-                              byWeekday[weekday],
-                              weekday,
-                              now,
-                            ),
-                          ),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => _editWeekday(
-                            context,
-                            ref,
-                            weekday,
-                            byWeekday[weekday],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
               ],
             ),
     );
   }
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
+/// Two-letter day marker; filled on class days.
+class _DayBadge extends StatelessWidget {
+  const _DayBadge(this.label, {required this.hasClass});
 
-  final String text;
+  final String label;
+  final bool hasClass;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-    child: Text(text, style: Theme.of(context).textTheme.titleSmall),
-  );
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return AnimatedContainer(
+      duration: PaceMotion.standard,
+      curve: PaceMotion.easeOut,
+      width: 40,
+      height: 40,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: hasClass ? scheme.primary : scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(PaceRadius.s),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelLarge?.copyWith(
+          color: hasClass ? scheme.onPrimary : scheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
 }

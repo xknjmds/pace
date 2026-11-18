@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/notifications/ui/notification_setup_screen.dart';
+import 'core/widgets/readable_width.dart';
 import 'features/review/ui/check_in_screen.dart';
 import 'features/review/ui/review_screen.dart';
 import 'features/routine/ui/routine_settings_screen.dart';
@@ -32,10 +33,10 @@ abstract final class Routes {
     inboxCapture: (_) =>
         const HomeShell(initialTab: ShellTab.inbox, startCapturing: true),
     focus: (_) => const HomeShell(initialTab: ShellTab.focus),
-    review: (_) => const ReviewScreen(),
-    checkIn: (_) => const CheckInScreen(),
-    settings: (_) => const RoutineSettingsScreen(),
-    notifications: (_) => const NotificationSetupScreen(),
+    review: (_) => const ReadableWidth(child: ReviewScreen()),
+    checkIn: (_) => const ReadableWidth(child: CheckInScreen()),
+    settings: (_) => const ReadableWidth(child: RoutineSettingsScreen()),
+    notifications: (_) => const ReadableWidth(child: NotificationSetupScreen()),
   };
 
   static Route<void> _route(String name) => MaterialPageRoute(

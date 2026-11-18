@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/pace_tokens.dart';
 import '../../core/widgets/cairn_mark.dart';
 import '../../core/widgets/pace_wordmark.dart';
+import '../../core/widgets/readable_width.dart';
 import '../deadlines/ui/deadlines_screen.dart';
 import '../focus/ui/focus_screen.dart';
 import '../inbox/ui/inbox_screen.dart';
@@ -28,10 +29,17 @@ class HomeShell extends ConsumerStatefulWidget {
 
   /// Shows [tab] from inside the shell. Returns false when no shell is
   /// mounted (a screen pumped on its own), so callers can push instead.
-  static bool open(BuildContext context, ShellTab tab, {bool capture = false}) {
+  static bool open(
+    BuildContext context,
+    ShellTab tab, {
+    bool capture = false,
+    String? taskId,
+  }) {
     final state = context.findAncestorStateOfType<_HomeShellState>();
     if (state == null) return false;
-    state.ref.read(shellRequestProvider.notifier).open(tab, capture: capture);
+    state.ref
+        .read(shellRequestProvider.notifier)
+        .open(tab, capture: capture, taskId: taskId);
     return true;
   }
 
@@ -100,7 +108,10 @@ class _HomeShellState extends ConsumerState<HomeShell>
         children: [
           for (final tab in ShellTab.values)
             _built.contains(tab)
-                ? KeyedSubtree(key: ValueKey(tab), child: _screen(tab))
+                ? KeyedSubtree(
+                    key: ValueKey(tab),
+                    child: ReadableWidth(child: _screen(tab)),
+                  )
                 : const SizedBox.shrink(),
         ],
       ),

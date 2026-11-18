@@ -8,6 +8,7 @@ import '../../../core/db/settings_provider.dart';
 import '../../../core/platform/platform_features.dart';
 import '../../../core/startup_report.dart';
 import '../../../core/time/local_time.dart';
+import '../../../core/theme/pace_colors.dart';
 import '../../../core/theme/pace_tokens.dart';
 import '../../../core/widgets/animated_cairn.dart';
 import '../../../core/widgets/cairn_progress.dart';
@@ -196,8 +197,11 @@ class TodayScreen extends ConsumerWidget {
         titleSpacing: 20,
         title: Row(
           children: [
-            const CairnMark(size: 26),
-            const SizedBox(width: 14),
+            // On wide windows the side rail already carries the mark.
+            if (MediaQuery.sizeOf(context).width < HomeShell.wide) ...[
+              const CairnMark(size: 26),
+              const SizedBox(width: 14),
+            ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -527,9 +531,14 @@ class _EveningCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    // Evening reads as night: Ink with Sand text, Moss light for the action.
+    final dark = theme.brightness == Brightness.dark;
+    final bg = dark ? scheme.surfaceContainerHighest : PaceColors.ink;
+    const fg = PaceColors.sand;
     return Card(
       key: const ValueKey('evening-card'),
-      color: scheme.secondaryContainer,
+      color: bg,
+      shape: const RoundedRectangleBorder(borderRadius: PaceRadius.cardAll),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -537,18 +546,16 @@ class _EveningCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.bedtime_outlined,
                   size: 20,
-                  color: scheme.onSecondaryContainer,
+                  color: PaceColors.mossLight,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Winding down. Bed around ${bedtime.format24()}.',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: scheme.onSecondaryContainer,
-                    ),
+                    style: theme.textTheme.titleMedium?.copyWith(color: fg),
                   ),
                 ),
               ],
@@ -560,12 +567,20 @@ class _EveningCard extends StatelessWidget {
               children: [
                 PressScale(
                   child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: PaceColors.mossLight,
+                      foregroundColor: PaceColors.ink,
+                    ),
                     onPressed: onCheckIn,
                     child: const Text('Check in'),
                   ),
                 ),
                 PressScale(
                   child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: fg,
+                      side: BorderSide(color: fg.withValues(alpha: .35)),
+                    ),
                     onPressed: onBed,
                     child: const Text('Going to bed'),
                   ),

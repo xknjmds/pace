@@ -28,14 +28,17 @@ class _Top3PickerSheetState extends State<Top3PickerSheet> {
     final theme = Theme.of(context);
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
+        padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text('Top 3 for today', style: theme.textTheme.titleLarge),
+              child: Text(
+                'Top 3 for today',
+                style: theme.textTheme.headlineSmall,
+              ),
             ),
             const SizedBox(height: 8),
             if (widget.tasks.isEmpty)

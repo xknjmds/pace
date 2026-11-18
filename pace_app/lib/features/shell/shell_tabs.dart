@@ -19,13 +19,20 @@ enum ShellTab {
       : ShellTab.values.where((t) => t.route == route).firstOrNull;
 }
 
-/// A request to show a tab; [capture] also focuses the Inbox field.
-/// [serial] makes repeated identical requests still count.
+/// A request to show a tab; [capture] also focuses the Inbox field and
+/// [taskId] preselects a task on Focus. [serial] makes repeated identical
+/// requests still count.
 class ShellRequest {
-  const ShellRequest(this.tab, {this.capture = false, this.serial = 0});
+  const ShellRequest(
+    this.tab, {
+    this.capture = false,
+    this.taskId,
+    this.serial = 0,
+  });
 
   final ShellTab tab;
   final bool capture;
+  final String? taskId;
   final int serial;
 }
 
@@ -35,8 +42,8 @@ class ShellRequests extends Notifier<ShellRequest?> {
   @override
   ShellRequest? build() => null;
 
-  void open(ShellTab tab, {bool capture = false}) =>
-      state = ShellRequest(tab, capture: capture, serial: ++_serial);
+  void open(ShellTab tab, {bool capture = false, String? taskId}) => state =
+      ShellRequest(tab, capture: capture, taskId: taskId, serial: ++_serial);
 }
 
 final shellRequestProvider = NotifierProvider<ShellRequests, ShellRequest?>(
