@@ -73,6 +73,12 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
 
+  /// Scrolls Today all the way down.
+  Future<void> scrollToEnd(WidgetTester tester) async {
+    await tester.drag(find.byType(ListView), const Offset(0, -4000));
+    await tester.pumpAndSettle();
+  }
+
   /// Fully inside the visible viewport, no scrolling needed.
   void expectOnScreen(WidgetTester tester, Finder finder) {
     final rect = tester.getRect(finder);
@@ -86,7 +92,8 @@ void main() {
     await pumpApp(tester, DateTime(2026, 11, 14, 10));
     expect(find.text('Progress Always Comes Eventually'), findsOneWidget);
     expect(find.text('Set up your week'), findsOneWidget);
-    expect(find.byType(Switch), findsOneWidget);
+    // Low-energy mode is one tap away in the header.
+    expect(find.byKey(const ValueKey('low-energy-chip')), findsOneWidget);
     expect(tester.takeException(), isNull);
     await unmountApp(tester);
   });
@@ -125,8 +132,9 @@ void main() {
       ),
       findsOneWidget,
     );
-    await scrollTo(tester, find.text('Due soon'));
-    expect(find.textContaining('Quiz prep · Due today'), findsOneWidget);
+    // Coming up holds what follows today, so nothing shows twice.
+    await scrollTo(tester, find.text('Coming up'));
+    expect(find.textContaining('Quiz prep · Due today'), findsNothing);
     expect(find.textContaining('Essay · Due tomorrow'), findsOneWidget);
     expect(find.textContaining('Far away'), findsNothing);
     // Tomorrow's one line is at the bottom.
@@ -178,7 +186,7 @@ void main() {
     await mondayClass();
     await pumpApp(tester, DateTime(2026, 11, 16, 6)); // Tuesday has no row
     await scrollTo(tester, find.text('Nothing due in the next two days.'));
-    await scrollTo(tester, find.text('Low-energy mode'));
+    await scrollToEnd(tester);
     expect(find.byKey(const ValueKey('tomorrow-preview')), findsNothing);
     await unmountApp(tester);
   });
@@ -215,23 +223,23 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('low-energy mode: only up, leave and due soon', (tester) async {
+  testWidgets('low-energy mode: only up, leave and coming up', (tester) async {
     await mondayClass();
     await db.settingsDao.setLowEnergy(true);
     await pumpApp(tester, DateTime(2026, 11, 16, 6));
     expect(find.byKey(const ValueKey('step-eat')), findsNothing);
     expect(find.byKey(const ValueKey('step-wake')), findsOneWidget);
     expect(find.byKey(const ValueKey('step-leave')), findsOneWidget);
-    await scrollTo(tester, find.text('Due soon'));
-    await scrollTo(tester, find.text('Low-energy mode'));
+    await scrollTo(tester, find.text('Coming up'));
+    await scrollToEnd(tester);
     expect(find.text('Top 3'), findsNothing);
     expect(find.byKey(const ValueKey('tomorrow-preview')), findsNothing);
     await unmountApp(tester);
   });
 
-  testWidgets('low-energy switch on Today writes to settings', (tester) async {
+  testWidgets('low-energy chip on Today writes to settings', (tester) async {
     await pumpApp(tester, DateTime(2026, 11, 14, 10));
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.byKey(const ValueKey('low-energy-chip')));
     await tester.pumpAndSettle();
     expect((await db.settingsDao.get()).lowEnergyEnabled, isTrue);
     await unmountApp(tester);
@@ -337,15 +345,12 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('low-energy switch on Today re-plans reminders too', (
+  testWidgets('low-energy chip on Today re-plans reminders too', (
     tester,
   ) async {
     await mondayClass();
     await pumpApp(tester, DateTime(2026, 11, 15, 10));
-    // Scroll to the end, past the write-it-down button.
-    await tester.drag(find.byType(ListView), const Offset(0, -600));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.byKey(const ValueKey('low-energy-chip')));
     await tester.pumpAndSettle();
     final kinds = gateway.scheduled.values
         .map((s) => s.payload!.split(':').first)

@@ -8,7 +8,10 @@ import '../domain/day_timeline.dart';
 /// The colour family of each kind of block.
 PastelKind pastelFor(TimelineKind kind) => switch (kind) {
   TimelineKind.wake || TimelineKind.eat => PastelKind.morning,
-  TimelineKind.leave || TimelineKind.classStart => PastelKind.leave,
+  TimelineKind.leave ||
+  TimelineKind.classStart ||
+  TimelineKind.classBlock => PastelKind.leave,
+  TimelineKind.event => PastelKind.focus,
   TimelineKind.deadline => PastelKind.deadline,
   TimelineKind.windDown || TimelineKind.bed => PastelKind.evening,
 };
@@ -17,7 +20,8 @@ IconData iconFor(TimelineKind kind) => switch (kind) {
   TimelineKind.wake => Icons.wb_sunny_rounded,
   TimelineKind.eat => Icons.restaurant_rounded,
   TimelineKind.leave => Icons.directions_walk_rounded,
-  TimelineKind.classStart => Icons.school_rounded,
+  TimelineKind.classStart || TimelineKind.classBlock => Icons.school_rounded,
+  TimelineKind.event => Icons.event_rounded,
   TimelineKind.deadline => Icons.assignment_rounded,
   TimelineKind.windDown => Icons.nights_stay_rounded,
   TimelineKind.bed => Icons.bedtime_rounded,
@@ -211,17 +215,35 @@ class _Block extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: Text(
-                              entry.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                color: scheme.onSurface,
-                                decoration: done
-                                    ? TextDecoration.lineThrough
-                                    : null,
-                                decorationColor: scheme.onSurfaceVariant,
-                              ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Two lines, not one: a long title stays
+                                // readable without a detail view.
+                                Text(
+                                  entry.title,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    color: scheme.onSurface,
+                                    decoration: done
+                                        ? TextDecoration.lineThrough
+                                        : null,
+                                    decorationColor: scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                if (_detail(entry) case final d?)
+                                  Text(
+                                    d,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                           if (done)
@@ -242,4 +264,13 @@ class _Block extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "08:30–09:30 · B12" for blocks with a length; null otherwise.
+String? _detail(TimelineEntry e) {
+  final end = e.endAt;
+  if (end == null) return e.detail;
+  String hm(DateTime t) => LocalTime.of(t.hour, t.minute).format24();
+  final range = '${hm(e.at)}–${hm(end)}';
+  return e.detail == null || e.detail!.isEmpty ? range : '$range · ${e.detail}';
 }

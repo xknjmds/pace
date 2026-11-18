@@ -163,3 +163,68 @@ class TodayTaskRow extends StatelessWidget {
     );
   }
 }
+
+/// Low-energy mode as a one-tap chip in Today's header. The icon and the
+/// filled shape change with the state, so it is never colour alone.
+class LowEnergyChip extends StatelessWidget {
+  const LowEnergyChip({super.key, required this.on, required this.onChanged});
+
+  final bool on;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final fg = on ? scheme.onPrimaryContainer : scheme.onSurfaceVariant;
+    // On narrow phones the label would crowd out the greeting: icon only,
+    // with the same name for screen readers and a tooltip.
+    final compact = MediaQuery.sizeOf(context).width < 420;
+    return Semantics(
+      toggled: on,
+      button: true,
+      label: 'Low-energy mode',
+      excludeSemantics: true,
+      child: Tooltip(
+        message: on ? 'Low-energy mode is on' : 'Low-energy mode',
+        child: PressScale(
+          enabled: onChanged != null,
+          child: Material(
+            key: const ValueKey('low-energy-chip'),
+            color: on ? scheme.primaryContainer : scheme.surfaceContainerHigh,
+            shape: const StadiumBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onChanged == null ? null : () => onChanged!(!on),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 40, minWidth: 40),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: compact ? 11 : 12),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        on ? Icons.spa_rounded : Icons.spa_outlined,
+                        size: 18,
+                        color: on ? scheme.secondary : fg,
+                      ),
+                      if (!compact) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          'Low energy',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: fg,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

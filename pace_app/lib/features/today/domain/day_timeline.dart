@@ -3,7 +3,21 @@ import '../../routine/domain/morning_plan.dart';
 import '../../routine/domain/wake_schedule.dart';
 
 /// What a block on Today's timeline is.
-enum TimelineKind { wake, eat, leave, classStart, deadline, windDown, bed }
+enum TimelineKind {
+  wake,
+  eat,
+  leave,
+  classStart,
+
+  /// A class from the timetable, with its end time and room.
+  classBlock,
+
+  /// A timed event from the calendar.
+  event,
+  deadline,
+  windDown,
+  bed,
+}
 
 /// A deadline as the timeline needs it.
 class TimelineTask {
@@ -20,6 +34,27 @@ class TimelineTask {
   final DateTime due;
 }
 
+/// A timed block from the timetable or the calendar, as plain data.
+class TimelineBlock {
+  const TimelineBlock({
+    required this.title,
+    required this.start,
+    required this.end,
+    this.room,
+    this.isEvent = false,
+  });
+
+  final String title;
+
+  /// Local times.
+  final DateTime start;
+  final DateTime end;
+  final String? room;
+
+  /// From the calendar rather than the timetable.
+  final bool isEvent;
+}
+
 /// One block of the day.
 class TimelineEntry {
   const TimelineEntry({
@@ -28,6 +63,8 @@ class TimelineEntry {
     required this.title,
     this.done = false,
     this.taskId,
+    this.endAt,
+    this.detail,
   });
 
   final TimelineKind kind;
@@ -40,10 +77,21 @@ class TimelineEntry {
   /// never marked as missed.
   final bool done;
   final String? taskId;
+
+  /// For blocks with a length (classes, events).
+  final DateTime? endAt;
+
+  /// A short extra line, such as the room.
+  final String? detail;
 }
 
-/// Pure: today's blocks in time order, from the morning plan, today's
-/// deadlines and tonight's plan.
+/// Pure: today's blocks in time order, from the morning plan, the
+/// timetable and calendar [blocks], today's deadlines and tonight's plan.
+/// When the timetable has classes today they replace the plan's single
+/// "Class" entry, so nothing shows twice.
+///
+/// In low-energy mode, given [now], only the block under way and the next
+/// one stay.
 ///
 /// Low-energy mode keeps only what matters: up, leave, class, what is due
 /// and bed (no breakfast block, no wind-down).
@@ -55,6 +103,8 @@ List<TimelineEntry> dayTimeline({
   required bool eatDone,
   required bool leaveDone,
   List<TimelineTask> tasks = const [],
+  List<TimelineBlock> blocks = const [],
+  DateTime? now,
   NightPlan? night,
   bool bedDone = false,
   required bool lowEnergy,
@@ -65,6 +115,11 @@ List<TimelineEntry> dayTimeline({
   bool sameDay(DateTime d) =>
       d.year == date.year && d.month == date.month && d.day == date.day;
 
+  final todays = blocks.where((b) => sameDay(b.start)).toList()
+    ..sort((a, b) => a.start.compareTo(b.start));
+  final shownBlocks = lowEnergy && now != null
+      ? todays.where((b) => b.end.isAfter(now)).take(2).toList()
+      : todays;
   final wakeAt = switch (morning) {
     LeaveByPlan p => p.wake,
     _ => noClassWake,
@@ -91,13 +146,22 @@ List<TimelineEntry> dayTimeline({
         title: 'Leave',
         done: leaveDone,
       ),
-      TimelineEntry(
-        kind: TimelineKind.classStart,
-        at: at(p.firstClass),
-        title: 'Class',
-        done: leaveDone,
-      ),
+      if (!todays.any((b) => !b.isEvent))
+        TimelineEntry(
+          kind: TimelineKind.classStart,
+          at: at(p.firstClass),
+          title: 'Class',
+          done: leaveDone,
+        ),
     ],
+    for (final b in shownBlocks)
+      TimelineEntry(
+        kind: b.isEvent ? TimelineKind.event : TimelineKind.classBlock,
+        at: b.start,
+        endAt: b.end,
+        title: b.title,
+        detail: b.room,
+      ),
     for (final t in tasks)
       if (sameDay(t.due))
         TimelineEntry(

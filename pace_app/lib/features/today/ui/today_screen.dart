@@ -10,6 +10,7 @@ import '../../../core/theme/pace_pastels.dart';
 import '../../../core/theme/pace_tokens.dart';
 import '../../../core/widgets/fade_slide_in.dart';
 import '../../../core/widgets/pace_section_card.dart';
+import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/tuck.dart';
 import '../../../routes.dart';
 import '../../deadlines/application/deadline_providers.dart';
@@ -28,8 +29,9 @@ import '../application/today_providers.dart';
 import '../domain/day_timeline.dart';
 import '../domain/today_model.dart';
 import '../domain/tuck_pose_for.dart';
-import '../../habits/ui/habit_card.dart';
-import '../../schedule/ui/today_classes_card.dart';
+import '../../habits/application/habit_providers.dart';
+import '../../calendar/application/calendar_providers.dart';
+import '../../schedule/application/schedule_providers.dart';
 import '../../verse/ui/verse_card.dart';
 import 'day_timeline_view.dart';
 import 'evening_card.dart';
@@ -156,9 +158,47 @@ class TodayScreen extends ConsumerWidget {
         for (final t in pending)
           if (t.id == id) t,
     ];
+    bool isToday(DateTime d) =>
+        d.year == now.year && d.month == now.month && d.day == now.day;
     final soon = pending
         .where((t) => t.dueAt.toLocal().isBefore(now.add(deadlineWindow)))
         .toList();
+    // Today's deadlines live on the timeline; this list is what follows.
+    final comingUp = soon.where((t) => !isToday(t.dueAt.toLocal())).toList();
+    final dueToday = soon.length - comingUp.length;
+
+    // Classes and calendar events go on the timeline.
+    final classBlocks =
+        ref.watch(classBlocksProvider).value ?? const <ClassBlock>[];
+    final events =
+        ref.watch(eventsOnDayProvider(dateKey(now))).value ??
+        const <CalendarEvent>[];
+    final day = DateTime(now.year, now.month, now.day);
+    final blocks = [
+      for (final b in classBlocks)
+        if (b.weekday == now.weekday)
+          TimelineBlock(
+            title: b.subject,
+            start: day.add(Duration(minutes: b.startMinutes)),
+            end: day.add(Duration(minutes: b.endMinutes)),
+            room: b.room,
+          ),
+      for (final e in events)
+        if (!e.allDay)
+          TimelineBlock(
+            title: e.title,
+            start: e.startAt.toLocal(),
+            end: e.endAt.toLocal(),
+            isEvent: true,
+          ),
+    ];
+
+    // The movement habit, as one pill.
+    final habit = ref.watch(movementHabitProvider).value;
+    final showHabit = habit != null && habit.active && !lowEnergy;
+    final habitDone =
+        showHabit &&
+        (ref.watch(habitDoneProvider(dateKey(now))).value ?? false);
 
     final empty =
         !hasSchedule && pending.isEmpty && inboxCount == 0 && focus == null;
@@ -188,6 +228,8 @@ class TodayScreen extends ConsumerWidget {
             ),
             bedDone: log?.bedLoggedAt != null,
             lowEnergy: lowEnergy,
+            blocks: blocks,
+            now: now,
           );
     final monday = DateTime(now.year, now.month, now.day - (now.weekday - 1));
     final doneThisWeek =
@@ -261,6 +303,15 @@ class TodayScreen extends ConsumerWidget {
             ),
           ],
         ),
+        actions: [
+          LowEnergyChip(
+            on: lowEnergy,
+            onChanged: settings == null
+                ? null
+                : (on) => ref.read(setLowEnergyProvider)(on),
+          ),
+          const SizedBox(width: 16),
+        ],
       ),
       floatingActionButton: empty
           ? null
@@ -327,7 +378,7 @@ class TodayScreen extends ConsumerWidget {
                     onOutTheDoor: () => _outTheDoor(ref, now),
                   ),
                 ),
-              if (focusText != null || inboxCount > 0)
+              if (showHabit || focusText != null || inboxCount > 0)
                 enter(
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6),
@@ -335,6 +386,21 @@ class TodayScreen extends ConsumerWidget {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
+                        if (showHabit)
+                          StatusPill(
+                            key: ValueKey(
+                              habitDone ? 'habit-undo' : 'habit-done',
+                            ),
+                            icon: habitDone
+                                ? Icons.check_rounded
+                                : Icons.directions_walk_rounded,
+                            text: habitDone
+                                ? '${habit.name}: done'
+                                : '${habit.name}: tap when done',
+                            onTap: () => ref
+                                .read(habitServiceProvider)
+                                .setDoneToday(!habitDone),
+                          ),
                         if (focusText != null)
                           StatusPill(
                             key: const ValueKey('focus-line'),
@@ -353,15 +419,6 @@ class TodayScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-              if (!lowEnergy) enter(VerseCard(day: now)),
-              enter(
-                TodayClassesCard(
-                  now: now,
-                  onOpen: () =>
-                      Navigator.of(context).pushNamed(Routes.schedule),
-                ),
-              ),
-              enter(HabitCard(now: now)),
               if (timeline.isNotEmpty)
                 enter(
                   Padding(
@@ -369,13 +426,7 @@ class TodayScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
-                          child: Text(
-                            'Your day',
-                            style: theme.textTheme.titleMedium,
-                          ),
-                        ),
+                        const SectionHeader('Your day'),
                         DayTimelineView(
                           key: const ValueKey('day-timeline'),
                           entries: timeline,
@@ -419,30 +470,34 @@ class TodayScreen extends ConsumerWidget {
                 ),
               enter(
                 PaceSectionCard(
-                  title: 'Due soon',
+                  title: 'Coming up',
                   icon: Icons.event_note_rounded,
                   pastel: PastelKind.deadline,
                   action: TextButton(
                     onPressed: () => _go(context, ShellTab.deadlines),
                     child: const Text('All'),
                   ),
-                  child: soon.isEmpty
-                      ? const TodayHint('Nothing due in the next two days.')
+                  child: comingUp.isEmpty
+                      ? TodayHint(
+                          dueToday > 0
+                              ? 'Nothing else due in the next two days.'
+                              : 'Nothing due in the next two days.',
+                        )
                       : Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            for (final t in soon.take(maxDeadlinesShown))
+                            for (final t in comingUp.take(maxDeadlinesShown))
                               TodayTaskRow(
                                 key: ValueKey('soon-${t.id}'),
                                 task: t,
                                 now: now,
                                 onSubmitted: () => markSubmitted(t),
                               ),
-                            if (soon.length > maxDeadlinesShown)
+                            if (comingUp.length > maxDeadlinesShown)
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(8, 4, 0, 0),
                                 child: Text(
-                                  'and ${soon.length - maxDeadlinesShown} more',
+                                  'and ${comingUp.length - maxDeadlinesShown} more',
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: scheme.onSurfaceVariant,
                                   ),
@@ -452,6 +507,7 @@ class TodayScreen extends ConsumerWidget {
                         ),
                 ),
               ),
+              if (!lowEnergy) enter(VerseCard(day: now)),
               if (!lowEnergy && tomorrow != null)
                 enter(
                   Padding(
@@ -478,24 +534,6 @@ class TodayScreen extends ConsumerWidget {
                   ),
                 ),
             ],
-            const SizedBox(height: 8),
-            enter(
-              Card(
-                color: lowEnergy ? scheme.secondaryContainer : null,
-                child: SwitchListTile(
-                  secondary: Icon(
-                    lowEnergy ? Icons.spa_rounded : Icons.spa_outlined,
-                    color: lowEnergy ? scheme.secondary : null,
-                  ),
-                  title: const Text('Low-energy mode'),
-                  subtitle: const Text('Shows only what matters today.'),
-                  value: lowEnergy,
-                  onChanged: settings == null
-                      ? null
-                      : (on) => ref.read(setLowEnergyProvider)(on),
-                ),
-              ),
-            ),
           ],
         ),
       ),

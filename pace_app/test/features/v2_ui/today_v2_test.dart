@@ -47,23 +47,26 @@ void main() {
       now: now,
       overrides: [startupReportProvider.overrideWithValue(StartupReport())],
     );
-    await scrollTo(tester, find.byKey(const ValueKey('today-classes')));
-    expect(find.text('Math'), findsOneWidget);
-    expect(find.text('now'), findsOneWidget);
-    expect(find.text('Art'), findsOneWidget);
+    // The timetable's classes sit on the timeline, with time and length.
+    final timeline = find.byKey(const ValueKey('day-timeline'));
+    await scrollTo(tester, timeline);
+    Finder onTimeline(String text) =>
+        find.descendant(of: timeline, matching: find.text(text));
+    expect(onTimeline('Math'), findsOneWidget);
+    expect(onTimeline('08:00–09:00'), findsOneWidget);
+    expect(onTimeline('Art'), findsOneWidget);
 
-    await scrollTo(tester, find.byKey(const ValueKey('habit-done')));
-    // Into the middle of the screen, clear of the floating button.
-    await Scrollable.ensureVisible(
-      tester.element(find.byKey(const ValueKey('habit-done'))),
-      alignment: .4,
-    );
-    await tester.pumpAndSettle();
+    // The habit is one pill in "Also today": tap to mark it done.
     await tester.tap(find.byKey(const ValueKey('habit-done')));
     await tester.pumpAndSettle();
     final id = (await h.db.habitsDao.ensureMovement()).id;
     expect(await h.db.habitsDao.isDone(id, now), isTrue);
-    expect(find.text('Done today. Any amount counts.'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('habit-undo')),
+      -200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.byKey(const ValueKey('habit-undo')), findsOneWidget);
     await h.unmount(tester);
   });
 
@@ -84,11 +87,14 @@ void main() {
       now: now,
       overrides: [startupReportProvider.overrideWithValue(StartupReport())],
     );
-    await scrollTo(tester, find.byKey(const ValueKey('today-classes')));
-    expect(find.text('Math'), findsOneWidget);
-    expect(find.text('Art'), findsOneWidget);
-    expect(find.text('History'), findsNothing);
-    expect(find.byKey(const ValueKey('habit-card')), findsNothing);
+    final timeline = find.byKey(const ValueKey('day-timeline'));
+    await scrollTo(tester, timeline);
+    Finder onTimeline(String text) =>
+        find.descendant(of: timeline, matching: find.text(text));
+    expect(onTimeline('Math'), findsOneWidget);
+    expect(onTimeline('Art'), findsOneWidget);
+    expect(onTimeline('History'), findsNothing);
+    expect(find.byKey(const ValueKey('habit-done')), findsNothing);
     expect(find.byKey(const ValueKey('verse-card')), findsNothing);
     await h.unmount(tester);
   });
