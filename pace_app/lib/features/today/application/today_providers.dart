@@ -27,3 +27,22 @@ final nowProvider = Provider.autoDispose<DateTime>((ref) {
   ref.watch(minuteTickProvider);
   return ref.watch(clockProvider)();
 });
+
+/// Weekdays (1 = Monday) of the week starting on [mondayKey] (`yyyy-MM-dd`)
+/// with the routine done. Only ever grows through the week.
+final weekRoutineDoneProvider = StreamProvider.family<Set<int>, String>((
+  ref,
+  mondayKey,
+) {
+  final from = DateTime.parse(mondayKey);
+  return ref
+      .watch(appDatabaseProvider)
+      .dailyLogsDao
+      .watchBetween(from, from.add(const Duration(days: 6)))
+      .map(
+        (logs) => {
+          for (final l in logs)
+            if (l.routineDone) DateTime.parse(l.date).weekday,
+        },
+      );
+});

@@ -51,7 +51,12 @@ Notification text stays about the user. Copy is calm and forgiving: no "you miss
 | Sand | #F3EEE6 | Tuck's body, warm light background, icon tile |
 | Ink | #1C2622 | outlines, text, dark background |
 
-Tuck works on Sand, white and Ink. On photos or busy backgrounds, put Tuck on a Sand tile.
+Tuck works on Sand, white and Ink.
+
+**UI activity pastels** (`PacePastels` in `pace_app/lib/core/theme/pace_pastels.dart`): soft fills that tell blocks of the day apart,
+Tiimo-style. Brand tints (dawn for morning, moss for leaving and class, warm sand for deadlines, sage for calm) plus two muted extras:
+soft sky for focus and dusk lilac for evening. Each has a deeper tone for its icon and text. They are for UI blocks only, never for Tuck
+or the logo, and none of them is red. On photos or busy backgrounds, put Tuck on a Sand tile.
 
 ## 7. Don'ts
 - Don't draw Tuck sad, crying, worried, angry, or shown as failing.

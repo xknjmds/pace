@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/db/settings_provider.dart';
 import '../../../core/theme/pace_tokens.dart';
+import '../../../core/theme/pace_pastels.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/widgets/done_check.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -231,10 +232,16 @@ class _TaskTile extends StatelessWidget {
     final due = task.dueAt.toLocal();
     // Due within a day gets a small warm marker; nothing is ever red.
     final soon = !pastDue && due.difference(now) < const Duration(hours: 24);
+    final pastels = PacePastels.of(context);
     return Card(
       key: ValueKey('task-${task.id}'),
       // Past due is quieter, not louder: a tinted surface.
-      color: pastDue ? scheme.surfaceContainerHigh : null,
+      // Due within a day: the warm deadline pastel. Past due: quiet sage.
+      color: pastDue
+          ? pastels.calm.fill
+          : soon
+          ? pastels.deadline.fill
+          : null,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -261,7 +268,7 @@ class _TaskTile extends StatelessWidget {
                             width: 7,
                             height: 7,
                             decoration: BoxDecoration(
-                              color: scheme.tertiary,
+                              color: pastels.deadline.ink,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -276,7 +283,7 @@ class _TaskTile extends StatelessWidget {
                             ].join(' · '),
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: soon
-                                  ? scheme.tertiary
+                                  ? pastels.deadline.ink
                                   : scheme.onSurfaceVariant,
                             ),
                             maxLines: 1,

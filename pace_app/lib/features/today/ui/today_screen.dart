@@ -8,7 +8,7 @@ import '../../../core/db/settings_provider.dart';
 import '../../../core/platform/platform_features.dart';
 import '../../../core/startup_report.dart';
 import '../../../core/time/local_time.dart';
-import '../../../core/theme/pace_colors.dart';
+import '../../../core/theme/pace_pastels.dart';
 import '../../../core/theme/pace_tokens.dart';
 import '../../../core/widgets/cairn_progress.dart';
 import '../../../core/widgets/done_check.dart';
@@ -24,15 +24,19 @@ import '../../focus/domain/focus_timer.dart';
 import '../../inbox/application/inbox_providers.dart';
 import '../../routine/application/morning_inputs.dart';
 import '../../routine/application/routine_providers.dart';
+import '../../routine/domain/morning_plan.dart';
 import '../../routine/domain/routine_reminder_planner.dart';
 import '../../routine/domain/wake_schedule.dart';
 import '../../shell/home_shell.dart';
 import '../../shell/shell_tabs.dart';
 import '../application/reminder_resync.dart';
 import '../application/today_providers.dart';
+import '../domain/day_timeline.dart';
 import '../domain/today_model.dart';
 import '../domain/tuck_pose_for.dart';
+import 'day_timeline_view.dart';
 import 'top3_picker_sheet.dart';
+import 'week_strip.dart';
 
 /// Answers "what do I do right now?" in one screen: the next routine step
 /// (or the one thing to do when the morning is late), today's top three,
@@ -166,6 +170,37 @@ class TodayScreen extends ConsumerWidget {
     final empty =
         !hasSchedule && pending.isEmpty && inboxCount == 0 && focus == null;
 
+    final todayInputs = settings == null
+        ? null
+        : morningInputsFor(settings, schedules[now.weekday], date: now);
+    final timeline = todayInputs == null || !hasSchedule
+        ? const <TimelineEntry>[]
+        : dayTimeline(
+            day: now,
+            morning: computeLeaveByPlan(todayInputs),
+            noClassWake: todayInputs.targetWake,
+            wakeDone: log?.wakeLoggedAt != null,
+            eatDone: log?.eatDoneAt != null,
+            leaveDone: log?.routineDone ?? false,
+            tasks: [
+              for (final t in pending)
+                TimelineTask(id: t.id, title: t.title, due: t.dueAt.toLocal()),
+            ],
+            // Tonight belongs to today's timeline, even in the morning.
+            night: nightPlan(
+              plan: wakePlanFrom(settings!),
+              night: DateTime(now.year, now.month, now.day),
+              sleepTargetMinutes: settings.sleepTargetMinutes,
+              windDownLeadMinutes: settings.windDownLeadMinutes,
+            ),
+            bedDone: log?.bedLoggedAt != null,
+            lowEnergy: lowEnergy,
+          );
+    final monday = DateTime(now.year, now.month, now.day - (now.weekday - 1));
+    final doneThisWeek =
+        ref.watch(weekRoutineDoneProvider(dateKey(monday))).value ??
+        const <int>{};
+
     // The first build after launch eases the blocks in, once.
     final stagger = !_entered;
     if (stagger) {
@@ -284,6 +319,13 @@ class TodayScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+            if (!empty)
+              enter(
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: WeekStrip(today: now, doneWeekdays: doneThisWeek),
+                ),
+              ),
             if (empty)
               enter(
                 EmptyWelcome(
@@ -340,11 +382,37 @@ class TodayScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+              if (timeline.isNotEmpty)
+                enter(
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6, bottom: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+                          child: Text(
+                            'Your day',
+                            style: theme.textTheme.titleMedium,
+                          ),
+                        ),
+                        DayTimelineView(
+                          key: const ValueKey('day-timeline'),
+                          entries: timeline,
+                          now: now,
+                          onTapDeadline: (_) =>
+                              _go(context, ShellTab.deadlines),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               if (!lowEnergy)
                 enter(
                   PaceSectionCard(
                     title: 'Top 3',
-                    icon: Icons.flag_outlined,
+                    icon: Icons.flag_rounded,
+                    pastel: PastelKind.leave,
                     action: TextButton(
                       onPressed: () =>
                           _pickTop3(context, ref, now, pending, top3Ids),
@@ -372,7 +440,8 @@ class TodayScreen extends ConsumerWidget {
               enter(
                 PaceSectionCard(
                   title: 'Due soon',
-                  icon: Icons.event_note_outlined,
+                  icon: Icons.event_note_rounded,
+                  pastel: PastelKind.deadline,
                   action: TextButton(
                     onPressed: () => _go(context, ShellTab.deadlines),
                     child: const Text('All'),
@@ -541,14 +610,15 @@ class _EveningCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    // Evening reads as night: Ink with Sand text, Moss light for the action.
-    final dark = theme.brightness == Brightness.dark;
-    final bg = dark ? scheme.surfaceContainerHighest : PaceColors.ink;
-    const fg = PaceColors.sand;
+    // Evening gets the soft dusk lilac.
+    final pastel = PacePastels.of(context).evening;
+    final fg = scheme.onSurface;
     return Card(
       key: const ValueKey('evening-card'),
-      color: bg,
-      shape: const RoundedRectangleBorder(borderRadius: PaceRadius.cardAll),
+      color: pastel.fill,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(30)),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -556,11 +626,7 @@ class _EveningCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(
-                  Icons.bedtime_outlined,
-                  size: 20,
-                  color: PaceColors.mossLight,
-                ),
+                Icon(Icons.bedtime_rounded, size: 20, color: pastel.ink),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -578,8 +644,8 @@ class _EveningCard extends StatelessWidget {
                 PressScale(
                   child: FilledButton(
                     style: FilledButton.styleFrom(
-                      backgroundColor: PaceColors.mossLight,
-                      foregroundColor: PaceColors.ink,
+                      backgroundColor: pastel.ink,
+                      foregroundColor: pastel.fill,
                     ),
                     onPressed: onCheckIn,
                     child: const Text('Check in'),
@@ -589,7 +655,7 @@ class _EveningCard extends StatelessWidget {
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: fg,
-                      side: BorderSide(color: fg.withValues(alpha: .35)),
+                      side: BorderSide(color: pastel.ink.withValues(alpha: .4)),
                     ),
                     onPressed: onBed,
                     child: const Text('Going to bed'),
@@ -670,8 +736,22 @@ class _RoutineCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     // Running late gets the warm dawn tone, never red.
     final late = status is RunningLate;
-    final bg = late ? scheme.tertiaryContainer : scheme.primaryContainer;
-    final fg = late ? scheme.onTertiaryContainer : scheme.onPrimaryContainer;
+    // The card takes the soft colour of what is happening now.
+    final kind = switch (status) {
+      RunningLate() => PastelKind.morning,
+      StepsRemaining(:final next) => switch (next.step) {
+        RoutineStep.wake || RoutineStep.eat => PastelKind.morning,
+        RoutineStep.leave => PastelKind.leave,
+        RoutineStep.windDown => PastelKind.evening,
+      },
+      RoutineAllDone() => PastelKind.leave,
+      NoClassToday(:final wake) when wake != null && !wake.done =>
+        PastelKind.morning,
+      _ => PastelKind.calm,
+    };
+    final pastel = PacePastels.of(context).forKind(kind);
+    final bg = pastel.fill;
+    final fg = scheme.onSurface;
     final title = theme.textTheme.headlineSmall?.copyWith(color: fg);
     final body = theme.textTheme.bodyLarge?.copyWith(color: fg);
 
@@ -729,8 +809,8 @@ class _RoutineCard extends StatelessWidget {
             PressScale(
               child: FilledButton.icon(
                 style: FilledButton.styleFrom(
-                  backgroundColor: scheme.tertiary,
-                  foregroundColor: scheme.onTertiary,
+                  backgroundColor: pastel.ink,
+                  foregroundColor: bg,
                 ),
                 onPressed: onOutTheDoor,
                 icon: const Icon(Icons.directions_walk_rounded),
@@ -779,7 +859,10 @@ class _RoutineCard extends StatelessWidget {
       duration: PaceMotion.standard,
       curve: PaceMotion.easeOut,
       margin: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(color: bg, borderRadius: PaceRadius.cardAll),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: const BorderRadius.all(Radius.circular(30)),
+      ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
         child: Column(
@@ -796,11 +879,7 @@ class _RoutineCard extends StatelessWidget {
                   ),
                 ),
                 if (stones != null)
-                  CairnProgress(
-                    done: stones,
-                    width: 30,
-                    color: late ? scheme.tertiary : scheme.primary,
-                  ),
+                  CairnProgress(done: stones, width: 30, color: pastel.ink),
               ],
             ),
             const SizedBox(height: 4),

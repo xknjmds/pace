@@ -14,11 +14,16 @@ abstract final class PaceSpace {
 }
 
 abstract final class PaceRadius {
-  static const double s = 12;
-  static const double m = 16;
-  static const double card = 20;
-  static const double sheet = 28;
+  static const double s = 14;
+  static const double m = 18;
+  static const double card = 26;
+  static const double sheet = 32;
   static const BorderRadius cardAll = BorderRadius.all(Radius.circular(card));
+
+  /// The one soft lift used for floating things (nav bar, Now card).
+  static const List<BoxShadow> softShadow = [
+    BoxShadow(color: Color(0x0F1C2622), blurRadius: 20, offset: Offset(0, 4)),
+  ];
 }
 
 /// Motion rules for the whole app: short, ease-out, purposeful.

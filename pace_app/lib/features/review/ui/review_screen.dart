@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/db/settings_provider.dart';
+import '../../../core/theme/pace_pastels.dart';
 import '../../../core/theme/pace_tokens.dart';
 import '../../../core/time/local_time.dart';
 import '../../../core/widgets/section_header.dart';
@@ -34,6 +35,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     final avgSleep = summary.averageSleep;
 
     final scheme = theme.colorScheme;
+    final pastels = PacePastels.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Review')),
@@ -42,7 +44,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           padding: PaceSpace.screen,
           children: [
             Card(
-              color: scheme.secondaryContainer,
+              color: pastels.evening.fill,
               child: InkWell(
                 onTap: () => Navigator.of(context).pushNamed(Routes.checkIn),
                 child: Padding(
@@ -51,7 +53,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                     children: [
                       _IconBadge(
                         Icons.nights_stay_outlined,
-                        color: scheme.onSecondaryContainer,
+                        color: pastels.evening.ink,
                         background: scheme.surfaceContainerLowest.withValues(
                           alpha: .6,
                         ),
@@ -64,13 +66,13 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                             Text(
                               'Evening check-in',
                               style: theme.textTheme.titleMedium?.copyWith(
-                                color: scheme.onSecondaryContainer,
+                                color: scheme.onSurface,
                               ),
                             ),
                             Text(
                               'Look at tomorrow, then rest.',
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: scheme.onSecondaryContainer.withValues(
+                                color: scheme.onSurfaceVariant.withValues(
                                   alpha: .8,
                                 ),
                               ),
@@ -80,7 +82,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                       ),
                       Icon(
                         Icons.chevron_right_rounded,
-                        color: scheme.onSecondaryContainer,
+                        color: pastels.evening.ink,
                       ),
                     ],
                   ),
@@ -106,8 +108,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                     key: const ValueKey('average-wake'),
                     badge: _IconBadge(
                       Icons.wb_sunny_outlined,
-                      color: scheme.onTertiaryContainer,
-                      background: scheme.tertiaryContainer,
+                      color: pastels.morning.ink,
+                      background: pastels.morning.fill,
                     ),
                     title: summary.averageWake == null
                         ? 'No wake times logged yet'
@@ -123,8 +125,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                     key: const ValueKey('average-sleep'),
                     badge: _IconBadge(
                       Icons.bedtime_outlined,
-                      color: scheme.onSecondaryContainer,
-                      background: scheme.secondaryContainer,
+                      color: pastels.evening.ink,
+                      background: pastels.evening.fill,
                     ),
                     title: avgSleep == null
                         ? 'No full nights logged yet'

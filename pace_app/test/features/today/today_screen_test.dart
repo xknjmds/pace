@@ -65,6 +65,14 @@ void main() {
     prepMinutes: 30,
   );
 
+  /// Scrolls Today until [finder] is built and on screen.
+  Future<void> scrollTo(WidgetTester tester, Finder finder) =>
+      tester.scrollUntilVisible(
+        finder,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+
   /// Fully inside the visible viewport, no scrolling needed.
   void expectOnScreen(WidgetTester tester, Finder finder) {
     final rect = tester.getRect(finder);
@@ -104,15 +112,27 @@ void main() {
     await db.tasksDao.add(title: 'Far away', dueAt: DateTime(2026, 11, 30));
     await pumpApp(tester, DateTime(2026, 11, 16, 6, 0)); // Monday 06:00
 
+    // "What now" is answered at the top, without scrolling.
     expect(find.text('Next: up at 06:30'), findsOneWidget);
-    expect(find.text('Due soon'), findsOneWidget);
-    expect(find.textContaining('Quiz prep'), findsOneWidget);
-    expect(find.textContaining('Essay'), findsOneWidget);
-    expect(find.textContaining('Far away'), findsNothing);
-    final tomorrow = find.byKey(const ValueKey('tomorrow-preview'));
-    expect(find.text('Tomorrow: class 09:00, leave by 08:30'), findsOneWidget);
-    expectOnScreen(tester, tomorrow);
     expectOnScreen(tester, find.byKey(const ValueKey('routine-card')));
+
+    // Today's deadline sits on the timeline at its time.
+    await scrollTo(tester, find.byKey(const ValueKey('day-timeline')));
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('day-timeline')),
+        matching: find.text('Quiz prep'),
+      ),
+      findsOneWidget,
+    );
+    await scrollTo(tester, find.text('Due soon'));
+    expect(find.textContaining('Quiz prep · Due today'), findsOneWidget);
+    expect(find.textContaining('Essay · Due tomorrow'), findsOneWidget);
+    expect(find.textContaining('Far away'), findsNothing);
+    // Tomorrow's one line is at the bottom.
+    final tomorrow = find.byKey(const ValueKey('tomorrow-preview'));
+    await scrollTo(tester, tomorrow);
+    expect(find.text('Tomorrow: class 09:00, leave by 08:30'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await unmountApp(tester);
   });
@@ -157,8 +177,9 @@ void main() {
   ) async {
     await mondayClass();
     await pumpApp(tester, DateTime(2026, 11, 16, 6)); // Tuesday has no row
+    await scrollTo(tester, find.text('Nothing due in the next two days.'));
+    await scrollTo(tester, find.text('Low-energy mode'));
     expect(find.byKey(const ValueKey('tomorrow-preview')), findsNothing);
-    expect(find.text('Nothing due in the next two days.'), findsOneWidget);
     await unmountApp(tester);
   });
 
@@ -166,7 +187,7 @@ void main() {
     await mondayClass();
     await pumpApp(tester, DateTime(2026, 11, 15, 11)); // Sunday
     expect(find.text('No class today. The day is yours.'), findsOneWidget);
-    expect(find.text('Tomorrow: class 08:30, leave by 08:00'), findsOneWidget);
+    await scrollTo(tester, find.text('Tomorrow: class 08:30, leave by 08:00'));
     await unmountApp(tester);
   });
 
@@ -179,7 +200,7 @@ void main() {
     await db.tasksDao.add(title: 'Beta', dueAt: DateTime(2026, 11, 21));
     final now = DateTime(2026, 11, 16, 6);
     await pumpApp(tester, now);
-    expect(find.text('Pick up to three things to move today.'), findsOneWidget);
+    await scrollTo(tester, find.text('Pick up to three things to move today.'));
 
     await tester.tap(find.text('Pick'));
     await tester.pumpAndSettle();
@@ -198,11 +219,12 @@ void main() {
     await mondayClass();
     await db.settingsDao.setLowEnergy(true);
     await pumpApp(tester, DateTime(2026, 11, 16, 6));
-    expect(find.text('Top 3'), findsNothing);
     expect(find.byKey(const ValueKey('step-eat')), findsNothing);
     expect(find.byKey(const ValueKey('step-wake')), findsOneWidget);
     expect(find.byKey(const ValueKey('step-leave')), findsOneWidget);
-    expect(find.text('Due soon'), findsOneWidget);
+    await scrollTo(tester, find.text('Due soon'));
+    await scrollTo(tester, find.text('Low-energy mode'));
+    expect(find.text('Top 3'), findsNothing);
     expect(find.byKey(const ValueKey('tomorrow-preview')), findsNothing);
     await unmountApp(tester);
   });

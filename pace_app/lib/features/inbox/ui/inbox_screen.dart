@@ -5,6 +5,7 @@ import '../../../core/db/app_database.dart';
 import '../../../core/db/settings_provider.dart';
 import '../../../core/platform/platform_features.dart';
 import '../../../core/theme/pace_tokens.dart';
+import '../../../core/theme/pace_pastels.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/tuck.dart';
@@ -105,7 +106,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
           padding: PaceSpace.screen,
           children: [
             Card(
-              color: scheme.primaryContainer,
+              color: PacePastels.of(context).leave.fill,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
                 child: Column(
@@ -114,7 +115,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                     Text(
                       'Write it down, sort it later.',
                       style: theme.textTheme.titleMedium?.copyWith(
-                        color: scheme.onPrimaryContainer,
+                        color: scheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 10),

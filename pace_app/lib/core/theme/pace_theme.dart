@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'pace_colors.dart';
+import 'pace_pastels.dart';
 import 'pace_tokens.dart';
 
 /// Calm Material 3 themes in the PACE palette, set in Figtree.
@@ -111,6 +112,11 @@ abstract final class PaceTheme {
     final buttonText = text.labelLarge!.copyWith(fontSize: 15);
 
     return base.copyWith(
+      extensions: [
+        scheme.brightness == Brightness.dark
+            ? PacePastels.dark
+            : PacePastels.light,
+      ],
       textTheme: text,
       scaffoldBackgroundColor: scheme.surface,
       visualDensity: VisualDensity.standard,
@@ -141,10 +147,8 @@ abstract final class PaceTheme {
         color: scheme.surfaceContainerLow,
         surfaceTintColor: Colors.transparent,
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: PaceRadius.cardAll,
-          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: .6)),
-        ),
+        // Soft and borderless: blocks are told apart by fill, not lines.
+        shape: const RoundedRectangleBorder(borderRadius: PaceRadius.cardAll),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
@@ -179,7 +183,7 @@ abstract final class PaceTheme {
       navigationBarTheme: NavigationBarThemeData(
         height: 72,
         elevation: 0,
-        backgroundColor: scheme.surfaceContainerLow,
+        backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         indicatorColor: scheme.primaryContainer,
         indicatorShape: const StadiumBorder(),

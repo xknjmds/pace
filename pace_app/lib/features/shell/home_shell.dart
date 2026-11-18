@@ -136,17 +136,35 @@ class _HomeShellState extends ConsumerState<HomeShell>
         body: body,
         bottomNavigationBar: wide
             ? null
-            : NavigationBar(
-                selectedIndex: _tab.index,
-                onDestinationSelected: (i) => _select(ShellTab.values[i]),
-                destinations: [
-                  for (final (icon, selected, label) in _destinations)
-                    NavigationDestination(
-                      icon: Icon(icon),
-                      selectedIcon: Icon(selected),
-                      label: label,
+            : SafeArea(
+                top: false,
+                // A soft floating pill, Tiimo-style.
+                child: Container(
+                  margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: PaceRadius.softShadow,
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: MediaQuery.removePadding(
+                    context: context,
+                    removeBottom: true,
+                    child: NavigationBar(
+                      height: 68,
+                      selectedIndex: _tab.index,
+                      onDestinationSelected: (i) => _select(ShellTab.values[i]),
+                      destinations: [
+                        for (final (icon, selected, label) in _destinations)
+                          NavigationDestination(
+                            icon: Icon(icon),
+                            selectedIcon: Icon(selected),
+                            label: label,
+                          ),
+                      ],
                     ),
-                ],
+                  ),
+                ),
               ),
       ),
     );

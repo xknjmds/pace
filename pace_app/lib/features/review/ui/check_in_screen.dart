@@ -6,6 +6,7 @@ import '../../../core/db/database_provider.dart';
 import '../../../core/db/settings_provider.dart';
 import '../../../core/notifications/notification_providers.dart';
 import '../../../core/platform/platform_features.dart';
+import '../../../core/theme/pace_pastels.dart';
 import '../../../core/theme/pace_tokens.dart';
 import '../../../core/widgets/tuck.dart';
 import '../../../core/widgets/press_scale.dart';
@@ -112,7 +113,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
 
     final body = switch (step) {
       _Step.tomorrow => [
-        _StepTitle(Icons.wb_twilight_rounded, 'Tomorrow'),
+        _StepTitle(Icons.wb_twilight_rounded, 'Tomorrow', PastelKind.morning),
         const SizedBox(height: 12),
         Text(
           switch (morning) {
@@ -156,7 +157,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
         ],
       ],
       _Step.top3 => [
-        _StepTitle(Icons.flag_outlined, 'Top 3 for tomorrow'),
+        _StepTitle(Icons.flag_rounded, 'Top 3 for tomorrow', PastelKind.leave),
         const SizedBox(height: 12),
         if (top3Ids.isEmpty)
           Text(
@@ -191,7 +192,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
         ),
       ],
       _Step.alarm => [
-        _StepTitle(Icons.alarm_rounded, 'Wake reminder'),
+        _StepTitle(Icons.alarm_rounded, 'Wake reminder', PastelKind.morning),
         const SizedBox(height: 12),
         Text(
           'Tomorrow at ${_hm(plan.wakeAt)}.',
@@ -244,7 +245,11 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
             textAlign: TextAlign.center,
           ),
         ] else
-          _StepTitle(Icons.bedtime_outlined, 'That is everything.'),
+          _StepTitle(
+            Icons.bedtime_rounded,
+            'That is everything.',
+            PastelKind.evening,
+          ),
         const SizedBox(height: 12),
         Text(
           _done
@@ -367,15 +372,15 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
 }
 
 class _StepTitle extends StatelessWidget {
-  const _StepTitle(this.icon, this.text);
+  const _StepTitle(this.icon, this.text, this.kind);
 
   final IconData icon;
   final String text;
+  final PastelKind kind;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Column(
@@ -385,10 +390,10 @@ class _StepTitle extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: scheme.primaryContainer,
+              color: PacePastels.of(context).forKind(kind).fill,
               borderRadius: BorderRadius.circular(PaceRadius.s),
             ),
-            child: Icon(icon, color: scheme.onPrimaryContainer),
+            child: Icon(icon, color: PacePastels.of(context).forKind(kind).ink),
           ),
           const SizedBox(height: 14),
           Text(text, style: theme.textTheme.headlineSmall),

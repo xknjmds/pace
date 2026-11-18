@@ -5,6 +5,7 @@ import '../../../core/db/app_database.dart';
 import '../../../core/db/settings_provider.dart';
 import '../../../core/platform/platform_features.dart';
 import '../../../core/time/clock.dart';
+import '../../../core/theme/pace_pastels.dart';
 import '../../../core/theme/pace_tokens.dart';
 import '../../../core/widgets/press_scale.dart';
 import '../../../core/widgets/tuck.dart';
@@ -137,7 +138,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                   Text(
                     '$focusMinutes',
                     style: theme.textTheme.displayMedium?.copyWith(
-                      color: scheme.primary,
+                      color: PacePastels.of(context).focus.ink,
                       height: 1,
                     ),
                   ),
@@ -248,7 +249,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                   Text(
                     formatRemaining(remaining),
                     key: const ValueKey('focus-remaining'),
-                    style: theme.textTheme.displayLarge,
+                    style: theme.textTheme.displayMedium,
                   ),
                   Text(
                     'left',
@@ -290,8 +291,8 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           Center(
             child: FocusRing(
               progress: 1,
-              size: 168,
-              child: const Tuck(pose: TuckPose.proud, size: 112),
+              size: 176,
+              child: const Tuck(pose: TuckPose.proud, size: 104),
             ),
           ),
           const SizedBox(height: 28),
