@@ -12,6 +12,7 @@ import '../../time/local_time.dart';
 import '../../db/app_database.dart';
 import '../notification_permissions.dart';
 import '../notification_providers.dart';
+import '../../widgets/pace_page.dart';
 
 /// Explains the three Android permissions reminders need, lets the owner
 /// grant each one, and sends a test reminder one minute ahead so the whole
@@ -123,124 +124,119 @@ class _NotificationSetupScreenState
     final theme = Theme.of(context);
     final p = permissions.value ?? NotificationPermissions.none;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Reminders')),
-      body: SafeArea(
-        child: ListView(
-          padding: PaceSpace.screen,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
-              child: Text(
-                'PACE works by nudging you at the right moment. For that, '
-                'Android needs three things from you. Each one is optional, '
-                'but reminders are less reliable without them.',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  height: 1.45,
+    return PacePage(
+      title: 'Reminders',
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
+          child: Text(
+            'PACE works by nudging you at the right moment. For that, '
+            'Android needs three things from you. Each one is optional, '
+            'but reminders are less reliable without them.',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.45,
+            ),
+          ),
+        ),
+        _StepCard(
+          step: SetupStep.notifications,
+          done: p.notificationsGranted,
+          title: 'Show notifications',
+          why: 'So reminders can appear at all.',
+          action: 'Allow',
+          onPressed: () => _run(gateway.requestNotificationPermission),
+          secondary: p.notificationsGranted
+              ? null
+              : TextButton(
+                  onPressed: () => _run(gateway.openNotificationSettings),
+                  child: const Text('Open settings'),
                 ),
-              ),
-            ),
-            _StepCard(
-              step: SetupStep.notifications,
-              done: p.notificationsGranted,
-              title: 'Show notifications',
-              why: 'So reminders can appear at all.',
-              action: 'Allow',
-              onPressed: () => _run(gateway.requestNotificationPermission),
-              secondary: p.notificationsGranted
-                  ? null
-                  : TextButton(
-                      onPressed: () => _run(gateway.openNotificationSettings),
-                      child: const Text('Open settings'),
+        ),
+        _StepCard(
+          step: SetupStep.exactAlarms,
+          done: p.exactAlarmsAllowed,
+          title: 'Exact timing',
+          why:
+              'Without this, Android may hold a reminder back for several '
+              'minutes to save battery. A leave-by time needs the minute.',
+          action: 'Allow exact timing',
+          onPressed: () => _run(gateway.requestExactAlarmPermission),
+        ),
+        _StepCard(
+          step: SetupStep.battery,
+          done: p.batteryUnrestricted,
+          title: 'Keep running in the background',
+          why:
+              'Some phones pause apps to save battery, which can silence '
+              'reminders. Turning battery optimisation off for PACE keeps '
+              'them coming.',
+          action: 'Turn off optimisation',
+          onPressed: () => _run(gateway.requestBatteryUnrestricted),
+        ),
+        const SectionHeader('Check it works'),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Try it', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 8),
+                Text(
+                  'Send a test reminder one minute from now, then lock the '
+                  'phone and wait. It should arrive on the minute.',
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 12),
+                if (_testFireAt case final fireAt?) ...[
+                  Text(
+                    'Test reminder set for '
+                    '${LocalTime.of(fireAt.hour, fireAt.minute).format24()}'
+                    '${_testMode == ScheduleMode.inexact ? ' (approximate, exact timing is off)' : ''}.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
-            ),
-            _StepCard(
-              step: SetupStep.exactAlarms,
-              done: p.exactAlarmsAllowed,
-              title: 'Exact timing',
-              why:
-                  'Without this, Android may hold a reminder back for several '
-                  'minutes to save battery. A leave-by time needs the minute.',
-              action: 'Allow exact timing',
-              onPressed: () => _run(gateway.requestExactAlarmPermission),
-            ),
-            _StepCard(
-              step: SetupStep.battery,
-              done: p.batteryUnrestricted,
-              title: 'Keep running in the background',
-              why:
-                  'Some phones pause apps to save battery, which can silence '
-                  'reminders. Turning battery optimisation off for PACE keeps '
-                  'them coming.',
-              action: 'Turn off optimisation',
-              onPressed: () => _run(gateway.requestBatteryUnrestricted),
-            ),
-            const SectionHeader('Check it works'),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Text('Try it', style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Send a test reminder one minute from now, then lock the '
-                      'phone and wait. It should arrive on the minute.',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    if (_testFireAt case final fireAt?) ...[
-                      Text(
-                        'Test reminder set for '
-                        '${LocalTime.of(fireAt.hour, fireAt.minute).format24()}'
-                        '${_testMode == ScheduleMode.inexact ? ' (approximate, exact timing is off)' : ''}.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                    PressScale(
+                      child: FilledButton(
+                        onPressed: p.canNotify ? _sendTest : null,
+                        child: const Text('Send test reminder'),
                       ),
-                      const SizedBox(height: 8),
-                    ],
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        PressScale(
-                          child: FilledButton(
-                            onPressed: p.canNotify ? _sendTest : null,
-                            child: const Text('Send test reminder'),
-                          ),
-                        ),
-                        if (_testFireAt != null)
-                          TextButton(
-                            onPressed: _cancelTest,
-                            child: const Text('Cancel it'),
-                          ),
-                      ],
                     ),
-                    if (!p.canNotify)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(
-                          'Allow notifications first.',
-                          style: theme.textTheme.bodySmall,
-                        ),
+                    if (_testFireAt != null)
+                      TextButton(
+                        onPressed: _cancelTest,
+                        child: const Text('Cancel it'),
                       ),
-                    const SizedBox(height: 12),
-                    Text(switch (pending) {
-                      AsyncData(:final value) =>
-                        'Reminders waiting: ${value.length}',
-                      _ => 'Reminders waiting: …',
-                    }, style: theme.textTheme.bodySmall),
                   ],
                 ),
-              ),
+                if (!p.canNotify)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Allow notifications first.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                Text(switch (pending) {
+                  AsyncData(:final value) =>
+                    'Reminders waiting: ${value.length}',
+                  _ => 'Reminders waiting: …',
+                }, style: theme.textTheme.bodySmall),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

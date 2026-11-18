@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/pace_tokens.dart';
 import '../../../core/time/local_time.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/time_button.dart';
@@ -10,6 +9,7 @@ import '../../routine/ui/routine_settings_screen.dart'
 import '../application/schedule_providers.dart';
 import '../domain/schedule_parser.dart';
 import 'class_block_sheet.dart';
+import '../../../core/widgets/pace_page.dart';
 
 /// Everything the photo seemed to say, for the owner to fix, remove or add
 /// to. Nothing is saved until "Save schedule" (CLAUDE.md rule 10).
@@ -74,116 +74,113 @@ class _ImportReviewState extends ConsumerState<ImportReviewScreen> {
     };
     final incomplete = _blocks.where((b) => !b.complete).length;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Check your schedule')),
-      body: ListView(
-        padding: PaceSpace.screen,
-        children: [
-          Text(
-            _blocks.isEmpty
-                ? 'Nothing could be read from that photo. Add the classes '
-                      'here instead, or try a sharper, straight-on photo.'
-                : 'This is what the photo seemed to say. Tap a class to fix '
-                      'it. Nothing is saved until you press Save.',
-            style: theme.textTheme.bodyMedium,
+    return PacePage(
+      title: 'Check your schedule',
+      children: [
+        Text(
+          _blocks.isEmpty
+              ? 'Nothing could be read from that photo. Add the classes '
+                    'here instead, or try a sharper, straight-on photo.'
+              : 'This is what the photo seemed to say. Tap a class to fix '
+                    'it. Nothing is saved until you press Save.',
+          style: theme.textTheme.bodyMedium,
+        ),
+        if (incomplete > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              '$incomplete ${incomplete == 1 ? 'class needs' : 'classes need'} '
+              'a day or time. Fill them in or remove them.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.secondary,
+              ),
+            ),
           ),
-          if (incomplete > 0)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                '$incomplete ${incomplete == 1 ? 'class needs' : 'classes need'} '
-                'a day or time. Fill them in or remove them.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.secondary,
+        if (overlaps.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'Some classes overlap. That may be right; worth a look.',
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        const SectionHeader('Classes'),
+        Card(
+          child: Column(
+            children: [
+              for (final (i, b) in _blocks.indexed)
+                ListTile(
+                  key: ValueKey('candidate-$i'),
+                  leading: Icon(
+                    b.complete
+                        ? (overlapping.contains(i)
+                              ? Icons.layers_outlined
+                              : Icons.check_circle_outline_rounded)
+                        : Icons.edit_outlined,
+                    color: theme.colorScheme.secondary,
+                  ),
+                  title: Text(b.subject.isEmpty ? '(no name)' : b.subject),
+                  subtitle: Text(
+                    [
+                      b.weekday == null ? 'day?' : weekdayNames[b.weekday]!,
+                      b.start == null || b.end == null
+                          ? 'time?'
+                          : formatSpan(b.start!, b.end!),
+                      if (b.room != null) 'Room ${b.room}',
+                    ].join(' · '),
+                  ),
+                  onTap: () => _edit(i),
+                  trailing: IconButton(
+                    tooltip: 'Remove',
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => setState(() => _blocks.removeAt(i)),
+                  ),
                 ),
+              ListTile(
+                leading: const Icon(Icons.add_rounded),
+                title: const Text('Add a class'),
+                onTap: _add,
               ),
-            ),
-          if (overlaps.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                'Some classes overlap. That may be right; worth a look.',
-                style: theme.textTheme.bodyMedium,
-              ),
-            ),
-          const SectionHeader('Classes'),
+            ],
+          ),
+        ),
+        if (differs.isNotEmpty) ...[
+          const SectionHeader('First class of the day'),
           Card(
             child: Column(
               children: [
-                for (final (i, b) in _blocks.indexed)
-                  ListTile(
-                    key: ValueKey('candidate-$i'),
-                    leading: Icon(
-                      b.complete
-                          ? (overlapping.contains(i)
-                                ? Icons.layers_outlined
-                                : Icons.check_circle_outline_rounded)
-                          : Icons.edit_outlined,
-                      color: theme.colorScheme.secondary,
+                for (final e in differs.entries)
+                  SwitchListTile(
+                    key: ValueKey('use-first-${e.key}'),
+                    title: Text(
+                      '${weekdayNames[e.key]}: use '
+                      '${LocalTime(e.value).format24()}',
                     ),
-                    title: Text(b.subject.isEmpty ? '(no name)' : b.subject),
                     subtitle: Text(
-                      [
-                        b.weekday == null ? 'day?' : weekdayNames[b.weekday]!,
-                        b.start == null || b.end == null
-                            ? 'time?'
-                            : formatSpan(b.start!, b.end!),
-                        if (b.room != null) 'Room ${b.room}',
-                      ].join(' · '),
+                      current[e.key] == null
+                          ? 'No first class set yet. Your wake and leave '
+                                'reminders follow this.'
+                          : 'Now ${LocalTime(current[e.key]!).format24()}. '
+                                'Keep that, or use the photo\'s time.',
                     ),
-                    onTap: () => _edit(i),
-                    trailing: IconButton(
-                      tooltip: 'Remove',
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: () => setState(() => _blocks.removeAt(i)),
+                    value: useFirst.contains(e.key),
+                    onChanged: (on) => setState(
+                      () => on ? useFirst.add(e.key) : useFirst.remove(e.key),
                     ),
                   ),
-                ListTile(
-                  leading: const Icon(Icons.add_rounded),
-                  title: const Text('Add a class'),
-                  onTap: _add,
-                ),
               ],
             ),
           ),
-          if (differs.isNotEmpty) ...[
-            const SectionHeader('First class of the day'),
-            Card(
-              child: Column(
-                children: [
-                  for (final e in differs.entries)
-                    SwitchListTile(
-                      key: ValueKey('use-first-${e.key}'),
-                      title: Text(
-                        '${weekdayNames[e.key]}: use '
-                        '${LocalTime(e.value).format24()}',
-                      ),
-                      subtitle: Text(
-                        current[e.key] == null
-                            ? 'No first class set yet. Your wake and leave '
-                                  'reminders follow this.'
-                            : 'Now ${LocalTime(current[e.key]!).format24()}. '
-                                  'Keep that, or use the photo\'s time.',
-                      ),
-                      value: useFirst.contains(e.key),
-                      onChanged: (on) => setState(
-                        () => on ? useFirst.add(e.key) : useFirst.remove(e.key),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-          const SizedBox(height: 20),
-          FilledButton(
-            key: const ValueKey('save-import'),
-            onPressed: _saving || incomplete > 0 || _blocks.isEmpty
-                ? null
-                : () => _save(useFirst),
-            child: const Text('Save schedule'),
-          ),
         ],
-      ),
+        const SizedBox(height: 20),
+        FilledButton(
+          key: const ValueKey('save-import'),
+          onPressed: _saving || incomplete > 0 || _blocks.isEmpty
+              ? null
+              : () => _save(useFirst),
+          child: const Text('Save schedule'),
+        ),
+      ],
     );
   }
 }

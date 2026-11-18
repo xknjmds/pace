@@ -47,10 +47,13 @@ class _PacePageState extends State<PacePage> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 52,
-        title: AnimatedOpacity(
-          opacity: _titleAway ? 1 : 0,
+        // Built only once the big title has scrolled away, so the title
+        // is never in the tree (or read out) twice.
+        title: AnimatedSwitcher(
           duration: PaceMotion.quick,
-          child: Text(widget.title),
+          child: _titleAway
+              ? Text(widget.title, key: const ValueKey('bar-title'))
+              : const SizedBox.shrink(),
         ),
         actions: [...widget.actions, const SizedBox(width: 8)],
       ),

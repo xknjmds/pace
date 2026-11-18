@@ -15,6 +15,7 @@ class PaceTile extends StatelessWidget {
     this.subtitle,
     this.icon,
     this.kind = PastelKind.calm,
+    this.leading,
     this.value,
     this.trailing,
     this.onTap,
@@ -46,6 +47,9 @@ class PaceTile extends StatelessWidget {
   final IconData? icon;
   final PastelKind kind;
 
+  /// A custom leading widget in place of the icon chip.
+  final Widget? leading;
+
   /// A short trailing value such as "06:30" or "15 min".
   final String? value;
 
@@ -66,8 +70,8 @@ class PaceTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         child: Row(
           children: [
-            if (icon != null) ...[
-              PastelIconChip(icon: icon!, kind: kind),
+            if (leading != null || icon != null) ...[
+              leading ?? PastelIconChip(icon: icon!, kind: kind),
               const SizedBox(width: 14),
             ],
             Expanded(

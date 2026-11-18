@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/db/settings_provider.dart';
 import '../../../core/platform/platform_features.dart';
-import '../../../core/theme/pace_tokens.dart';
 import '../../../core/theme/pace_pastels.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -17,6 +16,7 @@ import '../../deadlines/ui/task_edit_sheet.dart';
 import '../../shell/shell_tabs.dart';
 import '../application/inbox_providers.dart';
 import '../../notes/ui/notes_screen.dart' show noteFromInbox;
+import '../../../core/widgets/pace_page.dart';
 
 /// Quick capture and a short queue to sort later: each item becomes a
 /// deadline or goes away. Nothing here nags.
@@ -101,157 +101,152 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
 
     final scheme = theme.colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Inbox')),
-      body: SafeArea(
-        child: ListView(
-          padding: PaceSpace.screen,
-          children: [
-            Card(
-              color: PacePastels.of(context).leave.fill,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Write it down, sort it later.',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: scheme.onSurface,
+    return PacePage(
+      title: 'Inbox',
+      children: [
+        Card(
+          color: PacePastels.of(context).leave.fill,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Write it down, sort it later.',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  key: const ValueKey('capture-field'),
+                  controller: _text,
+                  focusNode: _focus,
+                  autofocus: widget.startCapturing,
+                  textCapitalization: TextCapitalization.sentences,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _add(),
+                  decoration: InputDecoration(
+                    hintText: 'What is on your mind?',
+                    fillColor: scheme.surfaceContainerLowest,
+                    suffixIcon: Padding(
+                      padding: const EdgeInsets.all(6),
+                      child: IconButton.filled(
+                        tooltip: 'Add',
+                        icon: Icon(
+                          Icons.arrow_upward_rounded,
+                          color: scheme.onPrimary,
+                        ),
+                        onPressed: _add,
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      key: const ValueKey('capture-field'),
-                      controller: _text,
-                      focusNode: _focus,
-                      autofocus: widget.startCapturing,
-                      textCapitalization: TextCapitalization.sentences,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => _add(),
-                      decoration: InputDecoration(
-                        hintText: 'What is on your mind?',
-                        fillColor: scheme.surfaceContainerLowest,
-                        suffixIcon: Padding(
-                          padding: const EdgeInsets.all(6),
-                          child: IconButton.filled(
-                            tooltip: 'Add',
-                            icon: Icon(
-                              Icons.arrow_upward_rounded,
-                              color: scheme.onPrimary,
-                            ),
-                            onPressed: _add,
-                          ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (items.isEmpty)
+          const EmptyState(
+            title: 'Inbox is clear.',
+            message:
+                'Anything you write above waits here until you '
+                'decide what it is.',
+            pose: TuckPose.note,
+            mascotSize: 96,
+          )
+        else if (hideList)
+          Card(
+            color: scheme.secondaryContainer,
+            child: ListTile(
+              leading: const Icon(Icons.spa_outlined),
+              title: Text(
+                '${items.length} ${items.length == 1 ? 'thing' : 'things'} '
+                'waiting. They can wait.',
+              ),
+              trailing: TextButton(
+                onPressed: () => setState(() => _showAllInLowEnergy = true),
+                child: const Text('Show'),
+              ),
+            ),
+          )
+        else ...[
+          SectionHeader(
+            '${items.length} waiting',
+            padding: const EdgeInsets.fromLTRB(4, 16, 4, 6),
+          ),
+          for (final (i, item) in items.indexed)
+            FadeSlideIn(
+              key: ValueKey('inbox-${item.id}'),
+              index: i,
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 6, 4, 6),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.body,
+                          style: theme.textTheme.bodyLarge,
                         ),
                       ),
-                    ),
-                  ],
+                      IconButton(
+                        tooltip: 'Make a deadline',
+                        icon: Icon(
+                          Icons.event_available_outlined,
+                          color: scheme.secondary,
+                        ),
+                        onPressed: () => _toDeadline(item),
+                      ),
+                      IconButton(
+                        tooltip: 'Make a note',
+                        icon: Icon(
+                          Icons.sticky_note_2_outlined,
+                          color: scheme.secondary,
+                        ),
+                        onPressed: () async {
+                          await noteFromInbox(ref, item.body);
+                          await capture.markProcessed(item.id);
+                        },
+                      ),
+                      IconButton(
+                        tooltip: 'Delete',
+                        icon: Icon(
+                          Icons.close_rounded,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        onPressed: () async {
+                          await capture.remove(item.id);
+                          if (!context.mounted) return;
+                          showUndo(
+                            context,
+                            message: 'Deleted ${quoted(item.body)}.',
+                            onUndo: () => capture.restore(item.id),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-            if (items.isEmpty)
-              const EmptyState(
-                title: 'Inbox is clear.',
-                message:
-                    'Anything you write above waits here until you '
-                    'decide what it is.',
-                pose: TuckPose.note,
-                mascotSize: 96,
-              )
-            else if (hideList)
-              Card(
-                color: scheme.secondaryContainer,
-                child: ListTile(
-                  leading: const Icon(Icons.spa_outlined),
-                  title: Text(
-                    '${items.length} ${items.length == 1 ? 'thing' : 'things'} '
-                    'waiting. They can wait.',
-                  ),
-                  trailing: TextButton(
-                    onPressed: () => setState(() => _showAllInLowEnergy = true),
-                    child: const Text('Show'),
-                  ),
-                ),
-              )
-            else ...[
-              SectionHeader(
-                '${items.length} waiting',
-                padding: const EdgeInsets.fromLTRB(4, 16, 4, 6),
+        ],
+        if (settings != null && features.reminders) ...[
+          const SizedBox(height: 16),
+          Card(
+            child: SwitchListTile(
+              secondary: const Icon(Icons.notifications_none_rounded),
+              title: const Text('Capture from the notification shade'),
+              subtitle: const Text(
+                'Keeps a quiet notification with a reply field, so a '
+                'thought can be saved without opening PACE.',
               ),
-              for (final (i, item) in items.indexed)
-                FadeSlideIn(
-                  key: ValueKey('inbox-${item.id}'),
-                  index: i,
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 6, 4, 6),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              item.body,
-                              style: theme.textTheme.bodyLarge,
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: 'Make a deadline',
-                            icon: Icon(
-                              Icons.event_available_outlined,
-                              color: scheme.secondary,
-                            ),
-                            onPressed: () => _toDeadline(item),
-                          ),
-                          IconButton(
-                            tooltip: 'Make a note',
-                            icon: Icon(
-                              Icons.sticky_note_2_outlined,
-                              color: scheme.secondary,
-                            ),
-                            onPressed: () async {
-                              await noteFromInbox(ref, item.body);
-                              await capture.markProcessed(item.id);
-                            },
-                          ),
-                          IconButton(
-                            tooltip: 'Delete',
-                            icon: Icon(
-                              Icons.close_rounded,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                            onPressed: () async {
-                              await capture.remove(item.id);
-                              if (!context.mounted) return;
-                              showUndo(
-                                context,
-                                message: 'Deleted ${quoted(item.body)}.',
-                                onUndo: () => capture.restore(item.id),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-            if (settings != null && features.reminders) ...[
-              const SizedBox(height: 16),
-              Card(
-                child: SwitchListTile(
-                  secondary: const Icon(Icons.notifications_none_rounded),
-                  title: const Text('Capture from the notification shade'),
-                  subtitle: const Text(
-                    'Keeps a quiet notification with a reply field, so a '
-                    'thought can be saved without opening PACE.',
-                  ),
-                  value: settings.captureShortcutEnabled,
-                  onChanged: capture.setShortcutEnabled,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
+              value: settings.captureShortcutEnabled,
+              onChanged: capture.setShortcutEnabled,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

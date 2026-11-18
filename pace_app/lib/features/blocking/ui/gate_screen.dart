@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/db/app_database.dart';
 import '../../../core/db/settings_provider.dart';
-import '../../../core/theme/pace_tokens.dart';
 import '../../../core/time/local_time.dart';
 import '../../../core/widgets/section_header.dart';
 import '../application/app_gate.dart';
 import '../application/gate_providers.dart';
+import '../../../core/widgets/pace_page.dart';
 
 /// The app gate: chosen apps wait during the morning (until the routine is
 /// done) and the wind-down window. The master switch, and the emergency
@@ -84,177 +84,170 @@ class _GateScreenState extends ConsumerState<GateScreen>
     final theme = Theme.of(context);
     if (settings == null) return const Scaffold();
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('App gate')),
-      body: ListView(
-        padding: PaceSpace.screen,
-        children: [
-          Text(
-            'Pick the apps that pull you away. In the morning they wait '
-            'until your routine is marked done; in the evening they wait '
-            'from wind-down until you wake. You can always unlock them for a '
-            'few minutes, and this switch turns everything off.',
-            style: theme.textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 12),
-          Card(
-            child: SwitchListTile(
-              key: const ValueKey('gate-enabled'),
-              secondary: const Icon(Icons.do_not_disturb_on_outlined),
-              title: const Text('App gate'),
-              subtitle: Text(
-                settings.gateEnabled
-                    ? (perms?.ready ?? false
-                          ? 'On'
-                          : 'On, waiting for the two permissions below')
-                    : 'Off. Nothing is blocked.',
-              ),
-              value: settings.gateEnabled,
-              onChanged: service.setEnabled,
+    return PacePage(
+      title: 'App gate',
+      subtitle: 'A short pause before the apps that pull you in.',
+      children: [
+        Text(
+          'Pick the apps that pull you away. In the morning they wait '
+          'until your routine is marked done; in the evening they wait '
+          'from wind-down until you wake. You can always unlock them for a '
+          'few minutes, and this switch turns everything off.',
+          style: theme.textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 12),
+        Card(
+          child: SwitchListTile(
+            key: const ValueKey('gate-enabled'),
+            secondary: const Icon(Icons.do_not_disturb_on_outlined),
+            title: const Text('App gate'),
+            subtitle: Text(
+              settings.gateEnabled
+                  ? (perms?.ready ?? false
+                        ? 'On'
+                        : 'On, waiting for the two permissions below')
+                  : 'Off. Nothing is blocked.',
             ),
+            value: settings.gateEnabled,
+            onChanged: service.setEnabled,
           ),
-          if (unlockedUntil != null)
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.lock_open_rounded),
-                title: Text(
-                  'Unlocked until '
-                  '${LocalTime.of(unlockedUntil.hour, unlockedUntil.minute).format24()}',
-                ),
+        ),
+        if (unlockedUntil != null)
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.lock_open_rounded),
+              title: Text(
+                'Unlocked until '
+                '${LocalTime.of(unlockedUntil.hour, unlockedUntil.minute).format24()}',
               ),
             ),
-          const SectionHeader('Permissions'),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: Icon(
-                    perms?.usageAccess ?? false
-                        ? Icons.check_circle_rounded
-                        : Icons.radio_button_unchecked_rounded,
-                    color: theme.colorScheme.secondary,
-                  ),
-                  title: const Text('Usage access'),
-                  subtitle: const Text(
-                    'Lets PACE see which app is open. Nothing leaves the '
-                    'phone.',
-                  ),
-                  trailing: perms?.usageAccess ?? false
-                      ? null
-                      : TextButton(
-                          onPressed: () => ref
-                              .read(appGateProvider)
-                              .openUsageAccessSettings(),
-                          child: const Text('Allow'),
-                        ),
-                ),
-                ListTile(
-                  leading: Icon(
-                    perms?.overlay ?? false
-                        ? Icons.check_circle_rounded
-                        : Icons.radio_button_unchecked_rounded,
-                    color: theme.colorScheme.secondary,
-                  ),
-                  title: const Text('Display over other apps'),
-                  subtitle: const Text(
-                    'Lets the calm "this can wait" screen appear.',
-                  ),
-                  trailing: perms?.overlay ?? false
-                      ? null
-                      : TextButton(
-                          onPressed: () =>
-                              ref.read(appGateProvider).openOverlaySettings(),
-                          child: const Text('Allow'),
-                        ),
-                ),
-              ],
-            ),
           ),
-          const SectionHeader('When'),
-          Card(
-            child: Column(
-              children: [
-                SwitchListTile(
-                  title: const Text('Mornings'),
-                  subtitle: Text(
-                    lowEnergy
-                        ? 'Low-energy mode: only the first 30 minutes after '
-                              'waking.'
-                        : 'From waking until your routine is done (or '
-                              'leaving time).',
-                  ),
-                  value: settings.morningLockEnabled,
-                  onChanged: (v) => service.updateSettings(
-                    (s) => s.copyWith(morningLockEnabled: v),
-                  ),
+        const SectionHeader('Permissions'),
+        Card(
+          child: Column(
+            children: [
+              ListTile(
+                leading: Icon(
+                  perms?.usageAccess ?? false
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  color: theme.colorScheme.secondary,
                 ),
-                SwitchListTile(
-                  title: const Text('Evenings'),
-                  subtitle: Text(
-                    lowEnergy
-                        ? 'Low-energy mode: from bedtime until waking.'
-                        : 'From wind-down until waking.',
-                  ),
-                  value: settings.windDownLockEnabled,
-                  onChanged: (v) => service.updateSettings(
-                    (s) => s.copyWith(windDownLockEnabled: v),
-                  ),
+                title: const Text('Usage access'),
+                subtitle: const Text(
+                  'Lets PACE see which app is open. Nothing leaves the '
+                  'phone.',
                 ),
-                ListTile(
-                  title: const Text('Emergency unlock'),
-                  subtitle: const Text('Always on the block screen.'),
-                  trailing: Text('${settings.unlockMinutes} min'),
-                  onTap: () => _unlockMinutes(settings),
+                trailing: perms?.usageAccess ?? false
+                    ? null
+                    : TextButton(
+                        onPressed: () =>
+                            ref.read(appGateProvider).openUsageAccessSettings(),
+                        child: const Text('Allow'),
+                      ),
+              ),
+              ListTile(
+                leading: Icon(
+                  perms?.overlay ?? false
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  color: theme.colorScheme.secondary,
                 ),
-              ],
-            ),
+                title: const Text('Display over other apps'),
+                subtitle: const Text(
+                  'Lets the calm "this can wait" screen appear.',
+                ),
+                trailing: perms?.overlay ?? false
+                    ? null
+                    : TextButton(
+                        onPressed: () =>
+                            ref.read(appGateProvider).openOverlaySettings(),
+                        child: const Text('Allow'),
+                      ),
+              ),
+            ],
           ),
-          SectionHeader(
-            'Apps that wait',
-            action: TextButton(
-              onPressed: () => _chooseApps(blocked),
-              child: const Text('Choose'),
-            ),
+        ),
+        const SectionHeader('When'),
+        Card(
+          child: Column(
+            children: [
+              SwitchListTile(
+                title: const Text('Mornings'),
+                subtitle: Text(
+                  lowEnergy
+                      ? 'Low-energy mode: only the first 30 minutes after '
+                            'waking.'
+                      : 'From waking until your routine is done (or '
+                            'leaving time).',
+                ),
+                value: settings.morningLockEnabled,
+                onChanged: (v) => service.updateSettings(
+                  (s) => s.copyWith(morningLockEnabled: v),
+                ),
+              ),
+              SwitchListTile(
+                title: const Text('Evenings'),
+                subtitle: Text(
+                  lowEnergy
+                      ? 'Low-energy mode: from bedtime until waking.'
+                      : 'From wind-down until waking.',
+                ),
+                value: settings.windDownLockEnabled,
+                onChanged: (v) => service.updateSettings(
+                  (s) => s.copyWith(windDownLockEnabled: v),
+                ),
+              ),
+              ListTile(
+                title: const Text('Emergency unlock'),
+                subtitle: const Text('Always on the block screen.'),
+                trailing: Text('${settings.unlockMinutes} min'),
+                onTap: () => _unlockMinutes(settings),
+              ),
+            ],
           ),
-          Card(
-            child: blocked.isEmpty
-                ? const ListTile(
-                    title: Text('None chosen yet'),
-                    subtitle: Text(
-                      'The gate does nothing until you pick some.',
-                    ),
-                  )
-                : Column(
-                    children: [
-                      for (final a in blocked)
-                        ListTile(
-                          title: Text(
-                            a.label.isEmpty ? a.packageName : a.label,
-                          ),
-                          trailing: IconButton(
-                            tooltip: 'Stop blocking',
-                            icon: const Icon(Icons.close_rounded),
-                            onPressed: () => service.setBlocked(
-                              InstalledApp(a.packageName, a.label),
-                              false,
-                            ),
+        ),
+        SectionHeader(
+          'Apps that wait',
+          action: TextButton(
+            onPressed: () => _chooseApps(blocked),
+            child: const Text('Choose'),
+          ),
+        ),
+        Card(
+          child: blocked.isEmpty
+              ? const ListTile(
+                  title: Text('None chosen yet'),
+                  subtitle: Text('The gate does nothing until you pick some.'),
+                )
+              : Column(
+                  children: [
+                    for (final a in blocked)
+                      ListTile(
+                        title: Text(a.label.isEmpty ? a.packageName : a.label),
+                        trailing: IconButton(
+                          tooltip: 'Stop blocking',
+                          icon: const Icon(Icons.close_rounded),
+                          onPressed: () => service.setBlocked(
+                            InstalledApp(a.packageName, a.label),
+                            false,
                           ),
                         ),
-                    ],
-                  ),
-          ),
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            key: const ValueKey('gate-unlock-now'),
-            icon: const Icon(Icons.lock_open_rounded),
-            label: Text('Unlock for ${settings.unlockMinutes} minutes now'),
-            onPressed: () async {
-              await ref.read(appGateProvider).unlockFor(settings.unlockMinutes);
-              ref.invalidate(unlockedUntilProvider);
-            },
-          ),
-        ],
-      ),
+                      ),
+                  ],
+                ),
+        ),
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          key: const ValueKey('gate-unlock-now'),
+          icon: const Icon(Icons.lock_open_rounded),
+          label: Text('Unlock for ${settings.unlockMinutes} minutes now'),
+          onPressed: () async {
+            await ref.read(appGateProvider).unlockFor(settings.unlockMinutes);
+            ref.invalidate(unlockedUntilProvider);
+          },
+        ),
+      ],
     );
   }
 }

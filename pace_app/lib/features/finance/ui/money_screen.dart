@@ -5,13 +5,13 @@ import '../../../core/db/app_database.dart';
 import '../../../core/db/database_provider.dart';
 import '../../../core/db/settings_provider.dart';
 import '../../../core/theme/pace_pastels.dart';
-import '../../../core/theme/pace_tokens.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/undo_snack.dart';
 import '../application/finance_providers.dart';
 import '../domain/budget_summary.dart';
 import '../domain/money.dart';
+import '../../../core/widgets/pace_page.dart';
 
 /// Spending in plain totals: this period, by category, and what is left
 /// of the budget. Going over is said neutrally (CLAUDE.md rule 12).
@@ -146,138 +146,134 @@ class _MoneyScreenState extends ConsumerState<MoneyScreen> {
     ];
     final listsVisible = !lowEnergy || _showLists;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Money'),
-        actions: [
-          IconButton(
-            tooltip: 'Currency',
-            icon: const Icon(Icons.currency_exchange_rounded),
-            onPressed: () => _editCurrency(code),
-          ),
-        ],
-      ),
+    return PacePage(
+      title: 'Money',
+      subtitle: 'Spending this period, no judgement.',
+      actions: [
+        IconButton(
+          tooltip: 'Currency',
+          icon: const Icon(Icons.currency_exchange_rounded),
+          onPressed: () => _editCurrency(code),
+        ),
+      ],
       floatingActionButton: FloatingActionButton.extended(
         key: const ValueKey('add-expense'),
         onPressed: _addExpense,
         icon: const Icon(Icons.add_rounded),
         label: const Text('Spent'),
       ),
-      body: ListView(
-        padding: PaceSpace.screen,
-        children: [
-          Card(
-            color: pastels.calm.fill,
-            child: InkWell(
-              onTap: () => _editBudget(budget, code),
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      period == Period.weekly ? 'This week' : 'This month',
-                      style: theme.textTheme.labelLarge,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      money(summary.spentMinor),
-                      key: const ValueKey('spent-total'),
-                      style: theme.textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      describeBudget(summary, money),
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    if (summary.budgetMinor != null &&
-                        summary.budgetMinor! > 0) ...[
-                      const SizedBox(height: 10),
-                      // Fills up to the budget and stops; never turns red.
-                      LinearProgressIndicator(
-                        value: (summary.spentMinor / summary.budgetMinor!)
-                            .clamp(0, 1)
-                            .toDouble(),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ],
-                    const SizedBox(height: 6),
-                    Text(
-                      budget == null ? 'Tap to set a budget' : 'Tap to change',
-                      style: theme.textTheme.bodySmall,
+      children: [
+        Card(
+          color: pastels.calm.fill,
+          child: InkWell(
+            onTap: () => _editBudget(budget, code),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    period == Period.weekly ? 'This week' : 'This month',
+                    style: theme.textTheme.labelLarge,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    money(summary.spentMinor),
+                    key: const ValueKey('spent-total'),
+                    style: theme.textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    describeBudget(summary, money),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  if (summary.budgetMinor != null &&
+                      summary.budgetMinor! > 0) ...[
+                    const SizedBox(height: 10),
+                    // Fills up to the budget and stops; never turns red.
+                    LinearProgressIndicator(
+                      value: (summary.spentMinor / summary.budgetMinor!)
+                          .clamp(0, 1)
+                          .toDouble(),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ],
-                ),
+                  const SizedBox(height: 6),
+                  Text(
+                    budget == null ? 'Tap to set a budget' : 'Tap to change',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
               ),
             ),
           ),
-          if (!listsVisible)
-            TextButton(
-              onPressed: () => setState(() => _showLists = true),
-              child: const Text('Show categories and spending'),
-            )
-          else ...[
-            if (summary.byCategory.isNotEmpty) ...[
-              const SectionHeader('By category'),
-              Card(
-                child: Column(
-                  children: [
-                    for (final c in summary.byCategory)
-                      ListTile(
-                        title: Text(c.category),
-                        trailing: Text(money(c.amountMinor)),
-                      ),
-                  ],
-                ),
+        ),
+        if (!listsVisible)
+          TextButton(
+            onPressed: () => setState(() => _showLists = true),
+            child: const Text('Show categories and spending'),
+          )
+        else ...[
+          if (summary.byCategory.isNotEmpty) ...[
+            const SectionHeader('By category'),
+            Card(
+              child: Column(
+                children: [
+                  for (final c in summary.byCategory)
+                    ListTile(
+                      title: Text(c.category),
+                      trailing: Text(money(c.amountMinor)),
+                    ),
+                ],
               ),
-            ],
-            const SectionHeader('Spent this period'),
-            if (recent.isEmpty)
-              const Card(child: ListTile(title: Text('Nothing logged yet')))
-            else
-              Card(
-                child: Column(
-                  children: [
-                    for (final e in recent)
-                      ListTile(
-                        key: ValueKey('expense-${e.id}'),
-                        title: Text(
-                          e.note.isEmpty
-                              ? e.category
-                              : '${e.category} · ${e.note}',
-                        ),
-                        subtitle: Text(_when(e.spentAt.toLocal(), now)),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(money(e.amountMinor)),
-                            IconButton(
-                              tooltip: 'Remove',
-                              icon: const Icon(Icons.close_rounded),
-                              onPressed: () async {
-                                final dao = ref
-                                    .read(appDatabaseProvider)
-                                    .financeDao;
-                                await dao.removeExpense(e.id);
-                                if (!context.mounted) return;
-                                showUndo(
-                                  context,
-                                  message:
-                                      'Removed ${money(e.amountMinor)} · '
-                                      '${e.category}.',
-                                  onUndo: () => dao.restoreExpense(e.id),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+            ),
           ],
+          const SectionHeader('Spent this period'),
+          if (recent.isEmpty)
+            const Card(child: ListTile(title: Text('Nothing logged yet')))
+          else
+            Card(
+              child: Column(
+                children: [
+                  for (final e in recent)
+                    ListTile(
+                      key: ValueKey('expense-${e.id}'),
+                      title: Text(
+                        e.note.isEmpty
+                            ? e.category
+                            : '${e.category} · ${e.note}',
+                      ),
+                      subtitle: Text(_when(e.spentAt.toLocal(), now)),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(money(e.amountMinor)),
+                          IconButton(
+                            tooltip: 'Remove',
+                            icon: const Icon(Icons.close_rounded),
+                            onPressed: () async {
+                              final dao = ref
+                                  .read(appDatabaseProvider)
+                                  .financeDao;
+                              await dao.removeExpense(e.id);
+                              if (!context.mounted) return;
+                              showUndo(
+                                context,
+                                message:
+                                    'Removed ${money(e.amountMinor)} · '
+                                    '${e.category}.',
+                                onUndo: () => dao.restoreExpense(e.id),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
         ],
-      ),
+      ],
     );
   }
 

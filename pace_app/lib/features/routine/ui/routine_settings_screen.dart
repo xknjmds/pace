@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/pace_tokens.dart';
+import '../../../core/theme/pace_pastels.dart';
+import '../../../core/widgets/pace_choice_sheet.dart';
+import '../../../core/widgets/pace_page.dart';
+import '../../../core/widgets/pace_tile.dart';
 import '../../../core/widgets/section_header.dart';
 
 import '../../../core/db/app_database.dart';
@@ -46,6 +50,8 @@ class RoutineSettingsScreen extends ConsumerWidget {
 
   static const _sleepChoices = [420, 450, 480, 510, 540];
   static const _leewayChoices = [0, 15, 30, 45, 60];
+  static const _breakfastChoices = [10, 15, 20, 30];
+  static const _windDownChoices = [15, 30, 45, 60];
 
   static String _hours(int minutes) {
     final h = minutes ~/ 60;
@@ -58,30 +64,14 @@ class RoutineSettingsScreen extends ConsumerWidget {
     String title,
     List<int> values,
     String Function(int) label,
-    int current,
-  ) => showDialog<int>(
+    int current, {
+    Future<int?> Function()? custom,
+  }) => showPaceChoiceSheet<int>(
     context: context,
-    builder: (ctx) => SimpleDialog(
-      title: Text(title),
-      children: [
-        for (final v in values)
-          SimpleDialogOption(
-            onPressed: () => Navigator.of(ctx).pop(v),
-            child: Row(
-              children: [
-                Icon(
-                  v == current
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_unchecked,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Text(label(v)),
-              ],
-            ),
-          ),
-      ],
-    ),
+    title: title,
+    selected: current,
+    choices: [for (final v in values) PaceChoice(v, label(v))],
+    custom: custom,
   );
 
   Future<void> _editSleep(
@@ -109,10 +99,17 @@ class RoutineSettingsScreen extends ConsumerWidget {
     WidgetRef ref,
     Setting s,
   ) async {
-    final v = await showMinutesDialog(
+    final v = await _choose(
       context,
-      title: 'Wind down before bed',
-      initial: s.windDownLeadMinutes,
+      'Wind down before bed',
+      _windDownChoices,
+      (m) => '$m min',
+      s.windDownLeadMinutes,
+      custom: () => showMinutesDialog(
+        context,
+        title: 'Wind down before bed',
+        initial: s.windDownLeadMinutes,
+      ),
     );
     if (v == null) return;
     await ref
@@ -192,10 +189,17 @@ class RoutineSettingsScreen extends ConsumerWidget {
     WidgetRef ref,
     Setting s,
   ) async {
-    final minutes = await showMinutesDialog(
+    final minutes = await _choose(
       context,
-      title: 'Breakfast',
-      initial: s.breakfastMinutes,
+      'Breakfast',
+      _breakfastChoices,
+      (m) => '$m min',
+      s.breakfastMinutes,
+      custom: () => showMinutesDialog(
+        context,
+        title: 'Breakfast',
+        initial: s.breakfastMinutes,
+      ),
     );
     if (minutes == null) return;
     await ref
@@ -265,7 +269,6 @@ class RoutineSettingsScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider).value;
     final rows = ref.watch(weekdaySchedulesProvider).value ?? const [];
     final byWeekday = {for (final r in rows) r.weekday: r};
-    final theme = Theme.of(context);
     final now = ref.watch(clockProvider)();
     final features = ref.watch(platformFeaturesProvider);
     final habit = ref.watch(movementHabitProvider).value;
@@ -282,244 +285,193 @@ class RoutineSettingsScreen extends ConsumerWidget {
           );
     String hm(DateTime t) => LocalTime.of(t.hour, t.minute).format24();
     String day(DateTime d) => '${d.day}/${d.month}';
-    final value = theme.textTheme.titleMedium?.copyWith(
-      color: theme.colorScheme.secondary,
-    );
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
-      body: settings == null
-          ? const SizedBox.shrink()
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-              children: [
-                const SectionHeader(
-                  'Week',
-                  padding: EdgeInsets.fromLTRB(4, 8, 4, 6),
+    if (settings == null) {
+      return const PacePage(title: 'Settings', children: []);
+    }
+    return PacePage(
+      title: 'Settings',
+      subtitle: 'Your week, mornings and evenings.',
+      children: [
+        const SectionHeader('Week', padding: EdgeInsets.fromLTRB(4, 8, 4, 6)),
+        PaceGroup(
+          children: [
+            for (final weekday in weekdayNames.keys)
+              PaceTile(
+                key: ValueKey('weekday-$weekday'),
+                leading: _DayBadge(
+                  weekdayNames[weekday]!.substring(0, 2),
+                  hasClass: byWeekday[weekday]?.firstClassMinutes != null,
                 ),
-                Card(
-                  child: Column(
-                    children: [
-                      for (final weekday in weekdayNames.keys)
-                        ListTile(
-                          key: ValueKey('weekday-$weekday'),
-                          leading: _DayBadge(
-                            weekdayNames[weekday]!.substring(0, 2),
-                            hasClass:
-                                byWeekday[weekday]?.firstClassMinutes != null,
-                          ),
-                          title: Text(weekdayNames[weekday]!),
-                          subtitle: Text(
-                            _summary(
-                              settings,
-                              byWeekday[weekday],
-                              weekday,
-                              now,
-                            ),
-                          ),
-                          trailing: const Icon(Icons.chevron_right_rounded),
-                          onTap: () => _editWeekday(
-                            context,
-                            ref,
-                            weekday,
-                            byWeekday[weekday],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SectionHeader('Mornings'),
-                Card(
-                  child: Column(
-                    children: [
-                      ListTile(
-                        key: const ValueKey('wake-time'),
-                        leading: const Icon(Icons.wb_sunny_outlined),
-                        title: const Text('Wake time'),
-                        subtitle: Text(
-                          shift == null
-                              ? 'Kept steady every day, even when a class is '
-                                    'late.'
-                              : 'Moving ${shift.stepMinutes} min earlier '
-                                    'every ${shift.everyDays} days toward '
-                                    '${LocalTime(shift.goalMinutes).format24()}'
-                                    ', there by '
-                                    '${day(shiftReachesGoalOn(shift))}.',
-                        ),
-                        trailing: Text(wakeToday!.format24(), style: value),
-                        onTap: () => _pickWakeTime(context, ref, settings),
-                      ),
-                      if (shift == null)
-                        ListTile(
-                          key: const ValueKey('start-shift'),
-                          leading: const Icon(Icons.trending_down_rounded),
-                          title: const Text('Move it earlier, gradually'),
-                          subtitle: const Text(
-                            '15 minutes every 3 days. A missed night does '
-                            'not undo anything.',
-                          ),
-                          trailing: const Icon(Icons.chevron_right_rounded),
-                          onTap: () => _startShift(context, ref, wakeToday),
-                        )
-                      else
-                        ListTile(
-                          key: const ValueKey('stop-shift'),
-                          leading: const Icon(
-                            Icons.pause_circle_outline_rounded,
-                          ),
-                          title: const Text('Stay at this time'),
-                          subtitle: Text(
-                            'Keep ${wakeToday.format24()} and stop moving.',
-                          ),
-                          onTap: () => _stopShift(ref, wakeToday),
-                        ),
-                      ListTile(
-                        key: const ValueKey('weekend-leeway'),
-                        leading: const Icon(Icons.weekend_outlined),
-                        title: const Text('Weekend lie-in'),
-                        subtitle: const Text(
-                          'Saturday and Sunday stay within an hour.',
-                        ),
-                        trailing: Text(
-                          settings.weekendLeewayMinutes == 0
-                              ? 'None'
-                              : '+${settings.weekendLeewayMinutes} min',
-                          style: value,
-                        ),
-                        onTap: () => _editLeeway(context, ref, settings),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.restaurant_outlined),
-                        title: const Text('Breakfast'),
-                        subtitle: const Text('Time set aside to eat.'),
-                        trailing: Text(
-                          '${settings.breakfastMinutes} min',
-                          style: value,
-                        ),
-                        onTap: () => _editBreakfast(context, ref, settings),
-                      ),
-                    ],
-                  ),
-                ),
-                const SectionHeader('Evenings'),
-                Card(
-                  child: Column(
-                    children: [
-                      ListTile(
-                        key: const ValueKey('sleep-target'),
-                        leading: const Icon(Icons.bedtime_outlined),
-                        title: const Text('Sleep target'),
-                        subtitle: Text(
-                          'Bed around ${hm(tonight!.bedtime)} tonight.',
-                        ),
-                        trailing: Text(
-                          _hours(settings.sleepTargetMinutes),
-                          style: value,
-                        ),
-                        onTap: () => _editSleep(context, ref, settings),
-                      ),
-                      ListTile(
-                        key: const ValueKey('wind-down'),
-                        leading: const Icon(Icons.nights_stay_outlined),
-                        title: const Text('Wind down'),
-                        subtitle: Text(
-                          features.reminders
-                              ? 'A gentle reminder at ${hm(tonight.windDownAt)}.'
-                              : 'From ${hm(tonight.windDownAt)}. The reminder '
-                                    'is on the Android app.',
-                        ),
-                        trailing: Text(
-                          '${settings.windDownLeadMinutes} min before',
-                          style: value,
-                        ),
-                        onTap: () => _editWindDown(context, ref, settings),
-                      ),
-                    ],
-                  ),
-                ),
-                const SectionHeader('Energy'),
-                Card(
-                  child: SwitchListTile(
-                    key: const ValueKey('low-energy-setting'),
-                    secondary: const Icon(Icons.spa_outlined),
-                    title: const Text('Low-energy mode'),
-                    subtitle: const Text(
-                      'Only wake, leave and what is due in two days. Other '
-                      'reminders pause.',
-                    ),
-                    value: settings.lowEnergyEnabled,
-                    onChanged: (on) => ref.read(setLowEnergyProvider)(on),
-                  ),
-                ),
-                const SectionHeader('Extras'),
-                Card(
-                  child: Column(
-                    children: [
-                      SwitchListTile(
-                        key: const ValueKey('verse-setting'),
-                        secondary: const Icon(Icons.menu_book_outlined),
-                        title: const Text('Daily verse'),
-                        subtitle: const Text(
-                          'On Today and in the wake-up reminder. Hidden in '
-                          'low-energy mode.',
-                        ),
-                        value: settings.verseEnabled,
-                        onChanged: (on) async {
-                          await ref
-                              .read(appDatabaseProvider)
-                              .settingsDao
-                              .updateSettings(
-                                (s) => s.copyWith(verseEnabled: on),
-                              );
-                          await _afterChange(ref);
-                        },
-                      ),
-                      ListTile(
-                        key: const ValueKey('habit-setting'),
-                        leading: const Icon(Icons.directions_walk_rounded),
-                        title: const Text('Movement'),
-                        subtitle: Text(
-                          habit == null || !habit.active
-                              ? 'Off'
-                              : '${habit.name} · ${describeHabitTime(HabitService.pointFor(habit.anchor), habit.offsetMinutes).toLowerCase()}',
-                        ),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => showHabitSheet(context, ref),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.school_outlined),
-                        title: const Text('Class schedule'),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () =>
-                            Navigator.of(context).pushNamed(Routes.schedule),
-                      ),
-                      if (features.appBlocking)
-                        ListTile(
-                          leading: const Icon(Icons.do_not_disturb_on_outlined),
-                          title: const Text('App gate'),
-                          subtitle: Text(settings.gateEnabled ? 'On' : 'Off'),
-                          trailing: const Icon(Icons.chevron_right_rounded),
-                          onTap: () =>
-                              Navigator.of(context).pushNamed(Routes.gate),
-                        ),
-                      if (features.calendarSync)
-                        ListTile(
-                          leading: const Icon(Icons.event_outlined),
-                          title: const Text('Google Calendar'),
-                          subtitle: Text(
-                            settings.calendarSyncedAt == null
-                                ? 'Not connected (optional)'
-                                : 'Connected',
-                          ),
-                          trailing: const Icon(Icons.chevron_right_rounded),
-                          onTap: () =>
-                              Navigator.of(context).pushNamed(Routes.calendar),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
+                title: weekdayNames[weekday]!,
+                subtitle: _summary(settings, byWeekday[weekday], weekday, now),
+                chevron: true,
+                onTap: () =>
+                    _editWeekday(context, ref, weekday, byWeekday[weekday]),
+              ),
+          ],
+        ),
+        const SectionHeader('Mornings'),
+        PaceGroup(
+          children: [
+            PaceTile(
+              key: const ValueKey('wake-time'),
+              icon: Icons.wb_sunny_rounded,
+              kind: PastelKind.morning,
+              title: 'Wake time',
+              subtitle: shift == null
+                  ? 'Kept steady every day, even when a class is late.'
+                  : 'Moving ${shift.stepMinutes} min earlier every '
+                        '${shift.everyDays} days toward '
+                        '${LocalTime(shift.goalMinutes).format24()}, there by '
+                        '${day(shiftReachesGoalOn(shift))}.',
+              value: wakeToday!.format24(),
+              onTap: () => _pickWakeTime(context, ref, settings),
             ),
+            if (shift == null)
+              PaceTile(
+                key: const ValueKey('start-shift'),
+                icon: Icons.trending_down_rounded,
+                kind: PastelKind.morning,
+                title: 'Move it earlier, gradually',
+                subtitle:
+                    '15 minutes every 3 days. A missed night does not undo '
+                    'anything.',
+                chevron: true,
+                onTap: () => _startShift(context, ref, wakeToday),
+              )
+            else
+              PaceTile(
+                key: const ValueKey('stop-shift'),
+                icon: Icons.pause_circle_outline_rounded,
+                kind: PastelKind.morning,
+                title: 'Stay at this time',
+                subtitle: 'Keep ${wakeToday.format24()} and stop moving.',
+                onTap: () => _stopShift(ref, wakeToday),
+              ),
+            PaceTile(
+              key: const ValueKey('weekend-leeway'),
+              icon: Icons.weekend_rounded,
+              kind: PastelKind.morning,
+              title: 'Weekend lie-in',
+              subtitle: 'Saturday and Sunday stay within an hour.',
+              value: settings.weekendLeewayMinutes == 0
+                  ? 'None'
+                  : '+${settings.weekendLeewayMinutes} min',
+              onTap: () => _editLeeway(context, ref, settings),
+            ),
+            PaceTile(
+              icon: Icons.restaurant_rounded,
+              kind: PastelKind.morning,
+              title: 'Breakfast',
+              subtitle: 'Time set aside to eat.',
+              value: '${settings.breakfastMinutes} min',
+              onTap: () => _editBreakfast(context, ref, settings),
+            ),
+          ],
+        ),
+        const SectionHeader('Evenings'),
+        PaceGroup(
+          children: [
+            PaceTile(
+              key: const ValueKey('sleep-target'),
+              icon: Icons.bedtime_rounded,
+              kind: PastelKind.evening,
+              title: 'Sleep target',
+              subtitle: 'Bed around ${hm(tonight!.bedtime)} tonight.',
+              value: _hours(settings.sleepTargetMinutes),
+              onTap: () => _editSleep(context, ref, settings),
+            ),
+            PaceTile(
+              key: const ValueKey('wind-down'),
+              icon: Icons.nights_stay_rounded,
+              kind: PastelKind.evening,
+              title: 'Wind down',
+              subtitle: features.reminders
+                  ? 'A gentle reminder at ${hm(tonight.windDownAt)}.'
+                  : 'From ${hm(tonight.windDownAt)}. The reminder is on the '
+                        'Android app.',
+              value: '${settings.windDownLeadMinutes} min before',
+              onTap: () => _editWindDown(context, ref, settings),
+            ),
+          ],
+        ),
+        const SectionHeader('Energy'),
+        PaceGroup(
+          children: [
+            PaceTile.toggle(
+              key: const ValueKey('low-energy-setting'),
+              icon: Icons.spa_rounded,
+              title: 'Low-energy mode',
+              subtitle:
+                  'Only wake, leave and what is due in two days. Other '
+                  'reminders pause.',
+              value: settings.lowEnergyEnabled,
+              onChanged: (on) => ref.read(setLowEnergyProvider)(on),
+            ),
+          ],
+        ),
+        const SectionHeader('Extras'),
+        PaceGroup(
+          children: [
+            PaceTile.toggle(
+              key: const ValueKey('verse-setting'),
+              icon: Icons.menu_book_rounded,
+              kind: PastelKind.evening,
+              title: 'Daily verse',
+              subtitle:
+                  'On Today and in the wake-up reminder. Hidden in '
+                  'low-energy mode.',
+              value: settings.verseEnabled,
+              onChanged: (on) async {
+                await ref
+                    .read(appDatabaseProvider)
+                    .settingsDao
+                    .updateSettings((s) => s.copyWith(verseEnabled: on));
+                await _afterChange(ref);
+              },
+            ),
+            PaceTile(
+              key: const ValueKey('habit-setting'),
+              icon: Icons.directions_walk_rounded,
+              kind: PastelKind.morning,
+              title: 'Movement',
+              subtitle: habit == null || !habit.active
+                  ? 'Off'
+                  : '${habit.name} · ${describeHabitTime(HabitService.pointFor(habit.anchor), habit.offsetMinutes).toLowerCase()}',
+              chevron: true,
+              onTap: () => showHabitSheet(context, ref),
+            ),
+            PaceTile(
+              icon: Icons.school_rounded,
+              kind: PastelKind.leave,
+              title: 'Class schedule',
+              chevron: true,
+              onTap: () => Navigator.of(context).pushNamed(Routes.schedule),
+            ),
+            if (features.appBlocking)
+              PaceTile(
+                icon: Icons.do_not_disturb_on_rounded,
+                kind: PastelKind.evening,
+                title: 'App gate',
+                subtitle: settings.gateEnabled ? 'On' : 'Off',
+                chevron: true,
+                onTap: () => Navigator.of(context).pushNamed(Routes.gate),
+              ),
+            if (features.calendarSync)
+              PaceTile(
+                icon: Icons.event_rounded,
+                kind: PastelKind.focus,
+                title: 'Google Calendar',
+                subtitle: settings.calendarSyncedAt == null
+                    ? 'Not connected (optional)'
+                    : 'Connected',
+                chevron: true,
+                onTap: () => Navigator.of(context).pushNamed(Routes.calendar),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

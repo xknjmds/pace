@@ -61,7 +61,7 @@ void main() {
     expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
   });
 
-  testWidgets('the page title fades into the bar once scrolled away', (
+  testWidgets('the page title appears in the bar only once scrolled away', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -73,21 +73,12 @@ void main() {
         ),
       ),
     );
-    double barOpacity() => tester
-        .widget<AnimatedOpacity>(
-          find.ancestor(
-            of: find.descendant(
-              of: find.byType(AppBar),
-              matching: find.text('Money'),
-            ),
-            matching: find.byType(AnimatedOpacity),
-          ),
-        )
-        .opacity;
-    expect(barOpacity(), 0);
+    final barTitle = find.byKey(const ValueKey('bar-title'));
+    expect(barTitle, findsNothing);
+    expect(find.text('Money'), findsOneWidget);
     await tester.drag(find.byType(ListView), const Offset(0, -300));
     await tester.pumpAndSettle();
-    expect(barOpacity(), 1);
+    expect(barTitle, findsOneWidget);
   });
 
   testWidgets('choice sheet returns the tapped value and marks the current', (

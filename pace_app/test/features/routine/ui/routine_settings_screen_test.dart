@@ -94,7 +94,7 @@ void main() {
     await unmount(tester);
   });
 
-  testWidgets('breakfast dialog updates settings and re-plans', (tester) async {
+  testWidgets('breakfast sheet updates settings and re-plans', (tester) async {
     await db.weekdayScheduleDao.upsert(
       weekday: DateTime.monday,
       firstClassMinutes: 8 * 60,
@@ -104,8 +104,7 @@ void main() {
     await pump(tester);
     await tester.tap(find.text('Breakfast'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const ValueKey('minutes-field')), '30');
-    await tester.tap(find.text('Save'));
+    await tester.tap(find.text('30 min'));
     await tester.pumpAndSettle();
 
     expect((await db.settingsDao.get()).breakfastMinutes, 30);
@@ -120,6 +119,20 @@ void main() {
       (s) => s.payload == 'wake:1',
     );
     expect(wake.body, contains('Breakfast first.'));
+    await unmount(tester);
+  });
+
+  testWidgets('a custom breakfast length can be typed', (tester) async {
+    await pump(tester);
+    await tester.tap(find.text('Breakfast'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Custom…'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('minutes-field')), '25');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect((await db.settingsDao.get()).breakfastMinutes, 25);
+    expect(find.text('25 min'), findsOneWidget);
     await unmount(tester);
   });
 
