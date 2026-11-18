@@ -15,6 +15,11 @@ import '../application/morning_inputs.dart';
 import '../application/routine_providers.dart';
 import '../domain/morning_plan.dart';
 import '../domain/wake_schedule.dart';
+import '../../../routes.dart';
+import '../../habits/application/habit_providers.dart';
+import '../../habits/application/habit_service.dart';
+import '../../habits/domain/habit_planner.dart';
+import '../../habits/ui/habit_sheet.dart';
 import 'weekday_edit_sheet.dart';
 
 final weekdaySchedulesProvider = StreamProvider<List<WeekdaySchedule>>(
@@ -263,6 +268,7 @@ class RoutineSettingsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final now = ref.watch(clockProvider)();
     final features = ref.watch(platformFeaturesProvider);
+    final habit = ref.watch(movementHabitProvider).value;
     final wakePlan = settings == null ? null : wakePlanFrom(settings);
     final wakeToday = wakePlan == null ? null : weekdayWakeOn(wakePlan, now);
     final shift = wakePlan?.shift;
@@ -443,6 +449,73 @@ class RoutineSettingsScreen extends ConsumerWidget {
                     ),
                     value: settings.lowEnergyEnabled,
                     onChanged: (on) => ref.read(setLowEnergyProvider)(on),
+                  ),
+                ),
+                const SectionHeader('Extras'),
+                Card(
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        key: const ValueKey('verse-setting'),
+                        secondary: const Icon(Icons.menu_book_outlined),
+                        title: const Text('Daily verse'),
+                        subtitle: const Text(
+                          'On Today and in the wake-up reminder. Hidden in '
+                          'low-energy mode.',
+                        ),
+                        value: settings.verseEnabled,
+                        onChanged: (on) async {
+                          await ref
+                              .read(appDatabaseProvider)
+                              .settingsDao
+                              .updateSettings(
+                                (s) => s.copyWith(verseEnabled: on),
+                              );
+                          await _afterChange(ref);
+                        },
+                      ),
+                      ListTile(
+                        key: const ValueKey('habit-setting'),
+                        leading: const Icon(Icons.directions_walk_rounded),
+                        title: const Text('Movement'),
+                        subtitle: Text(
+                          habit == null || !habit.active
+                              ? 'Off'
+                              : '${habit.name} · ${describeHabitTime(HabitService.pointFor(habit.anchor), habit.offsetMinutes).toLowerCase()}',
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => showHabitSheet(context, ref),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.school_outlined),
+                        title: const Text('Class schedule'),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () =>
+                            Navigator.of(context).pushNamed(Routes.schedule),
+                      ),
+                      if (features.appBlocking)
+                        ListTile(
+                          leading: const Icon(Icons.do_not_disturb_on_outlined),
+                          title: const Text('App gate'),
+                          subtitle: Text(settings.gateEnabled ? 'On' : 'Off'),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () =>
+                              Navigator.of(context).pushNamed(Routes.gate),
+                        ),
+                      if (features.calendarSync)
+                        ListTile(
+                          leading: const Icon(Icons.event_outlined),
+                          title: const Text('Google Calendar'),
+                          subtitle: Text(
+                            settings.calendarSyncedAt == null
+                                ? 'Not connected (optional)'
+                                : 'Connected',
+                          ),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () =>
+                              Navigator.of(context).pushNamed(Routes.calendar),
+                        ),
+                    ],
                   ),
                 ),
               ],

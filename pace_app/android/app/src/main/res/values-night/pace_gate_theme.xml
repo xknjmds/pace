@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="PaceGateTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/pace_widget_surface</item>
+        <item name="android:statusBarColor">@color/pace_widget_surface</item>
+    </style>
+</resources>

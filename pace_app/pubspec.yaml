@@ -44,6 +44,10 @@ dependencies:
   permission_handler: ^13.0.2
   home_widget: ^0.10.0
   path_provider: ^2.1.6
+  image_picker: ^1.2.4
+  google_mlkit_text_recognition: ^1.0.3
+  google_sign_in: ^7.2.0
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:
@@ -74,6 +78,9 @@ flutter:
     - assets/fonts/OFL.txt
     # Tuck the turtle (branding/mascot/, built by build_mascot.py).
     - assets/mascot/
+    # 365 daily verses, World English Bible (public domain), built from the
+    # eBible.org text. See lib/features/verse.
+    - assets/verses.json
 
   # Figtree (SIL Open Font License 1.1), the UI typeface. See assets/fonts/OFL.txt.
   fonts:

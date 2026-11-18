@@ -154,15 +154,176 @@ only `settings`; M3 adds the rest as a v2 migration. See `CLAUDE.md` rule 9.
 
 ## After v1
 
-Use v1 for at least two weeks before adding anything.
+Use v1 for at least two weeks before adding anything, and finish the M2 real-device check
+(`NOTES.md`) before starting v2.
 
 v1.5 candidates, in rough order: deadline buffer (a personal due date a day before the real
 one), gentle rescue after a missed morning (switch to the low-energy list for that day),
 first-step hints on the focus timer, one-tap evening energy check-in shown on the weekly view,
-subject colours and a class list, daily Bible verse (bundled offline JSON, public-domain
-translation), Google Classroom import.
+subject colours and a class list, Google Classroom import (optional, never required).
 
-## M11. Accounts and sync (the SaaS version)
+---
+
+## v2
+
+v2 is split into three phases. Each phase is usable on its own, so stop after any phase if
+needed. Keep low-energy mode working on every new screen and widget. Android-only features
+(OCR, blocking, widgets) go through `core/platform/platform_features.dart` and are hidden on
+web and desktop.
+
+### New tables (v2)
+
+Every new table follows `CLAUDE.md` rule 9: text UUID v4 `id`, `updated_at`, nullable
+`deleted_at`, soft deletes. Times of day are minutes since midnight, instants UTC. The
+database is at schema v5, so v2 migrations start at v6, one step per milestone.
+
+| Table | Fields |
+|---|---|
+| class_blocks | id, weekday, subject, start_time, end_time, room (nullable), source (manual/image) |
+| habits | id, name, anchor (wake/eat/leave/wind_down), offset_minutes, active |
+| habit_logs | id, habit_id, date, done |
+| blocked_apps | id, package_name (unique), label |
+| notes | id, title, body, created_at |
+| expenses | id, amount_minor (integer, minor units), category, note, spent_at |
+| budgets | id, period (weekly/monthly), amount_minor |
+| calendar_events | id, external_id, title, start_at, end_at, all_day, cached_at |
+
+Settings gains `verse_enabled`, `currency_code`, the gate's `gate_enabled`,
+`morning_lock_enabled`, `wind_down_lock_enabled` and `unlock_minutes`, and
+`calendar_synced_at`; `tasks` gains `submitted_at` for the weekly counts. Verses are not a table: they ship as a
+read-only bundled asset (`assets/verses.json`).
+
+### Phase A: routine support
+
+**A1. Daily Bible verse**
+- Bundle 365 verses from a public-domain translation (WEB or KJV) as `assets/verses.json`
+- Pick by day of year (pure function), show on Today screen, optional line in wake-up notification
+- Setting to hide the verse
+
+Done when
+- Verse shows with airplane mode on and changes the next day
+- Verse can be turned off, and low-energy mode hides it
+- Leap-year day 366 falls back to a valid verse
+
+**A2. Schedule OCR spike (Android only)**
+- Add image picker and on-device text recognition (ML Kit, **bundled model** so nothing is
+  downloaded through Play Services), no network
+- Test with the owner's real schedule image and print recognized text with positions
+- Gate the import entry point in `platform_features.dart`; manual block entry works everywhere
+
+Done when
+- A short note in `NOTES.md` records whether OCR output is good enough to parse
+- If not, the decision to rely on manual block entry is written down and A3 skips OCR
+
+**A3. Review screen and save to schedule**
+- Pure Dart parser: recognized text lines to candidate class blocks (subject, day, times)
+- Review screen: every block is editable, deletable, and addable manually
+- Nothing is saved until the user confirms
+- Confirmed blocks fill `class_blocks`. For each affected weekday the review screen shows the
+  earliest block's time next to the current `first_class_time` and the user chooses which to
+  keep (never overwritten silently). Then reminders are rescheduled
+
+Done when
+- Parser unit tests cover clean input, missing times, and overlapping blocks
+- Confirming blocks reschedules leave-by notifications for the affected weekdays
+- Re-importing replaces earlier image-sourced blocks and keeps manual ones
+
+**A4. Time-block widget (Android only)**
+- Second home-screen widget, next to the quick-capture one, showing today's class blocks with
+  the current block highlighted
+- Android refreshes widgets on its own only every 30 minutes or more, so updates at block
+  boundaries and at midnight use scheduled alarms. Handles no-class days
+
+Done when
+- Widget shows the correct blocks for today and highlights the current one on a real phone
+- Widget survives a reboot and updates without opening the app
+
+**A5. Movement habit**
+- One habit (default: 10 minutes of movement) with a reminder tied to a chosen routine point
+  (anchor plus offset, computed by a pure function from that day's plan)
+- Reminder goes through `scheduled_notifications` with the habit as owner
+- One tap marks done. Done days feed the weekly view as positive counts only
+
+Done when
+- Reminder fires on a real device and a done tap cancels the remaining reminder
+- Changing the routine reschedules the habit reminder
+- Missing a day shows no failure state and does not reset anything
+
+### Phase B: control and insight
+
+**B1. Blocking spike (Android only)**
+- Use usage access (foreground app detection) plus an overlay, with a clear explanation screen.
+  Do not use an AccessibilityService: Play policy restricts it for non-accessibility use,
+  which matters for M11
+- Show a block screen for one chosen test app
+- Test on the owner's phone brand with battery optimization on and the screen locked for a while
+
+Done when
+- The test app is blocked reliably and the service survives for a full day
+- Result and phone model are recorded in `NOTES.md`. If it is unreliable, stop and decide before B2
+
+**B2. Blocking gate**
+- Choose apps to block. Lock until the morning routine is marked done, and during the wind-down window
+- Emergency unlock for a configurable number of minutes, always available from the block screen
+- Master off switch in settings, and low-energy mode loosens the gate (shorter lock window)
+
+Done when
+- Completing the morning routine unlocks blocked apps immediately
+- Wind-down lock starts and ends at the right times
+- Emergency unlock works every time and is never hidden
+- Turning the gate off removes all blocking
+
+**B3. Analytics (extends the weekly view)**
+- Built on the M10 weekly view, not a separate dashboard: planned vs. actual wake time,
+  average sleep hours, deadlines submitted (a count, not an on-time rate), focus sessions
+  per week, movement habit days
+- Pure Dart aggregation functions with unit tests
+- Neutral presentation: trends and averages, no red or failure indicators
+
+Done when
+- Every view renders correctly with no data, partial data, and a full month of data
+- Aggregation tests cover week boundaries and timezone changes
+
+### Phase C: new modules
+
+Each module gets its own feature folder and tables and does not import routine code.
+
+**C1. Notes**
+- Create, edit, delete, and search notes. Separate from the quick-capture inbox
+- Option to turn an inbox item into a note
+
+Done when
+- Search finds text in titles and bodies
+- Deleting asks for confirmation and no data is lost on app restart
+
+**C2. Finance**
+- Log an expense with amount, category, and note in a few taps
+- Amounts stored as integer minor units, with one currency setting
+- Set a weekly or monthly budget, see spent vs. remaining and a simple category summary
+- Neutral wording when over budget, no alarming styling
+
+Done when
+- Totals are correct across period boundaries
+- Budget summary works with no budget set and with no expenses
+
+**C3. Google Calendar sync (read-only, last, optional)**
+- Google sign-in with read-only calendar scope, requires a Google Cloud project and OAuth consent screen
+- While the OAuth app is in "Testing" status, refresh tokens expire after 7 days, so the owner
+  signs in again weekly until the app is published (`calendar.readonly` is a sensitive scope
+  and needs Google verification to publish)
+- Release builds need the INTERNET permission. Android and web only; hidden on desktop
+- Fetch events and cache them in `calendar_events`, show them next to class blocks on Today and the widget
+- Manual refresh plus background refresh when online
+
+Done when
+- Events appear next to class blocks and still show offline from the cache
+- Expired sign-in shows a calm "reconnect" prompt, never an error state
+- Signing out clears cached events
+- The app works fully with sync never set up
+
+---
+
+## M11. Accounts and sync (the SaaS version, after v2)
 
 Drift stays the source of truth on the device. Supabase (Postgres, auth, row-level security)
 is the backend. Sync through PowerSync or a hand-rolled push/pull on `updated_at` with
@@ -170,4 +331,5 @@ last-write-wins per row. Adds `user_id` to every table in one migration. Notific
 locally scheduled; push is a backup only. iOS support is decided here. Export/backup to JSON,
 and shared "routine done" visibility for a coach or parent, come after sync works.
 
-Still not planned: app blocking, workouts, analytics dashboards, consequence systems, streaks.
+Still not planned: workouts (beyond the single movement habit), consequence systems, streaks.
+Anything new is added to the v1.5 list first and only moves into a phase on purpose.

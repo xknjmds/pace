@@ -3,6 +3,12 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'daos/class_blocks_dao.dart';
+import 'daos/habits_dao.dart';
+import 'daos/blocked_apps_dao.dart';
+import 'daos/notes_dao.dart';
+import 'daos/finance_dao.dart';
+import 'daos/calendar_events_dao.dart';
 import 'daos/daily_logs_dao.dart';
 import 'daos/focus_sessions_dao.dart';
 import 'daos/inbox_dao.dart';
@@ -15,6 +21,12 @@ import 'schema_versions.dart';
 import 'tables.dart';
 import 'uuid.dart';
 
+export 'daos/class_blocks_dao.dart';
+export 'daos/habits_dao.dart';
+export 'daos/blocked_apps_dao.dart';
+export 'daos/notes_dao.dart';
+export 'daos/finance_dao.dart';
+export 'daos/calendar_events_dao.dart';
 export 'daos/daily_logs_dao.dart';
 export 'daos/focus_sessions_dao.dart';
 export 'daos/inbox_dao.dart';
@@ -37,6 +49,14 @@ part 'app_database.g.dart';
     FocusSessions,
     ScheduledNotifications,
     ReminderMutes,
+    ClassBlocks,
+    Habits,
+    HabitLogs,
+    BlockedApps,
+    Notes,
+    Expenses,
+    Budgets,
+    CalendarEvents,
   ],
   daos: [
     SettingsDao,
@@ -47,6 +67,12 @@ part 'app_database.g.dart';
     FocusSessionsDao,
     ScheduledNotificationsDao,
     ReminderMutesDao,
+    ClassBlocksDao,
+    HabitsDao,
+    BlockedAppsDao,
+    NotesDao,
+    FinanceDao,
+    CalendarEventsDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -87,7 +113,7 @@ class AppDatabase extends _$AppDatabase {
   static DateTime _utcNow() => DateTime.now().toUtc();
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   /// Schema history. Never edit a released step (CLAUDE.md rule 8); add one,
   /// then regenerate: `drift_dev schema dump`, then `schema steps` into
@@ -98,6 +124,9 @@ class AppDatabase extends _$AppDatabase {
   /// - v3 (M7): `settings.capture_shortcut_enabled`
   /// - v4 (M8): `focus_sessions.ended_at`
   /// - v5 (M9): settings for weekend leeway and the gradual wake shift
+  /// - v6 (v2): class blocks, habits, blocked apps, notes, finance and
+  ///   calendar tables; settings for the verse, currency, gate and calendar;
+  ///   `tasks.submitted_at`
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
@@ -144,6 +173,33 @@ class AppDatabase extends _$AppDatabase {
         ]) {
           await m.addColumn(s, column);
         }
+      },
+      from5To6: (m, schema) async {
+        for (final table in <TableInfo<Table, Object>>[
+          schema.classBlocks,
+          schema.habits,
+          schema.habitLogs,
+          schema.blockedApps,
+          schema.notes,
+          schema.expenses,
+          schema.budgets,
+          schema.calendarEvents,
+        ]) {
+          await m.createTable(table);
+        }
+        final s = schema.settings;
+        for (final column in [
+          s.verseEnabled,
+          s.currencyCode,
+          s.gateEnabled,
+          s.morningLockEnabled,
+          s.windDownLockEnabled,
+          s.unlockMinutes,
+          s.calendarSyncedAt,
+        ]) {
+          await m.addColumn(s, column);
+        }
+        await m.addColumn(schema.tasks, schema.tasks.submittedAt);
       },
     ),
     beforeOpen: (_) => settingsDao.ensureRow(),

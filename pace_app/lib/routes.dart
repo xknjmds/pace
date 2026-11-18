@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 
 import 'core/notifications/ui/notification_setup_screen.dart';
 import 'core/widgets/readable_width.dart';
+import 'features/blocking/ui/gate_screen.dart';
+import 'features/calendar/ui/calendar_screen.dart';
+import 'features/finance/ui/money_screen.dart';
+import 'features/notes/ui/notes_screen.dart';
 import 'features/review/ui/check_in_screen.dart';
+import 'features/schedule/ui/schedule_screen.dart';
 import 'features/review/ui/review_screen.dart';
 import 'features/routine/ui/routine_settings_screen.dart';
 import 'features/shell/home_shell.dart';
@@ -25,6 +30,11 @@ abstract final class Routes {
   static const checkIn = '/review/check-in';
   static const settings = '/settings';
   static const notifications = '/notifications';
+  static const schedule = '/schedule';
+  static const gate = '/gate';
+  static const notes = '/notes';
+  static const money = '/money';
+  static const calendar = '/calendar';
 
   static Map<String, WidgetBuilder> get table => {
     today: (_) => const HomeShell(),
@@ -37,6 +47,11 @@ abstract final class Routes {
     checkIn: (_) => const ReadableWidth(child: CheckInScreen()),
     settings: (_) => const ReadableWidth(child: RoutineSettingsScreen()),
     notifications: (_) => const ReadableWidth(child: NotificationSetupScreen()),
+    schedule: (_) => const ReadableWidth(child: ScheduleScreen()),
+    gate: (_) => const ReadableWidth(child: GateScreen()),
+    notes: (_) => const ReadableWidth(child: NotesScreen()),
+    money: (_) => const ReadableWidth(child: MoneyScreen()),
+    calendar: (_) => const ReadableWidth(child: CalendarScreen()),
   };
 
   static Route<void> _route(String name) => MaterialPageRoute(

@@ -8,6 +8,7 @@ import 'generated/schema_v1.dart' as v1;
 import 'generated/schema_v2.dart' as v2;
 import 'generated/schema_v3.dart' as v3;
 import 'generated/schema_v4.dart' as v4;
+import 'generated/schema_v5.dart' as v5;
 
 void main() {
   late SchemaVerifier verifier;
@@ -34,7 +35,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 5);
+    await verifier.migrateAndValidate(db, 6);
 
     final s = await db.settingsDao.get();
     expect(s.lowEnergyEnabled, isTrue);
@@ -71,7 +72,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 5);
+    await verifier.migrateAndValidate(db, 6);
 
     final s = await db.settingsDao.get();
     expect(s.targetWakeMinutes, 7 * 60);
@@ -96,7 +97,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 5);
+    await verifier.migrateAndValidate(db, 6);
     expect(await db.focusSessionsDao.getActive(), isNull);
     final s = (await db.focusSessionsDao.recent()).single;
     expect(s.endedAt, DateTime.utc(2026, 11, 15, 19));
@@ -118,7 +119,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 5);
+    await verifier.migrateAndValidate(db, 6);
     final s = await db.settingsDao.get();
     expect(s.targetWakeMinutes, 7 * 60);
     expect(s.weekendLeewayMinutes, 60);
@@ -127,10 +128,42 @@ void main() {
     expect(s.wakeShiftEveryDays, 3);
   });
 
-  test('a fresh database matches the v5 snapshot', () async {
-    final connection = await verifier.startAt(5);
+  test('a v5 database upgrades to v6 and keeps tasks', () async {
+    final schema = await verifier.schemaAt(5);
+    final old = v5.DatabaseAtV5(schema.newConnection());
+    await old
+        .into(old.tasks)
+        .insert(
+          v5.TasksCompanion.insert(
+            id: 't-1',
+            title: 'Essay',
+            dueAt: '2026-11-20T08:00:00.000Z',
+            status: const Value('submitted'),
+            createdAt: '2026-11-17T00:00:00.000Z',
+            updatedAt: '2026-11-17T00:00:00.000Z',
+          ),
+        );
+    await old.close();
+
+    final db = AppDatabase(schema.newConnection());
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 6);
+    final s = await db.settingsDao.get();
+    expect(s.verseEnabled, isTrue);
+    expect(s.gateEnabled, isFalse);
+    expect(s.unlockMinutes, 10);
+    expect(s.currencyCode, '');
+    final task = (await db.tasksDao.getAll()).single;
+    expect(task.title, 'Essay');
+    expect(task.submittedAt, isNull);
+    expect(await db.classBlocksDao.getAll(), isEmpty);
+    expect(await db.notesDao.getAll(), isEmpty);
+  });
+
+  test('a fresh database matches the v6 snapshot', () async {
+    final connection = await verifier.startAt(6);
     final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 5);
+    await verifier.migrateAndValidate(db, 6);
   });
 }

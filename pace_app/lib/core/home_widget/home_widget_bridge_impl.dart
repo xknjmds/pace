@@ -10,4 +10,10 @@ class HomeWidgetBridgeImpl implements HomeWidgetBridge {
     await HomeWidget.saveWidgetData<int>(HomeWidgetKeys.inboxCount, count);
     await HomeWidget.updateWidget(androidName: HomeWidgetKeys.androidProvider);
   }
+
+  @override
+  Future<void> publishSchedule(String json) async {
+    await HomeWidget.saveWidgetData<String>(HomeWidgetKeys.schedule, json);
+    await HomeWidget.updateWidget(androidName: HomeWidgetKeys.scheduleProvider);
+  }
 }

@@ -66,8 +66,24 @@ class TasksDao extends DatabaseAccessor<AppDatabase> with _$TasksDaoMixin {
 
   Future<void> setStatus(String id, TaskStatus status) =>
       (update(tasks)..where((t) => t.id.equals(id))).write(
-        TasksCompanion(status: Value(status), updatedAt: Value(db.now())),
+        TasksCompanion(
+          status: Value(status),
+          // Kept only while submitted; reopening clears it.
+          submittedAt: Value(status == TaskStatus.submitted ? db.now() : null),
+          updatedAt: Value(db.now()),
+        ),
       );
+
+  /// Tasks submitted at or after [from] and before [to].
+  Future<List<Task>> submittedBetween(DateTime from, DateTime to) =>
+      (select(tasks)..where(
+            (t) =>
+                t.deletedAt.isNull() &
+                t.status.equalsValue(TaskStatus.submitted) &
+                t.submittedAt.isBiggerOrEqualValue(from.toUtc()) &
+                t.submittedAt.isSmallerThanValue(to.toUtc()),
+          ))
+          .get();
 
   Future<void> markSubmitted(String id) => setStatus(id, TaskStatus.submitted);
 

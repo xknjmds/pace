@@ -1,16 +1,24 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/db/database_provider.dart';
+import '../../blocking/application/gate_providers.dart';
 import '../../deadlines/application/deadline_providers.dart';
+import '../../habits/application/habit_providers.dart';
+import '../../schedule/application/schedule_providers.dart';
 import '../../routine/application/routine_providers.dart';
 
-/// Re-plans every reminder that depends on settings: the routine (wake,
-/// eat, leave, wind-down) and every deadline's nudges. Call after any
-/// change to wake time, sleep, schedule or low-energy mode.
+/// Re-plans everything that depends on settings and the routine: the
+/// routine reminders (wake, eat, leave, wind-down), every deadline's
+/// nudges, the movement habit, the app gate's lock windows and the
+/// today's-classes widget. Call after any change to wake time, sleep,
+/// schedule or low-energy mode.
 final reminderResyncProvider = Provider<Future<void> Function()>(
   (ref) => () async {
     await ref.read(routineRemindersProvider).resync();
     await ref.read(deadlineRemindersProvider).resyncAll();
+    await ref.read(habitServiceProvider).resync();
+    await ref.read(gateServiceProvider).sync();
+    await ref.read(scheduleServiceProvider).publishWidget();
   },
 );
 

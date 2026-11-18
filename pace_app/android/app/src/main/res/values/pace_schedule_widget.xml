@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="schedule_widget_title">TODAY</string>
+    <string name="schedule_widget_none">No classes today. The day is yours.</string>
+    <string name="schedule_widget_done">That\'s everything for today.</string>
+    <string name="schedule_widget_description">Today\'s classes, with the current one highlighted</string>
+</resources>

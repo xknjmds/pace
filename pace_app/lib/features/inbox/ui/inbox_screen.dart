@@ -15,6 +15,7 @@ import '../../deadlines/application/deadline_providers.dart';
 import '../../deadlines/ui/task_edit_sheet.dart';
 import '../../shell/shell_tabs.dart';
 import '../application/inbox_providers.dart';
+import '../../notes/ui/notes_screen.dart' show noteFromInbox;
 
 /// Quick capture and a short queue to sort later: each item becomes a
 /// deadline or goes away. Nothing here nags.
@@ -198,6 +199,17 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                               color: scheme.primary,
                             ),
                             onPressed: () => _toDeadline(item),
+                          ),
+                          IconButton(
+                            tooltip: 'Make a note',
+                            icon: Icon(
+                              Icons.sticky_note_2_outlined,
+                              color: scheme.primary,
+                            ),
+                            onPressed: () async {
+                              await noteFromInbox(ref, item.body);
+                              await capture.markProcessed(item.id);
+                            },
                           ),
                           IconButton(
                             tooltip: 'Delete',

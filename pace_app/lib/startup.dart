@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
@@ -10,11 +11,17 @@ import 'core/notifications/notification_providers.dart';
 import 'core/db/app_database.dart';
 import 'core/notifications/reminder_actions.dart';
 import 'core/notifications/reminder_response_router.dart';
+import 'core/platform/platform_features.dart';
+import 'features/blocking/application/gate_providers.dart';
+import 'features/calendar/application/calendar_providers.dart';
 import 'features/deadlines/application/deadline_providers.dart';
+import 'features/habits/application/habit_providers.dart';
+import 'features/schedule/application/schedule_providers.dart';
 import 'features/focus/application/focus_providers.dart';
 import 'features/inbox/application/inbox_providers.dart';
 import 'features/routine/application/routine_providers.dart';
 import 'features/shell/shell_tabs.dart';
+import 'features/verse/application/verse_providers.dart';
 import 'routes.dart';
 
 /// Brings reminders, the capture shortcut and the home-screen widget in
@@ -34,6 +41,7 @@ Future<String?> bootstrap(
     'rebuild reminders',
     () => container.read(reminderSchedulerProvider).rebuildAll(),
   );
+  await report.guard('verses', () => container.read(versesProvider.future));
   await report.guard(
     'plan routine',
     () => container.read(routineRemindersProvider).resync(),
@@ -42,6 +50,21 @@ Future<String?> bootstrap(
     'plan deadlines',
     () => container.read(deadlineRemindersProvider).resyncAll(),
   );
+  await report.guard(
+    'plan habit',
+    () => container.read(habitServiceProvider).resync(),
+  );
+  await report.guard(
+    'app gate',
+    () => container.read(gateServiceProvider).sync(),
+  );
+  await report.guard(
+    'schedule widget',
+    () => container.read(scheduleServiceProvider).publishWidget(),
+  );
+  // Optional and online: never awaited, so a slow network never holds up
+  // the app opening.
+  _refreshCalendar(container, report);
 
   final capture = container.read(inboxCaptureProvider);
   await report.guard('widget count', capture.publishCount);
@@ -56,9 +79,46 @@ Future<String?> bootstrap(
         (n) => report.guard('widget count', () => widget.publishInboxCount(n)),
       );
 
+  // Finishing the morning routine opens the gate at once, wherever it was
+  // marked done (Today, a notification button).
+  final db = container.read(appDatabaseProvider);
+  final bootNow = DateTime.now();
+  db.dailyLogsDao
+      .watchBetween(
+        bootNow.subtract(const Duration(days: 1)),
+        bootNow.add(const Duration(days: 7)),
+      )
+      .map(
+        (logs) => [
+          for (final l in logs)
+            if (l.routineDone) l.date,
+        ].join(),
+      )
+      .distinct()
+      .skip(1)
+      .listen(
+        (_) => report.guard(
+          'app gate',
+          () => container.read(gateServiceProvider).sync(),
+        ),
+      );
+  // Back in the foreground: lock windows move with the clock, and the
+  // calendar may be stale.
+  // Registers itself with the binding and lives as long as the app.
+  AppLifecycleListener(
+    onResume: () {
+      report.guard(
+        'app gate',
+        () => container.read(gateServiceProvider).sync(),
+      );
+      _refreshCalendar(container, report);
+    },
+  );
+
   final router = ReminderResponseRouter([
     container.read(routineRemindersProvider).handle,
     container.read(deadlineRemindersProvider).handle,
+    container.read(habitServiceProvider).handle,
     capture.handle,
     container.read(focusServiceProvider).handle,
   ]);
@@ -79,6 +139,15 @@ Future<String?> bootstrap(
     if (route != null) _open(container, route);
   });
   return launch == null ? null : routeForResponse(launch!);
+}
+
+void _refreshCalendar(ProviderContainer container, StartupReport report) {
+  if (!container.read(platformFeaturesProvider).calendarSync) return;
+  // A failed refresh is quiet: the cache keeps showing the last events.
+  container
+      .read(calendarServiceProvider)
+      .refreshIfStale()
+      .catchError((_) => null);
 }
 
 void _open(ProviderContainer container, String route) => Routes.open(
@@ -103,6 +172,7 @@ String? routeForResponse(ReminderResponse r) {
 String? routeForWidgetUri(Uri? uri) => switch (uri?.toString()) {
   HomeWidgetKeys.captureUri => Routes.inboxCapture,
   HomeWidgetKeys.todayUri => Routes.today,
+  HomeWidgetKeys.scheduleUri => Routes.schedule,
   _ => null,
 };
 

@@ -46,7 +46,8 @@ class WindDownSettings {
 /// without it each weekday's own target is used. [wakeAnchor] adds a wake
 /// reminder on days without class. [windDown] adds an evening reminder per
 /// night, owned by the evening's weekday. [lowEnergy] keeps only wake and
-/// leave.
+/// leave. [wakeLine] adds an optional closing line (the daily verse) to
+/// each wake reminder.
 List<PlannedRoutineReminder> planRoutineReminders({
   required DateTime now,
   required Map<int, MorningInputs> inputsByWeekday,
@@ -56,6 +57,7 @@ List<PlannedRoutineReminder> planRoutineReminders({
   WindDownSettings? windDown,
   bool lowEnergy = false,
   int days = 7,
+  String? Function(DateTime date)? wakeLine,
 }) {
   final out = <PlannedRoutineReminder>[];
   final today = dateOnly(now);
@@ -66,6 +68,8 @@ List<PlannedRoutineReminder> planRoutineReminders({
     bool isMuted(RoutineStep s) => muted.contains('${s.name}:$weekday:$key');
     void add(RoutineStep step, DateTime fireAt, String title, String body) {
       if (!fireAt.isAfter(now) || isMuted(step)) return;
+      final extra = step == RoutineStep.wake ? wakeLine?.call(date) : null;
+      if (extra != null) body = '$body\n$extra';
       out.add(
         PlannedRoutineReminder(
           step: step,

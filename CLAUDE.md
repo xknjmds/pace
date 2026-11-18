@@ -8,6 +8,7 @@ disappointed, and respects reduced motion and low-energy mode.
 
 Personal routine and productivity app. Single user, Android first, offline-first.
 Read `PLAN.md` for milestones and acceptance criteria. Work on one milestone at a time.
+v1 (M1 to M10) is built. Current work is v2 (phases A, B, C in `PLAN.md`), then M11.
 
 ## Purpose
 
@@ -31,6 +32,10 @@ The app is an external memory and a nudge, not a to-do list. Every feature must 
 - Home widget: `home_widget`
 - Permissions: `permission_handler`
 - Verify current package docs and Android exact-alarm rules before implementing notifications
+- v2 additions (ask before adding each): image picker + ML Kit text recognition (bundled
+  model) for schedule OCR, an Android usage-access + overlay approach for app blocking
+  (no AccessibilityService), Google Sign-In + Calendar API (read-only) for calendar sync.
+  Android-only ones are gated in `platform_features.dart`
 
 ## Structure
 
@@ -45,7 +50,14 @@ lib/
     today/     Today screen
     inbox/     quick capture
     focus/     "just start" timer
-    review/    evening check-in, weekly view
+    review/    evening check-in, weekly view, analytics (B3)
+    verse/     daily Bible verse (bundled asset)
+    schedule/  class blocks, image import, time-block widget
+    habits/    movement habit
+    blocking/  app blocking gate
+    notes/     notes
+    finance/   expenses and budget
+    calendar/  Google Calendar read-only sync
   main.dart
 test/          mirrors lib/
 ```
@@ -58,32 +70,51 @@ test/          mirrors lib/
 2. **Notifications are rebuilt from data.** Store every scheduled notification in the
    `scheduled_notifications` table with an owner id. To change reminders, cancel by owner
    and reschedule. Never hand-manage notification ids elsewhere.
-3. **Offline-first.** No network calls in v1.
+3. **Offline-first.** No network calls, with one exception: Google Calendar sync (C3),
+   which is optional, read-only, cached locally, and must never be required for the app
+   to work.
 4. **Fast to use.** Opening the app to marking something done must take a few taps.
    Today screen answers "what do I do right now?" immediately.
 5. **Forgiving by design.** No punishment, no red failure states, no streaks that reset
    to zero. Use positive counts such as "days done this week."
-6. **Low-energy mode** must be respected by every screen that lists items.
+6. **Low-energy mode** must be respected by every screen and widget that lists items,
+   including all v2 features. The blocking gate must loosen in low-energy mode.
 7. Keep widgets small and feature-local. Shared UI goes in `core/`.
 8. Use Drift migrations for every schema change. Never edit an existing migration.
 9. **Sync-ready schema.** Every table has `updated_at` (UTC, bumped by the DAO on every write)
    and nullable `deleted_at`. Deletes are soft: DAOs set `deleted_at` and every read filters
    it out. New tables use a text UUID v4 primary key from `core/db/uuid.dart` (`settings` and
    `daily_logs` keep their natural keys). No `user_id` until M11.
+10. **OCR is never trusted.** Imported schedule blocks are saved only after the user
+    reviews and confirms them.
+11. **Blocking must always be escapable.** The emergency unlock is always reachable and
+    there is a master off switch. Never trap the user.
+12. **Analytics and finance are neutral.** Show trends and totals, not shame. No red
+    failure indicators.
+13. Finance, notes, and calendar are independent modules: no imports from routine code.
 
-## v1 scope
+## v1 scope (built)
 
 Must: leave-by planner, deadline tracker with escalating reminders, Today screen,
 quick capture (inbox + widget), "just start" timer.
 Should: evening check-in with wind-down and sleep log, low-energy mode, weekly view.
 
+## v2 scope (current)
+
+Phase A: daily Bible verse, schedule image import (OCR + review), time-block widget,
+movement habit.
+Phase B: app blocking gate, analytics (extends the weekly view).
+Phase C: notes, finance, Google Calendar sync (read-only).
+Build phases in order. Do the OCR spike (A2) and blocking spike (B1) before the
+features that depend on them, and stop to report if a spike fails.
+
 ## Non-goals (do not build)
 
-Punishment or demerit system, app blocking, iOS, workouts, analytics, notes, finance,
-calendar sync, daily Bible verse, social features. Google Classroom import
+Punishment or demerit system, iOS, full workout system (only the single movement habit
+is planned), social features, and anything not listed in `PLAN.md`. Google Classroom import
 is optional and must never be required for the app to work.
-Cloud sync and accounts are not in v1 (planned as M11 for the SaaS version); v1 only keeps
-the schema sync-ready, see rule 9.
+Cloud sync and accounts come after v2 (M11, the SaaS version); until then the schema only
+stays sync-ready, see rule 9.
 
 ## Workflow
 

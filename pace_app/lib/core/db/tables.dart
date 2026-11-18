@@ -59,6 +59,25 @@ class Settings extends Table with SyncColumns {
   IntColumn get wakeShiftEveryDays =>
       integer().withDefault(const Constant(3))();
 
+  /// v6: show the daily verse on Today and in the wake-up reminder.
+  BoolColumn get verseEnabled => boolean().withDefault(const Constant(true))();
+
+  /// v6: ISO 4217 code shown next to amounts (empty: plain numbers).
+  TextColumn get currencyCode => text().withDefault(const Constant(''))();
+
+  /// v6: app blocking gate. [gateEnabled] is the master switch; the two
+  /// windows can be turned off on their own. [unlockMinutes] is how long
+  /// an emergency unlock lasts.
+  BoolColumn get gateEnabled => boolean().withDefault(const Constant(false))();
+  BoolColumn get morningLockEnabled =>
+      boolean().withDefault(const Constant(true))();
+  BoolColumn get windDownLockEnabled =>
+      boolean().withDefault(const Constant(true))();
+  IntColumn get unlockMinutes => integer().withDefault(const Constant(10))();
+
+  /// v6: when calendar events were last fetched; null when never.
+  DateTimeColumn get calendarSyncedAt => dateTime().nullable()();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
@@ -90,6 +109,9 @@ class Tasks extends Table with UuidKey, SyncColumns {
   TextColumn get source =>
       textEnum<TaskSource>().withDefault(const Constant('manual'))();
   DateTimeColumn get createdAt => dateTime()();
+
+  /// v6: when it was marked submitted, for the weekly counts.
+  DateTimeColumn get submittedAt => dateTime().nullable()();
 }
 
 /// Quick captures waiting to become a task or be discarded.
@@ -131,7 +153,18 @@ class FocusSessions extends Table with UuidKey, SyncColumns {
 
 /// What a reminder is for. The owner id's meaning depends on the kind:
 /// a task id for [deadline], a weekday for the routine kinds, and so on.
-enum ReminderKind { wake, eat, leave, deadline, windDown, focusEnd, test }
+enum ReminderKind {
+  wake,
+  eat,
+  leave,
+  deadline,
+  windDown,
+  focusEnd,
+  test,
+
+  /// v6: the movement habit; owner id is the habit id.
+  habit,
+}
 
 /// Every notification handed to Android, so reminders can be cancelled by
 /// owner and rebuilt from data (CLAUDE.md rule 2). [notificationId] is the
@@ -155,6 +188,83 @@ class ReminderMutes extends Table with UuidKey, SyncColumns {
   List<Set<Column<Object>>> get uniqueKeys => [
     {kind, ownerId, date},
   ];
+}
+
+enum BlockSource { manual, image }
+
+/// v6: one class on one weekday. Times are minutes since midnight.
+class ClassBlocks extends Table with UuidKey, SyncColumns {
+  IntColumn get weekday => integer()();
+  TextColumn get subject => text()();
+  IntColumn get startMinutes => integer()();
+  IntColumn get endMinutes => integer()();
+  TextColumn get room => text().nullable()();
+  TextColumn get source =>
+      textEnum<BlockSource>().withDefault(const Constant('manual'))();
+}
+
+/// The routine point a habit reminder hangs off.
+enum HabitAnchor { wake, eat, leave, windDown }
+
+/// v6: a small daily habit with a reminder [offsetMinutes] after (or,
+/// negative, before) its [anchor] in that day's routine.
+class Habits extends Table with UuidKey, SyncColumns {
+  TextColumn get name => text()();
+  TextColumn get anchor =>
+      textEnum<HabitAnchor>().withDefault(const Constant('wake'))();
+  IntColumn get offsetMinutes => integer().withDefault(const Constant(30))();
+  BoolColumn get active => boolean().withDefault(const Constant(true))();
+}
+
+/// v6: a habit marked done on one local day (`yyyy-MM-dd`).
+class HabitLogs extends Table with UuidKey, SyncColumns {
+  TextColumn get habitId => text()();
+  TextColumn get date => text()();
+  BoolColumn get done => boolean().withDefault(const Constant(true))();
+
+  @override
+  List<Set<Column<Object>>> get uniqueKeys => [
+    {habitId, date},
+  ];
+}
+
+/// v6: an Android app the gate holds back during lock windows.
+class BlockedApps extends Table with UuidKey, SyncColumns {
+  TextColumn get packageName => text().unique()();
+  TextColumn get label => text().withDefault(const Constant(''))();
+}
+
+/// v6: a note. Separate from the quick-capture inbox.
+class Notes extends Table with UuidKey, SyncColumns {
+  TextColumn get title => text().withDefault(const Constant(''))();
+  TextColumn get body => text().withDefault(const Constant(''))();
+  DateTimeColumn get createdAt => dateTime()();
+}
+
+/// v6: money spent. [amountMinor] is in minor units (cents).
+class Expenses extends Table with UuidKey, SyncColumns {
+  IntColumn get amountMinor => integer()();
+  TextColumn get category => text()();
+  TextColumn get note => text().withDefault(const Constant(''))();
+  DateTimeColumn get spentAt => dateTime()();
+}
+
+enum BudgetPeriod { weekly, monthly }
+
+/// v6: a spending budget. Only the newest live row is used.
+class Budgets extends Table with UuidKey, SyncColumns {
+  TextColumn get period => textEnum<BudgetPeriod>()();
+  IntColumn get amountMinor => integer()();
+}
+
+/// v6: Google Calendar events cached for offline display.
+class CalendarEvents extends Table with UuidKey, SyncColumns {
+  TextColumn get externalId => text().unique()();
+  TextColumn get title => text()();
+  DateTimeColumn get startAt => dateTime()();
+  DateTimeColumn get endAt => dateTime()();
+  BoolColumn get allDay => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get cachedAt => dateTime()();
 }
 
 /// JSON list of strings in a text column.

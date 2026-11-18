@@ -148,6 +148,8 @@ class LocalNotificationGateway implements NotificationGateway {
           importance: Importance.high,
           priority: Priority.high,
           category: AndroidNotificationCategory.reminder,
+          // Expands to show the whole body (the wake reminder's verse).
+          styleInformation: BigTextStyleInformation(body),
           actions: _androidActions(actions),
         ),
       ),

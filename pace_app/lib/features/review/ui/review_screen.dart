@@ -9,6 +9,7 @@ import '../../../core/widgets/section_header.dart';
 import '../../../routes.dart';
 import '../application/review_providers.dart';
 import '../domain/weekly_summary.dart';
+import 'trends_section.dart';
 
 /// The last seven days in plain counts: what got done, when you got up,
 /// how you slept. Nothing here goes down or turns red.
@@ -186,6 +187,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                       '${summary.sleep.length == 1 ? 'night' : 'nights'} logged.',
                     ),
             ),
+            const TrendsSection(),
           ],
         ),
       ),

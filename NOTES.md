@@ -283,3 +283,49 @@ The owner asked for PACE to run on all devices and chose Android + web + desktop
   densities.
 - **Not verified:** Windows and macOS builds need those systems. The new APK has not been
   run on the phone yet.
+
+## v2 (2026-11-18)
+
+The owner asked for all of v2 at once rather than one milestone at a time. The code for
+phases A, B and C is in, with unit and widget tests (316 pass). **Neither spike has been run on
+a real phone**, so A2 and B1 are not done in the PLAN.md sense.
+
+- **Schema v6** (one step, `from5To6`): `class_blocks`, `habits`, `habit_logs`, `blocked_apps`,
+  `notes`, `expenses`, `budgets`, `calendar_events`. Settings gains the verse, currency, gate
+  and calendar fields, and `tasks` gains `submitted_at`. The planned `blocking_settings` table
+  became settings columns, so there is still only one single-row table.
+- **A1 verse.** `assets/verses.json` holds 365 verses from the World English Bible (public
+  domain). They were pulled from the eBible.org text (`engwebp_vpl`) by reference, not typed
+  from memory. They appear on Today and as a line in the wake reminder, which now uses
+  Android's expanded text style.
+- **A2 OCR spike: PENDING.** `google_mlkit_text_recognition` uses the bundled Latin model
+  (`com.google.mlkit:text-recognition`), so nothing is downloaded. Release builds need the
+  `-dontwarn` rules in `android/app/proguard-rules.pro` for the optional language models that
+  are not included. To do on the phone: photograph the real schedule, then record here how
+  well `parseSchedule` reads it (list layout, grid layout, MWF/TTh codes). If it reads poorly,
+  write that down; adding blocks by hand already works.
+- **A4 widget.** `PaceScheduleWidgetProvider` sets its own alarm for the next block boundary
+  or midnight. `ScheduleWidgetClockReceiver` re-arms it after a reboot, an app update or a
+  clock change. Not yet checked on a home screen.
+- **B1 blocking spike: PENDING.** It uses usage access plus a block screen. The block screen is
+  an activity started from a `specialUse` foreground service and needs "display over other
+  apps". It does not use an AccessibilityService. The service polls every 1.2 s only inside a
+  lock window and otherwise sleeps until the next one. To do on the phone: block one test app
+  with battery optimisation on and the screen locked for a while, then check it survives a full
+  day and a reboot, and record the result and phone model here. **Stop before relying on B2 if
+  it is unreliable.** Play note for M11: `specialUse` needs a justification at review, and
+  `PACKAGE_USAGE_STATS` is a special permission the user grants.
+- **C3 calendar.** Build with `--dart-define=PACE_GOOGLE_CLIENT_ID=<web client id>`. Without
+  it, the Calendar screen explains the setup and nothing goes online. Android also needs the
+  app's SHA-1 registered in the same Google Cloud project, and the Calendar API enabled. While
+  the OAuth app is in "Testing", Google expires the grant after 7 days, so "Reconnect" will
+  show up weekly. On the web the access token lasts an hour. Refresh happens on launch and on
+  resume when the cache is over an hour old; there is no background job, because WorkManager
+  would be another dependency. Desktop has no Google sign-in plugin, so it is hidden there.
+- **Verified here:** `flutter analyze` is clean and `flutter test` passes. `assembleDebug` and
+  `assembleRelease` both build, the release with R8 and resource shrinking. Gradle needed
+  `-Dorg.gradle.jvmargs=-Xmx3g`, because the 8 GB in gradle.properties does not fit this
+  machine's free memory.
+- **Not verified:** everything on a device. That covers the habit and wake/verse
+  notifications, the widget, the gate, OCR on a real photo, Google sign-in (no client id
+  here), and the web build of the new screens.

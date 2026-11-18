@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gate_title_morning">Morning first</string>
+    <string name="gate_body_morning">This app opens again once your morning routine is marked done in PACE, or at %1$s.</string>
+    <string name="gate_title_evening">Time to rest</string>
+    <string name="gate_body_evening">This app opens again in the morning, at %1$s. Tomorrow will be easier with sleep.</string>
+    <string name="gate_open_pace">Open PACE</string>
+    <string name="gate_home">Go to the home screen</string>
+    <string name="gate_unlock">Unlock for %1$d minutes</string>
+</resources>

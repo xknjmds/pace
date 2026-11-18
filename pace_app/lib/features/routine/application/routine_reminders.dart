@@ -6,6 +6,7 @@ import '../../../core/notifications/reminder_scheduler.dart';
 import '../domain/morning_plan.dart';
 import '../domain/routine_reminder_planner.dart';
 import '../domain/wake_schedule.dart';
+import '../../verse/domain/verse.dart';
 import 'morning_inputs.dart';
 
 /// Keeps the wake, eat, leave and wind-down reminders in step with settings,
@@ -20,11 +21,15 @@ class RoutineReminders {
     required this.db,
     required this.scheduler,
     required this.now,
+    this.loadVerses,
   });
 
   final AppDatabase db;
   final ReminderScheduler scheduler;
   final DateTime Function() now;
+
+  /// The bundled verses, for the optional line in wake reminders.
+  final Future<List<Verse>> Function()? loadVerses;
 
   static const snoozeMinutes = 10;
   static const _steps = {
@@ -54,6 +59,13 @@ class RoutineReminders {
       t.add(const Duration(days: 7)),
     );
     final setUp = inputs.isNotEmpty;
+    var verses = const <Verse>[];
+    if (settings.verseEnabled && !settings.lowEnergyEnabled) {
+      // The verse is a nicety: if it cannot load, reminders go out without it.
+      try {
+        verses = await loadVerses?.call() ?? const [];
+      } catch (_) {}
+    }
     final planned = planRoutineReminders(
       now: t,
       inputsByWeekday: inputs,
@@ -68,6 +80,12 @@ class RoutineReminders {
             )
           : null,
       lowEnergy: settings.lowEnergyEnabled,
+      wakeLine: verses.isEmpty
+          ? null
+          : (date) {
+              final v = verseFor(date, verses);
+              return v == null ? null : '${v.text} (${v.reference})';
+            },
     );
     for (final entry in _steps.entries) {
       for (

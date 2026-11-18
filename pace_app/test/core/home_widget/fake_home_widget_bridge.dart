@@ -7,4 +7,9 @@ class FakeHomeWidgetBridge implements HomeWidgetBridge {
 
   @override
   Future<void> publishInboxCount(int count) async => counts.add(count);
+
+  final schedules = <String>[];
+
+  @override
+  Future<void> publishSchedule(String json) async => schedules.add(json);
 }

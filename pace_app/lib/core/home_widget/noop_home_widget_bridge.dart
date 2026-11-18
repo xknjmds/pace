@@ -6,4 +6,7 @@ class NoopHomeWidgetBridge implements HomeWidgetBridge {
 
   @override
   Future<void> publishInboxCount(int count) async {}
+
+  @override
+  Future<void> publishSchedule(String json) async {}
 }

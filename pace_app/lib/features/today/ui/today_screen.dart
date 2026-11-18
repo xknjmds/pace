@@ -34,6 +34,9 @@ import '../application/today_providers.dart';
 import '../domain/day_timeline.dart';
 import '../domain/today_model.dart';
 import '../domain/tuck_pose_for.dart';
+import '../../habits/ui/habit_card.dart';
+import '../../schedule/ui/today_classes_card.dart';
+import '../../verse/ui/verse_card.dart';
 import 'day_timeline_view.dart';
 import 'top3_picker_sheet.dart';
 import 'week_strip.dart';
@@ -50,9 +53,22 @@ class TodayScreen extends ConsumerWidget {
   /// Screens that sit on top of the tabs.
   static const _menu = [
     ('Review', Routes.review, Icons.insights_outlined),
+    ('Class schedule', Routes.schedule, Icons.school_outlined),
+    ('Notes', Routes.notes, Icons.sticky_note_2_outlined),
+    ('Money', Routes.money, Icons.account_balance_wallet_outlined),
+    ('App gate', Routes.gate, Icons.do_not_disturb_on_outlined),
+    ('Calendar', Routes.calendar, Icons.event_outlined),
     ('Settings', Routes.settings, Icons.tune_rounded),
     ('Reminders', Routes.notifications, Icons.notifications_none_rounded),
   ];
+
+  /// Menu entries this device can use.
+  static bool _offered(String route, PlatformFeatures f) => switch (route) {
+    Routes.notifications => f.reminders,
+    Routes.gate => f.appBlocking,
+    Routes.calendar => f.calendarSync,
+    _ => true,
+  };
 
   /// Shows a tab in the home shell, or pushes the screen when Today runs
   /// on its own.
@@ -275,7 +291,7 @@ class TodayScreen extends ConsumerWidget {
             onSelected: (route) => Navigator.of(context).pushNamed(route),
             itemBuilder: (_) => [
               for (final (label, route, icon) in _menu)
-                if (features.reminders || route != Routes.notifications)
+                if (_offered(route, features))
                   PopupMenuItem(
                     value: route,
                     child: Row(
@@ -382,6 +398,15 @@ class TodayScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+              if (!lowEnergy) enter(VerseCard(day: now)),
+              enter(
+                TodayClassesCard(
+                  now: now,
+                  onOpen: () =>
+                      Navigator.of(context).pushNamed(Routes.schedule),
+                ),
+              ),
+              enter(HabitCard(now: now)),
               if (timeline.isNotEmpty)
                 enter(
                   Padding(

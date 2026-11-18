@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/pace_widget_surface"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="32dp">
+
+    <ImageView
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/splash_tuck" />
+
+    <TextView
+        android:id="@+id/gate_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:gravity="center"
+        android:textColor="@color/pace_widget_text"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/gate_body"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:lineSpacingMultiplier="1.2"
+        android:textColor="@color/pace_widget_text"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/gate_open_pace"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/pace_widget_button"
+        android:text="@string/gate_open_pace"
+        android:textAllCaps="false"
+        android:textColor="@color/pace_widget_on_accent"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/gate_home"
+        style="?android:attr/borderlessButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/gate_home"
+        android:textAllCaps="false"
+        android:textColor="@color/pace_widget_accent"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/gate_unlock"
+        style="?android:attr/borderlessButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="8dp"
+        android:textAllCaps="false"
+        android:textColor="@color/pace_widget_accent"
+        android:textSize="16sp" />
+</LinearLayout>
