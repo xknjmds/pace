@@ -30,6 +30,9 @@ class FakeNotificationGateway implements NotificationGateway {
   final responseController = StreamController<ReminderResponse>.broadcast();
   ReminderResponse? launch;
   final cancelled = <int>[];
+
+  /// Simulates a broken plugin (for example a missing notification icon).
+  bool failPending = false;
   final persistent =
       <
         int,
@@ -111,7 +114,12 @@ class FakeNotificationGateway implements NotificationGateway {
   }
 
   @override
-  Future<List<PendingReminder>> pending() async => [
+  Future<List<PendingReminder>> pending() async {
+    if (failPending) throw StateError('plugin not initialised');
+    return _pending();
+  }
+
+  Future<List<PendingReminder>> _pending() async => [
     for (final e in scheduled.entries)
       PendingReminder(id: e.key, title: e.value.title, body: e.value.body),
   ];

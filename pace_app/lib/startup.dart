@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
 import 'core/db/database_provider.dart';
+import 'core/startup_report.dart';
 import 'core/home_widget/home_widget_bridge.dart';
 import 'core/home_widget/home_widget_providers.dart';
 import 'core/notifications/notification_gateway.dart';
@@ -25,19 +26,34 @@ Future<String?> bootstrap(
   required ProviderContainer container,
   Stream<Uri?> widgetTaps = const Stream.empty(),
 }) async {
-  await container.read(reminderSchedulerProvider).rebuildAll();
-  await container.read(routineRemindersProvider).resync();
-  await container.read(deadlineRemindersProvider).resyncAll();
+  // Each step is guarded on its own: a failing plugin must never stop the
+  // app from opening, nor stop the steps that do not depend on it.
+  final report = container.read(startupReportProvider);
+  await report.guard(
+    'rebuild reminders',
+    () => container.read(reminderSchedulerProvider).rebuildAll(),
+  );
+  await report.guard(
+    'plan routine',
+    () => container.read(routineRemindersProvider).resync(),
+  );
+  await report.guard(
+    'plan deadlines',
+    () => container.read(deadlineRemindersProvider).resyncAll(),
+  );
 
   final capture = container.read(inboxCaptureProvider);
-  await capture.publishCount();
-  await capture.syncShortcut();
+  await report.guard('widget count', capture.publishCount);
+  await report.guard('capture shortcut', capture.syncShortcut);
   // Keep the widget's count right whatever changes the inbox.
+  final widget = container.read(homeWidgetBridgeProvider);
   container
       .read(appDatabaseProvider)
       .inboxDao
       .watchUnprocessedCount()
-      .listen(container.read(homeWidgetBridgeProvider).publishInboxCount);
+      .listen(
+        (n) => report.guard('widget count', () => widget.publishInboxCount(n)),
+      );
 
   final router = ReminderResponseRouter([
     container.read(routineRemindersProvider).handle,
@@ -45,11 +61,14 @@ Future<String?> bootstrap(
     capture.handle,
     container.read(focusServiceProvider).handle,
   ]);
-  final launch = await gateway.launchResponse();
-  if (launch != null) await router.dispatch(launch);
+  ReminderResponse? launch;
+  await report.guard('launch response', () async {
+    launch = await gateway.launchResponse();
+    if (launch != null) await router.dispatch(launch!);
+  });
   // Lives as long as the app; the gateway's stream is app-scoped too.
   gateway.responses.listen((r) async {
-    await router.dispatch(r);
+    await report.guard('notification response', () => router.dispatch(r));
     final route = routeForResponse(r);
     if (route != null) PaceApp.navigatorKey.currentState?.pushNamed(route);
   });
@@ -58,7 +77,7 @@ Future<String?> bootstrap(
     final route = routeForWidgetUri(uri);
     if (route != null) PaceApp.navigatorKey.currentState?.pushNamed(route);
   });
-  return launch == null ? null : routeForResponse(launch);
+  return launch == null ? null : routeForResponse(launch!);
 }
 
 /// Where a plain tap on a notification leads. Button presses are handled
@@ -80,13 +99,15 @@ String? routeForWidgetUri(Uri? uri) => switch (uri?.toString()) {
   _ => null,
 };
 
-/// The app's container: the real gateway and widget bridge.
+/// The app's container: the real gateway, widget bridge and startup report.
 ProviderContainer containerFor(
   NotificationGateway gateway,
   HomeWidgetBridge widget,
+  StartupReport report,
 ) => ProviderContainer(
   overrides: [
     notificationGatewayProvider.overrideWithValue(gateway),
     homeWidgetBridgeProvider.overrideWithValue(widget),
+    startupReportProvider.overrideWithValue(report),
   ],
 );

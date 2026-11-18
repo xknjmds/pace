@@ -5,6 +5,7 @@ import 'package:home_widget/home_widget.dart';
 
 import 'app.dart';
 import 'core/home_widget/home_widget_bridge_impl.dart';
+import 'core/startup_report.dart';
 import 'core/widgets/unsupported_platform_app.dart';
 import 'core/notifications/local_notification_gateway.dart';
 import 'features/inbox/application/capture_background.dart';
@@ -19,17 +20,29 @@ Future<void> main() async {
     runApp(const UnsupportedPlatformApp());
     return;
   }
+  final report = StartupReport();
   final notifications = LocalNotificationGateway(
     backgroundHandler: captureFromNotificationBackground,
   );
-  await notifications.initialize();
-  final container = containerFor(notifications, const HomeWidgetBridgeImpl());
-  final fromNotification = await bootstrap(
+  await report.guard('notifications', notifications.initialize);
+  final container = containerFor(
     notifications,
-    container: container,
-    widgetTaps: HomeWidget.widgetClicked,
+    const HomeWidgetBridgeImpl(),
+    report,
   );
-  final launchedWith = await HomeWidget.initiallyLaunchedFromHomeWidget();
+  String? fromNotification;
+  await report.guard('startup', () async {
+    fromNotification = await bootstrap(
+      notifications,
+      container: container,
+      widgetTaps: HomeWidget.widgetClicked,
+    );
+  });
+  Uri? launchedWith;
+  await report.guard('widget launch', () async {
+    launchedWith = await HomeWidget.initiallyLaunchedFromHomeWidget();
+  });
+  // Always reached: whatever failed above, the app opens.
   runApp(
     UncontrolledProviderScope(
       container: container,

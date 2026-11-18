@@ -7,6 +7,7 @@ import 'package:pace/core/db/app_database.dart';
 import 'package:pace/core/db/database_provider.dart';
 import 'package:pace/core/home_widget/home_widget_providers.dart';
 import 'package:pace/core/notifications/notification_providers.dart';
+import 'package:pace/core/startup_report.dart';
 import 'package:pace/core/time/clock.dart';
 
 import '../../core/home_widget/fake_home_widget_bridge.dart';
@@ -25,7 +26,11 @@ void main() {
   /// A typical small phone.
   const phone = Size(360, 640);
 
-  Future<void> pumpApp(WidgetTester tester, DateTime now) async {
+  Future<void> pumpApp(
+    WidgetTester tester,
+    DateTime now, {
+    StartupReport? report,
+  }) async {
     tester.view.physicalSize = phone;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -36,6 +41,7 @@ void main() {
           appDatabaseProvider.overrideWithValue(db),
           notificationGatewayProvider.overrideWithValue(gateway),
           homeWidgetBridgeProvider.overrideWithValue(FakeHomeWidgetBridge()),
+          startupReportProvider.overrideWithValue(report ?? StartupReport()),
           clockProvider.overrideWithValue(() => now),
         ],
         child: const PaceApp(),
@@ -294,6 +300,25 @@ void main() {
         .map((s) => s.payload!.split(':').first)
         .toSet();
     expect(kinds, {'wake', 'leave'});
+    await unmountApp(tester);
+  });
+
+  testWidgets('a failed startup step shows one calm card, app still works', (
+    tester,
+  ) async {
+    final report = StartupReport()..problems.add('notifications');
+    await pumpApp(tester, DateTime(2026, 11, 14, 10), report: report);
+    expect(find.text('Reminders did not start properly'), findsOneWidget);
+    expect(find.text('Set up your week'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('startup-problem')));
+    await tester.pumpAndSettle();
+    expect(find.text('Reminders'), findsWidgets);
+    await unmountApp(tester);
+  });
+
+  testWidgets('no card when startup went fine', (tester) async {
+    await pumpApp(tester, DateTime(2026, 11, 14, 10));
+    expect(find.byKey(const ValueKey('startup-problem')), findsNothing);
     await unmountApp(tester);
   });
 }

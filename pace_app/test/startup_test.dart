@@ -8,6 +8,7 @@ import 'package:pace/core/notifications/notification_channels.dart';
 import 'package:pace/core/notifications/notification_permissions.dart';
 import 'package:pace/core/notifications/notification_providers.dart';
 import 'package:pace/core/notifications/reminder_actions.dart';
+import 'package:pace/core/startup_report.dart';
 import 'package:pace/core/time/clock.dart';
 import 'package:pace/features/inbox/application/inbox_capture.dart';
 import 'package:pace/routes.dart';
@@ -147,4 +148,51 @@ void main() {
       expect(await bootstrap(gateway, container: c), Routes.checkIn);
     },
   );
+
+  test(
+    'a broken notification plugin does not stop the rest of startup',
+    () async {
+      await db.weekdayScheduleDao.upsert(
+        weekday: DateTime.monday,
+        firstClassMinutes: 8 * 60 + 30,
+        commuteMinutes: 30,
+        prepMinutes: 30,
+      );
+      await db.inboxDao.add('kept');
+      gateway.failPending = true;
+      final report = StartupReport();
+      final c = ProviderContainer(
+        overrides: [
+          notificationGatewayProvider.overrideWithValue(gateway),
+          homeWidgetBridgeProvider.overrideWithValue(widget),
+          appDatabaseProvider.overrideWithValue(db),
+          clockProvider.overrideWithValue(() => now),
+          startupReportProvider.overrideWithValue(report),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      await bootstrap(gateway, container: c);
+
+      expect(report.problems, ['rebuild reminders']);
+      // Later steps still ran.
+      expect(
+        gateway.scheduled.values.map((s) => s.payload),
+        contains('leave:1'),
+      );
+      expect(widget.last, 1);
+      expect(
+        gateway.persistent,
+        contains(FixedNotificationIds.captureShortcut),
+      );
+    },
+  );
+
+  test('StartupReport.guard records the step and swallows the error', () async {
+    final report = StartupReport();
+    await report.guard('ok', () async {});
+    await report.guard('boom', () async => throw StateError('x'));
+    expect(report.problems, ['boom']);
+    expect(report.ok, isFalse);
+  });
 }

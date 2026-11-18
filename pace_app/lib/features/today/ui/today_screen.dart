@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/db/database_provider.dart';
 import '../../../core/db/settings_provider.dart';
+import '../../../core/startup_report.dart';
 import '../../../core/time/local_time.dart';
 import '../../../core/widgets/cairn_mark.dart';
 import '../../../routes.dart';
@@ -82,6 +83,7 @@ class TodayScreen extends ConsumerWidget {
     final lowEnergy = ref.watch(lowEnergyProvider);
     final inboxCount = ref.watch(inboxCountProvider);
     final focus = ref.watch(activeFocusProvider).value;
+    final startup = ref.watch(startupReportProvider);
     final theme = Theme.of(context);
 
     final hasSchedule = schedules.isNotEmpty;
@@ -160,6 +162,20 @@ class TodayScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
           children: [
+            if (!startup.ok)
+              Card(
+                key: const ValueKey('startup-problem'),
+                child: ListTile(
+                  leading: const Icon(Icons.info_outline),
+                  title: const Text('Reminders did not start properly'),
+                  subtitle: const Text(
+                    'Everything else works. Check the reminder setup.',
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () =>
+                      Navigator.of(context).pushNamed(Routes.notifications),
+                ),
+              ),
             if (empty) ...[
               const SizedBox(height: 16),
               const Center(child: CairnMark(size: 72)),

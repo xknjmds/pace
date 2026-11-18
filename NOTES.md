@@ -235,3 +235,24 @@ built), so no real data was affected. Regenerate the steps file after every sche
   logged" rather than a gap). Empty data reads "No ... logged yet". No streaks, no red, and
   no number ever goes down because of a missed day. In low-energy mode the sleep log folds
   into a count with a Show button.
+
+## First real-device install (2026-11-18)
+
+The owner installed a release APK (`flutter build apk`, built 14:28 from commit 09d96e3) and
+it did not work. No phone was connected afterwards, so there are no device logs. Reading
+the APK found the cause: **`drawable/ic_stat_pace` was missing**. Release builds shrink
+resources, and the notification icon is only named from Dart, so R8 removed it.
+`LocalNotificationGateway.initialize()` then fails ("invalid icon") inside `main` before
+`runApp`, so the app never draws a screen. The four densities exist in the source, and the
+release APK's resource table has no entry for them.
+
+Fixes:
+- `res/raw/keep.xml` keeps `@drawable/ic_stat_pace`, as the plugin's README requires.
+  Its R8 rules for Gson ship with the plugin since v19, so no proguard file is needed.
+- Startup can no longer stop the app from opening. `main` and `bootstrap` run each step
+  (notifications, rebuild, routine, deadlines, widget, capture, launch response) through
+  `StartupReport.guard`, so a failure is logged and recorded and the next step still runs.
+  Today shows one calm card, "Reminders did not start properly", linking to the reminder
+  setup.
+
+Not yet confirmed on the phone: a new release build is needed (disk at 1.2 GB free).

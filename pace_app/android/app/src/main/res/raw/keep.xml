@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Release builds shrink resources and drop anything not referenced from
+  Android code or XML. These are only named from Dart (the notification
+  icon is passed to flutter_local_notifications as a string), so they must
+  be kept explicitly. Without this the plugin fails to initialise and the
+  app never opens (found on the first real-device install).
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_pace" />
