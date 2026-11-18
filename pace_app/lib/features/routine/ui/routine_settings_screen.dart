@@ -283,7 +283,7 @@ class RoutineSettingsScreen extends ConsumerWidget {
     String hm(DateTime t) => LocalTime.of(t.hour, t.minute).format24();
     String day(DateTime d) => '${d.day}/${d.month}';
     final value = theme.textTheme.titleMedium?.copyWith(
-      color: theme.colorScheme.primary,
+      color: theme.colorScheme.secondary,
     );
 
     return Scaffold(
@@ -542,13 +542,13 @@ class _DayBadge extends StatelessWidget {
       height: 40,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: hasClass ? scheme.primary : scheme.surfaceContainerHigh,
+        color: hasClass ? scheme.primaryContainer : scheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(PaceRadius.s),
       ),
       child: Text(
         label,
         style: theme.textTheme.labelLarge?.copyWith(
-          color: hasClass ? scheme.onPrimary : scheme.onSurfaceVariant,
+          color: hasClass ? scheme.onPrimaryContainer : scheme.onSurfaceVariant,
         ),
       ),
     );

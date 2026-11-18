@@ -94,7 +94,7 @@ class _ImportReviewState extends ConsumerState<ImportReviewScreen> {
                 '$incomplete ${incomplete == 1 ? 'class needs' : 'classes need'} '
                 'a day or time. Fill them in or remove them.',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.primary,
+                  color: theme.colorScheme.secondary,
                 ),
               ),
             ),
@@ -119,7 +119,7 @@ class _ImportReviewState extends ConsumerState<ImportReviewScreen> {
                                 ? Icons.layers_outlined
                                 : Icons.check_circle_outline_rounded)
                           : Icons.edit_outlined,
-                      color: theme.colorScheme.primary,
+                      color: theme.colorScheme.secondary,
                     ),
                     title: Text(b.subject.isEmpty ? '(no name)' : b.subject),
                     subtitle: Text(

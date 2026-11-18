@@ -61,9 +61,9 @@ class _DoneCheckState extends State<DoneCheck>
             child: DecoratedBox(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Color.lerp(Colors.transparent, scheme.primary, v),
+                color: Color.lerp(Colors.transparent, scheme.secondary, v),
                 border: Border.all(
-                  color: Color.lerp(scheme.outline, scheme.primary, v)!,
+                  color: Color.lerp(scheme.outline, scheme.secondary, v)!,
                   width: 1.8,
                 ),
               ),
@@ -74,7 +74,7 @@ class _DoneCheckState extends State<DoneCheck>
                   child: Icon(
                     Icons.check_rounded,
                     size: s * .7,
-                    color: scheme.onPrimary,
+                    color: scheme.onSecondary,
                   ),
                 ),
               ),

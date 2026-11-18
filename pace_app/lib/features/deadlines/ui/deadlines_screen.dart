@@ -153,7 +153,7 @@ class DeadlinesScreen extends ConsumerWidget {
                           Icon(
                             Icons.spa_outlined,
                             size: 18,
-                            color: scheme.primary,
+                            color: scheme.secondary,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -186,7 +186,7 @@ class DeadlinesScreen extends ConsumerWidget {
                               key: ValueKey('done-${t.id}'),
                               leading: Icon(
                                 Icons.check_circle_rounded,
-                                color: scheme.primary,
+                                color: scheme.secondary,
                               ),
                               title: Text(
                                 t.title,

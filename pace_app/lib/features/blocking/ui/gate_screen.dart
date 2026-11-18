@@ -132,7 +132,7 @@ class _GateScreenState extends ConsumerState<GateScreen>
                     perms?.usageAccess ?? false
                         ? Icons.check_circle_rounded
                         : Icons.radio_button_unchecked_rounded,
-                    color: theme.colorScheme.primary,
+                    color: theme.colorScheme.secondary,
                   ),
                   title: const Text('Usage access'),
                   subtitle: const Text(
@@ -153,7 +153,7 @@ class _GateScreenState extends ConsumerState<GateScreen>
                     perms?.overlay ?? false
                         ? Icons.check_circle_rounded
                         : Icons.radio_button_unchecked_rounded,
-                    color: theme.colorScheme.primary,
+                    color: theme.colorScheme.secondary,
                   ),
                   title: const Text('Display over other apps'),
                   subtitle: const Text(

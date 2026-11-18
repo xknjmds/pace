@@ -197,7 +197,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                             tooltip: 'Make a deadline',
                             icon: Icon(
                               Icons.event_available_outlined,
-                              color: scheme.primary,
+                              color: scheme.secondary,
                             ),
                             onPressed: () => _toDeadline(item),
                           ),
@@ -205,7 +205,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                             tooltip: 'Make a note',
                             icon: Icon(
                               Icons.sticky_note_2_outlined,
-                              color: scheme.primary,
+                              color: scheme.secondary,
                             ),
                             onPressed: () async {
                               await noteFromInbox(ref, item.body);

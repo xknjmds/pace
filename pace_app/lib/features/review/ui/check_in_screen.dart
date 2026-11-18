@@ -146,7 +146,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
                   ListTile(
                     leading: Icon(
                       Icons.event_note_outlined,
-                      color: theme.colorScheme.primary,
+                      color: theme.colorScheme.secondary,
                     ),
                     title: Text(t.title),
                     subtitle: Text(describeDue(t.dueAt, now)),
@@ -298,7 +298,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
                       height: 4,
                       decoration: BoxDecoration(
                         color: i <= index
-                            ? scheme.primary
+                            ? scheme.secondary
                             : scheme.surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(2),
                       ),

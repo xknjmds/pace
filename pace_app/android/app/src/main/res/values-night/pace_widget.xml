@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="pace_widget_surface">#1C2622</color>
-    <color name="pace_widget_accent">#9CC3B4</color>
-    <color name="pace_widget_on_accent">#10201B</color>
-    <color name="pace_widget_text">#E4E1DA</color>
+    <color name="pace_widget_surface">#1A1B1E</color>
+    <color name="pace_widget_accent">#F1EEE8</color>
+    <color name="pace_widget_on_accent">#1A1B1E</color>
+    <color name="pace_widget_now">#2C3A35</color>
+    <color name="pace_widget_text">#EEEBE6</color>
 </resources>

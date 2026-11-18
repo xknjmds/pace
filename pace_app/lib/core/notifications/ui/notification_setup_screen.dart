@@ -301,7 +301,7 @@ class _StepCard extends StatelessWidget {
                   child: Icon(
                     done ? Icons.check_circle : Icons.radio_button_unchecked,
                     key: ValueKey(done),
-                    color: done ? scheme.primary : scheme.outline,
+                    color: done ? scheme.secondary : scheme.outline,
                     semanticLabel: done ? 'Done' : 'Not yet',
                   ),
                 ),

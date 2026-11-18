@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The block under way: a soft accent tint, never an alarm colour. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#2635665A" />
+    <solid android:color="@color/pace_widget_now" />
     <corners android:radius="12dp" />
 </shape>

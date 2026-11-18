@@ -53,6 +53,21 @@ Notification text stays about the user. Copy is calm and forgiving: no "you miss
 
 Tuck works on Sand, white and Ink.
 
+**UI neutrals** (`pace_app/lib/core/theme/pace_colors.dart`). The brand colours above are for Tuck, the logo and the icon.
+The app UI itself is calm and neutral: an off-white page, soft-ink actions and pastel fills, with Moss as a small accent.
+
+| Role | Light | Dark |
+|---|---|---|
+| Page | `#FAF8F5` off-white | `#1A1B1E` soft charcoal |
+| Card | `#FFFFFF` (a whisper of shadow) | `#24262A` |
+| Text / secondary text | `#26282C` / `#64666C` | `#EEEBE6` / `#A9ACB2` |
+| Main action (buttons, FAB) | `#2B2D31` soft ink, off-white label | `#F1EEE8`, charcoal label |
+| Selected (today, nav, chips) | `#DCEAE3` mint | `#2C3A35` |
+| Accent (checks, done, links, focus) | Moss `#35665A` | Moss light `#9CC3B4` |
+
+Every text pair passes 4.5:1 and every outline 3:1 in both modes (secondary text and outlines were darkened by lightness only to get there).
+Green is never a page or card background.
+
 **UI activity pastels** (`PacePastels` in `pace_app/lib/core/theme/pace_pastels.dart`): soft fills that tell blocks of the day apart,
 Tiimo-style. Brand tints (dawn for morning, moss for leaving and class, warm sand for deadlines, sage for calm) plus two muted extras:
 soft sky for focus and dusk lilac for evening. Each has a deeper tone for its icon and text. They are for UI blocks only, never for Tuck

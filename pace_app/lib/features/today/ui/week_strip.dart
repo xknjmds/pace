@@ -68,13 +68,13 @@ class _DayPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = isToday ? scheme.onPrimary : scheme.onSurface;
+    final fg = isToday ? scheme.onPrimaryContainer : scheme.onSurface;
     return AnimatedContainer(
       duration: PaceMotion.standard,
       curve: PaceMotion.easeOut,
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: isToday ? scheme.primary : scheme.surfaceContainerLow,
+        color: isToday ? scheme.primaryContainer : scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(PaceRadius.m),
       ),
       child: Column(
@@ -100,9 +100,7 @@ class _DayPill extends StatelessWidget {
             height: 5,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: done
-                  ? (isToday ? scheme.onPrimary : scheme.primary)
-                  : Colors.transparent,
+              color: done ? scheme.secondary : Colors.transparent,
             ),
           ),
         ],

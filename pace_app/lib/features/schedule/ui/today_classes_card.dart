@@ -98,7 +98,7 @@ class TodayClassesCard extends ConsumerWidget {
                           child: Text(
                             '${_hm(i.start)}–${_hm(i.end)}',
                             style: theme.textTheme.labelLarge?.copyWith(
-                              color: scheme.primary,
+                              color: scheme.secondary,
                             ),
                           ),
                         ),

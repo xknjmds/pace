@@ -175,7 +175,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                                   : Text(
                                       formatSleep(e.slept!),
                                       style: theme.textTheme.titleMedium
-                                          ?.copyWith(color: scheme.primary),
+                                          ?.copyWith(color: scheme.secondary),
                                     ),
                             ),
                           ],
@@ -294,12 +294,12 @@ class _NumberBadge extends StatelessWidget {
       height: 40,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: scheme.primary,
+        color: scheme.secondary,
         borderRadius: BorderRadius.circular(PaceRadius.s),
       ),
       child: Text(
         '$value',
-        style: theme.textTheme.titleLarge?.copyWith(color: scheme.onPrimary),
+        style: theme.textTheme.titleLarge?.copyWith(color: scheme.onSecondary),
       ),
     );
   }

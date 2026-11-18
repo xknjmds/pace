@@ -15,7 +15,7 @@ class PaceWordmark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? Theme.of(context).colorScheme.primary;
+    final c = color ?? Theme.of(context).colorScheme.secondary;
     return Semantics(
       label: 'PACE',
       child: CustomPaint(

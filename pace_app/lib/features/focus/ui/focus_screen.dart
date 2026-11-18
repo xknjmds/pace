@@ -210,7 +210,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.check_circle_rounded, color: scheme.primary),
+                  Icon(Icons.check_circle_rounded, color: scheme.secondary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(

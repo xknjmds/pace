@@ -11,62 +11,79 @@ abstract final class PaceTheme {
   static const fontFamily = 'Figtree';
   static const tabular = [FontFeature.tabularFigures()];
 
+  /// Off-white page, white cards, soft-ink actions, mint for selected
+  /// states, Moss as the accent.
   static ThemeData light() {
     final scheme =
         ColorScheme.fromSeed(
           seedColor: PaceColors.moss,
-          dynamicSchemeVariant: DynamicSchemeVariant.tonalSpot,
+          dynamicSchemeVariant: DynamicSchemeVariant.neutral,
         ).copyWith(
-          primary: PaceColors.moss,
-          onPrimary: Colors.white,
-          primaryContainer: PaceColors.mossMist,
-          onPrimaryContainer: PaceColors.mossDeep,
-          secondary: const Color(0xFF56665F),
-          secondaryContainer: const Color(0xFFE3E9E2),
-          onSecondaryContainer: const Color(0xFF1E2B26),
+          primary: PaceColors.softInk,
+          onPrimary: PaceColors.offWhite,
+          primaryContainer: PaceColors.mint,
+          onPrimaryContainer: PaceColors.text,
+          secondary: PaceColors.moss,
+          onSecondary: PaceColors.white,
+          secondaryContainer: const Color(0xFFE4EAE3),
+          onSecondaryContainer: PaceColors.text,
           tertiary: PaceColors.dawn,
+          onTertiary: PaceColors.white,
           tertiaryContainer: PaceColors.dawnMist,
           onTertiaryContainer: const Color(0xFF3D2A07),
-          surface: PaceColors.sand,
-          onSurface: PaceColors.ink,
-          onSurfaceVariant: const Color(0xFF56605B),
-          surfaceContainerLowest: Colors.white,
-          surfaceContainerLow: PaceColors.paper,
-          surfaceContainer: const Color(0xFFEFE9E0),
-          surfaceContainerHigh: PaceColors.sandDeep,
-          surfaceContainerHighest: PaceColors.sandHigh,
-          outline: const Color(0xFF7D8681),
-          outlineVariant: const Color(0xFFDDD5C9),
+          surface: PaceColors.offWhite,
+          onSurface: PaceColors.text,
+          onSurfaceVariant: PaceColors.textSoft,
+          surfaceContainerLowest: PaceColors.white,
+          surfaceContainerLow: PaceColors.white,
+          surfaceContainer: PaceColors.mist,
+          surfaceContainerHigh: PaceColors.sunken,
+          surfaceContainerHighest: PaceColors.sunkenDeep,
+          outline: PaceColors.line,
+          outlineVariant: PaceColors.lineSoft,
+          inverseSurface: PaceColors.softInk,
+          onInverseSurface: PaceColors.offWhite,
+          inversePrimary: PaceColors.mossLight,
+          surfaceTint: Colors.transparent,
         );
     return _base(scheme);
   }
 
+  /// Soft charcoal page, lifted cards, paper-white actions, deep mint for
+  /// selected states, Moss light as the accent.
   static ThemeData dark() {
     final scheme =
         ColorScheme.fromSeed(
           seedColor: PaceColors.moss,
           brightness: Brightness.dark,
+          dynamicSchemeVariant: DynamicSchemeVariant.neutral,
         ).copyWith(
-          primary: PaceColors.mossLight,
-          onPrimary: const Color(0xFF0F2A22),
-          primaryContainer: PaceColors.mossNight,
-          onPrimaryContainer: PaceColors.mossPale,
-          secondary: const Color(0xFFB5C6BE),
-          secondaryContainer: const Color(0xFF33423C),
-          onSecondaryContainer: const Color(0xFFD6E4DD),
+          primary: PaceColors.paper,
+          onPrimary: PaceColors.charcoal,
+          primaryContainer: PaceColors.mintNight,
+          onPrimaryContainer: PaceColors.textNight,
+          secondary: PaceColors.mossLight,
+          onSecondary: const Color(0xFF14231E),
+          secondaryContainer: const Color(0xFF2C3833),
+          onSecondaryContainer: PaceColors.textNight,
           tertiary: PaceColors.dawnLight,
+          onTertiary: const Color(0xFF2A1E08),
           tertiaryContainer: PaceColors.dawnNight,
           onTertiaryContainer: const Color(0xFFF6E2BD),
-          surface: PaceColors.ink,
-          onSurface: const Color(0xFFEDE8DF),
-          onSurfaceVariant: const Color(0xFFB4BEB8),
-          surfaceContainerLowest: const Color(0xFF151D1A),
-          surfaceContainerLow: PaceColors.inkLow,
-          surfaceContainer: PaceColors.inkMid,
-          surfaceContainerHigh: PaceColors.inkHigh,
-          surfaceContainerHighest: PaceColors.inkHighest,
-          outline: const Color(0xFF8A9690),
-          outlineVariant: const Color(0xFF3A4842),
+          surface: PaceColors.charcoal,
+          onSurface: PaceColors.textNight,
+          onSurfaceVariant: PaceColors.textNightSoft,
+          surfaceContainerLowest: PaceColors.charcoalDeep,
+          surfaceContainerLow: PaceColors.charcoalCard,
+          surfaceContainer: PaceColors.charcoalMid,
+          surfaceContainerHigh: PaceColors.charcoalHigh,
+          surfaceContainerHighest: PaceColors.charcoalHighest,
+          outline: PaceColors.lineNight,
+          outlineVariant: PaceColors.lineNightSoft,
+          inverseSurface: PaceColors.textNight,
+          onInverseSurface: PaceColors.charcoal,
+          inversePrimary: PaceColors.moss,
+          surfaceTint: Colors.transparent,
         );
     return _base(scheme);
   }
@@ -142,12 +159,15 @@ abstract final class PaceTheme {
         titleTextStyle: text.titleLarge!.copyWith(color: scheme.onSurface),
       ),
       cardTheme: CardThemeData(
-        elevation: 0,
+        // White cards lift off the off-white page with a whisper of
+        // shadow; on charcoal the lighter fill does that job.
+        elevation: scheme.brightness == Brightness.light ? 1 : 0,
+        shadowColor: const Color(0x1A1C1D20),
         margin: const EdgeInsets.symmetric(vertical: 5),
         color: scheme.surfaceContainerLow,
         surfaceTintColor: Colors.transparent,
         clipBehavior: Clip.antiAlias,
-        // Soft and borderless: blocks are told apart by fill, not lines.
+        // Borderless: blocks are told apart by fill and lift, not lines.
         shape: const RoundedRectangleBorder(borderRadius: PaceRadius.cardAll),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -276,7 +296,7 @@ abstract final class PaceTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(PaceRadius.m),
-          borderSide: BorderSide(color: scheme.primary, width: 1.5),
+          borderSide: BorderSide(color: scheme.secondary, width: 1.5),
         ),
       ),
       popupMenuTheme: PopupMenuThemeData(
@@ -294,7 +314,7 @@ abstract final class PaceTheme {
         thickness: 1,
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
-        color: scheme.primary,
+        color: scheme.secondary,
         linearTrackColor: scheme.surfaceContainerHigh,
         circularTrackColor: scheme.surfaceContainerHigh,
       ),

@@ -116,7 +116,7 @@ class _WeekCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 3),
                   child: Row(
                     children: [
-                      Icon(icon, size: 18, color: theme.colorScheme.primary),
+                      Icon(icon, size: 18, color: theme.colorScheme.secondary),
                       const SizedBox(width: 10),
                       Expanded(child: Text(text)),
                     ],

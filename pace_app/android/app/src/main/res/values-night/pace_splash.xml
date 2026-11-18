@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Night: Tuck on Ink. -->
-    <color name="pace_splash_bg">#1C2622</color>
+    <!-- Night: Tuck on the soft charcoal UI page. -->
+    <color name="pace_splash_bg">#1A1B1E</color>
 </resources>

@@ -530,7 +530,7 @@ class TodayScreen extends ConsumerWidget {
                 child: SwitchListTile(
                   secondary: Icon(
                     lowEnergy ? Icons.spa_rounded : Icons.spa_outlined,
-                    color: lowEnergy ? scheme.primary : null,
+                    color: lowEnergy ? scheme.secondary : null,
                   ),
                   title: const Text('Low-energy mode'),
                   subtitle: const Text('Shows only what matters today.'),
@@ -724,7 +724,7 @@ class _StatusPill extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 18, color: scheme.primary),
+                Icon(icon, size: 18, color: scheme.secondary),
                 const SizedBox(width: 8),
                 Text(text, style: theme.textTheme.labelLarge),
                 const SizedBox(width: 4),
@@ -813,7 +813,7 @@ class _RoutineCard extends StatelessWidget {
       RoutineAllDone() => (
         Row(
           children: [
-            Icon(Icons.check_circle_rounded, color: scheme.primary),
+            Icon(Icons.check_circle_rounded, color: scheme.secondary),
             const SizedBox(width: 12),
             Expanded(child: Text('Routine done for today.', style: body)),
           ],
@@ -963,13 +963,13 @@ class _StepPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final fg = done ? scheme.onPrimary : scheme.onSurface;
+    final fg = done ? scheme.onSecondary : scheme.onSurface;
     final pill = AnimatedContainer(
       duration: PaceMotion.standard,
       curve: PaceMotion.easeOut,
       padding: const EdgeInsets.fromLTRB(12, 9, 14, 9),
       decoration: ShapeDecoration(
-        color: done ? scheme.primary : scheme.surfaceContainerLowest,
+        color: done ? scheme.secondary : scheme.surfaceContainerLowest,
         shape: const StadiumBorder(),
       ),
       child: Row(
@@ -981,7 +981,7 @@ class _StepPill extends StatelessWidget {
               done ? Icons.check_rounded : icon,
               key: ValueKey(done),
               size: 18,
-              color: done ? fg : scheme.primary,
+              color: done ? fg : scheme.secondary,
             ),
           ),
           const SizedBox(width: 6),
@@ -1030,14 +1030,14 @@ class _StepTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final fg = done ? scheme.onPrimary : scheme.onSurface;
+    final fg = done ? scheme.onSecondary : scheme.onSurface;
     final tile = AnimatedContainer(
       duration: PaceMotion.standard,
       curve: PaceMotion.easeOut,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: done
-            ? scheme.primary
+            ? scheme.secondary
             : isNext
             ? scheme.surfaceContainerLowest
             : scheme.surfaceContainerLowest.withValues(alpha: .55),

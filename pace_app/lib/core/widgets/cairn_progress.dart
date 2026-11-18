@@ -26,7 +26,7 @@ class CairnProgress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final fill = color ?? scheme.primary;
+    final fill = color ?? scheme.secondary;
     final track = trackColor ?? fill.withValues(alpha: .18);
     final unit = width / 176;
     final n = done.length.clamp(1, 3);

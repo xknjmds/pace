@@ -166,9 +166,9 @@ class _Block extends StatelessWidget {
                     height: 12,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: done ? scheme.primary : scheme.surface,
+                      color: done ? scheme.secondary : scheme.surface,
                       border: Border.all(
-                        color: done ? scheme.primary : pastel.ink,
+                        color: done ? scheme.secondary : pastel.ink,
                         width: 2,
                       ),
                     ),
@@ -228,7 +228,7 @@ class _Block extends StatelessWidget {
                             Icon(
                               Icons.check_circle_rounded,
                               size: 20,
-                              color: scheme.primary,
+                              color: scheme.secondary,
                             ),
                         ],
                       ),

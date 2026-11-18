@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Launch colours (branding/GUIDELINES.md): Tuck on Sand. -->
-    <color name="pace_splash_bg">#F3EEE6</color>
+    <!-- Launch colours (branding/GUIDELINES.md): Tuck on the off-white UI page. -->
+    <color name="pace_splash_bg">#FAF8F5</color>
 </resources>
