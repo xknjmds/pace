@@ -14,6 +14,11 @@ class Pastel {
 }
 
 /// What a block of the day is, so it gets its own soft colour.
+///
+/// Modules use one family each, so a screen and its tile in the More hub
+/// match: schedule and classes → [leave], habits → [morning],
+/// money → [calm], notes → [deadline], calendar → [focus],
+/// app gate and the daily verse → [evening].
 enum PastelKind { morning, leave, deadline, focus, evening, calm }
 
 /// Soft activity colours, Tiimo-style: brand tints (dawn, moss, sand) plus

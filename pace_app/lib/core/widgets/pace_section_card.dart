@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/pace_pastels.dart';
 import '../theme/pace_tokens.dart';
+import 'pastel_icon_chip.dart';
 
 /// A card with a title row (and optional action) above its content.
 /// Height changes (a row arriving or leaving) glide instead of jumping.
@@ -41,10 +42,7 @@ class PaceSectionCard extends StatelessWidget {
                 child: Row(
                   children: [
                     if (icon != null) ...[
-                      _IconChip(
-                        icon: icon!,
-                        pastel: PacePastels.of(context).forKind(pastel),
-                      ),
+                      PastelIconChip(icon: icon!, kind: pastel),
                       const SizedBox(width: 12),
                     ],
                     Expanded(
@@ -64,23 +62,4 @@ class PaceSectionCard extends StatelessWidget {
       ),
     );
   }
-}
-
-/// A small soft square holding an icon in its pastel colour.
-class _IconChip extends StatelessWidget {
-  const _IconChip({required this.icon, required this.pastel});
-
-  final IconData icon;
-  final Pastel pastel;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 32,
-    height: 32,
-    decoration: BoxDecoration(
-      color: pastel.fill,
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: Icon(icon, size: 18, color: pastel.ink),
-  );
 }

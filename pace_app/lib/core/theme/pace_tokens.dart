@@ -41,7 +41,7 @@ class PaceMotion {
   /// Low-energy mode: no decorative motion.
   final bool calm;
 
-  static const press = Duration(milliseconds: 120);
+  static const press = Duration(milliseconds: 150);
   static const quick = Duration(milliseconds: 180);
   static const standard = Duration(milliseconds: 240);
   static const emphasized = Duration(milliseconds: 300);
