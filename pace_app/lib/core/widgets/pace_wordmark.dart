@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// The PACE wordmark, drawn from the master geometry in
-/// branding/final/pace-wordmark.svg (four round-capped strokes). It is
+/// branding/archive/cairn/final/pace-wordmark.svg (four round-capped strokes). It is
 /// constructed, never typed in a font.
 class PaceWordmark extends StatelessWidget {
   const PaceWordmark({super.key, this.height = 20, this.color});

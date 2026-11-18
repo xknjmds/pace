@@ -3,6 +3,8 @@
 **App name:** PACE (Progress Always Comes Eventually)
 **Android package ID:** `com.el.pace`
 **Tone:** calm, steady, forgiving. Copy and UI should never shame or rush the user.
+**Mascot:** Tuck the turtle is the brand (`branding/GUIDELINES.md`). Tuck is never sad or
+disappointed, and respects reduced motion and low-energy mode.
 
 Personal routine and productivity app. Single user, Android first, offline-first.
 Read `PLAN.md` for milestones and acceptance criteria. Work on one milestone at a time.

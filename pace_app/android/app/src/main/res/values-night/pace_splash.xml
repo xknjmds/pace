@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Night: Moss light cairn on Ink. -->
+    <!-- Night: Tuck on Ink. -->
     <color name="pace_splash_bg">#1C2622</color>
-    <color name="pace_splash_mark">#9CC3B4</color>
 </resources>

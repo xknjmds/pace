@@ -7,6 +7,7 @@ import '../../../core/platform/platform_features.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/theme/pace_tokens.dart';
 import '../../../core/widgets/press_scale.dart';
+import '../../../core/widgets/tuck.dart';
 import '../../deadlines/application/deadline_providers.dart';
 import '../../shell/shell_tabs.dart';
 import '../application/focus_providers.dart';
@@ -259,7 +260,9 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          const Center(child: Tuck(pose: TuckPose.focus, size: 80)),
+          const SizedBox(height: 12),
           Text(
             features.reminders
                 ? 'You can turn the screen off. PACE will tell '
@@ -288,7 +291,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
             child: FocusRing(
               progress: 1,
               size: 168,
-              child: Icon(Icons.check_rounded, size: 64, color: scheme.primary),
+              child: const Tuck(pose: TuckPose.proud, size: 112),
             ),
           ),
           const SizedBox(height: 28),

@@ -7,6 +7,7 @@ import '../../../core/platform/platform_features.dart';
 import '../../../core/theme/pace_tokens.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/tuck.dart';
 import '../../../core/widgets/fade_slide_in.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../deadlines/application/deadline_providers.dart';
@@ -151,7 +152,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                 message:
                     'Anything you write above waits here until you '
                     'decide what it is.',
-                cairnSize: 56,
+                pose: TuckPose.note,
+                mascotSize: 96,
               )
             else if (hideList)
               Card(

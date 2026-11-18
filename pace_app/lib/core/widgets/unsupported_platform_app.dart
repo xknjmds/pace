@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/pace_theme.dart';
-import 'animated_cairn.dart';
+import 'tuck.dart';
 import 'pace_wordmark.dart';
 
 /// Shown instead of the app on a platform PACE is not built for (iOS).
@@ -25,7 +25,7 @@ class UnsupportedPlatformApp extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const AnimatedCairn(size: 80),
+                    const Tuck(size: 128),
                     const SizedBox(height: 20),
                     const PaceWordmark(height: 22),
                     const SizedBox(height: 32),

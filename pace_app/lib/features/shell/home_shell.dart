@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/pace_tokens.dart';
-import '../../core/widgets/cairn_mark.dart';
+import '../../core/widgets/tuck.dart';
 import '../../core/widgets/pace_wordmark.dart';
 import '../../core/widgets/readable_width.dart';
 import '../deadlines/ui/deadlines_screen.dart';
@@ -173,7 +173,7 @@ class _Rail extends StatelessWidget {
         padding: EdgeInsets.fromLTRB(0, 20, 0, 28),
         child: Column(
           children: [
-            CairnMark(size: 36),
+            TuckMark(size: 44),
             SizedBox(height: 10),
             PaceWordmark(height: 11),
           ],

@@ -1,7 +1,7 @@
 # Skill clone that may sit in the project folder
 logo-design-skill/
 # Rendered previews of the brand kit
-branding/final/renders/
-branding/concepts/renders/
+branding/archive/cairn/final/renders/
+branding/archive/cairn/concepts/renders/
 # OS
 .DS_Store

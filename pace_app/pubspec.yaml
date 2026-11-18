@@ -72,6 +72,8 @@ flutter:
 
   assets:
     - assets/fonts/OFL.txt
+    # Tuck the turtle (branding/mascot/, built by build_mascot.py).
+    - assets/mascot/
 
   # Figtree (SIL Open Font License 1.1), the UI typeface. See assets/fonts/OFL.txt.
   fonts:

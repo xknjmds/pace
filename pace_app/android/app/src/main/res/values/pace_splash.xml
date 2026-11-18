@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Launch colours (branding/GUIDELINES.md): Moss cairn on Sand. -->
+    <!-- Launch colours (branding/GUIDELINES.md): Tuck on Sand. -->
     <color name="pace_splash_bg">#F3EEE6</color>
-    <color name="pace_splash_mark">#35665A</color>
 </resources>

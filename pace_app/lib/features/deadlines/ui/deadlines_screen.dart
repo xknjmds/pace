@@ -8,6 +8,7 @@ import '../../../core/theme/pace_tokens.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/widgets/done_check.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/tuck.dart';
 import '../../../core/widgets/fade_slide_in.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../routes.dart';
@@ -119,6 +120,7 @@ class DeadlinesScreen extends ConsumerWidget {
                 child: SingleChildScrollView(
                   child: lowEnergy
                       ? const EmptyState(
+                          pose: TuckPose.resting,
                           title: 'Nothing due in the next two days.',
                           message: 'Low-energy mode shows only what is close.',
                         )

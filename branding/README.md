@@ -1,22 +1,24 @@
-# PACE branding — handover notes
+# PACE branding: handover notes
 
-**Chosen direction:** A, "Cairn" (round 1 concepts are kept in `concepts/`).
+**Current brand:** Tuck the turtle (2026-11-18). It replaces the cairn logo, which is kept in `archive/cairn/`.
+The cairn lives on as the three stones on Tuck's shell, and in the app's routine progress (`CairnProgress`).
+Usage rules: `GUIDELINES.md`.
 
-## What is here
-- `final/` masters: `pace-symbol.svg`, `pace-symbol-small.svg` (icon cut), `pace-wordmark.svg`, `pace-horizontal.svg`, `pace-stacked.svg`, plus `pace-symbol-on-tile.svg` (app icon) and `pace-horizontal-on-dark.svg`.
-- `final/board/` presentation board (`pace-presentation.html`, slides as PNG in `slides/`).
-- `final/preview.html` test sheet: size ladder, 16/32/48 px pixel test, backgrounds, one-colour, reversed, blur, mirror, rotate, shelf test against 11 productivity marks.
-- `export/digital/` black, white and Moss variants of each lockup (SVG + 1200 px PNG).
-- `export/web/` favicon.ico, favicon.svg, PNG icon set, `site.webmanifest`, `head-snippet.html`.
-- `export/android/` adaptive launcher icon (foreground, background, monochrome) at mdpi–xxxhdpi, legacy `ic_launcher.png`, `mipmap-anydpi-v26/ic_launcher.xml`, notification icon `ic_stat_pace` at every density, 512 px Play Store icon.
-- `GUIDELINES.md` one-page usage guide. `gen_kit.py` regenerates all masters and Android SVGs.
+## How the assets are made
+1. The poses were generated with an image-gen AI: one master first, then each pose in a fresh chat with the master attached.
+   Originals: `mascot/source/tuck_<pose>.jpeg` (white background).
+2. `python3 branding/mascot/build_mascot.py` (Pillow, numpy, ImageMagick) then:
+   - removes the background by flood-filling from the edges (Tuck's sand body is nearly white, so a colour key would eat it)
+   - crops every pose to one shared square frame, so Tuck keeps its size and place across poses
+   - builds `tuck_blink` from the default pose with only the eyes taken from the blink image, so blinking doesn't jitter
+   - writes the in-app assets (`pace_app/assets/mascot/`, 1x/2x/3x), the Android launcher icon (adaptive, with a themed-icon
+     monochrome layer), notification icon `ic_stat_pace`, splash and widget icons, web favicon/PWA icons/splash, Windows `.ico`,
+     the Play Store icon, and `mascot/preview.png`.
 
-## Tests run
-- SVG audit: 98–99/100 on symbol and lockups. Remaining notes are informational: the wordmark and lockups keep strokes (round caps and joins), which is intentional for screen use.
-- Rendered and inspected at 16, 48, 512 and 1000 px. The small cut keeps three separate stones at 16 px; the regular symbol starts to merge below 24 px.
-- One-colour, reversed, blur, mirror and 180° rotation checked on the test sheet. No unintended readings found.
+## Replacing a pose
+Regenerate it with the master attached, save it as `mascot/source/tuck_<pose>.jpeg`, rerun the script, and check `preview.png`.
 
 ## Open items
-- Strokes in the wordmark and lockups should be expanded to outlines (Inkscape: Stroke to Path, then Union) before any cutting, embroidery or print vendor use. Screen use is fine as is.
-- Trademark: not checked. Run a trademark database search and a reverse image search before any public release. Stacked-stone marks exist in the wellness category, so check that space in particular.
-- Pantone values are approximations.
+- Notification icon and themed launcher icon: check on a real phone (status bar, Android 13+ themed icons).
+- Trademark and reverse image search before any public release.
+- Image-gen terms: check the generator's terms allow commercial use of the output before the SaaS version (M11).

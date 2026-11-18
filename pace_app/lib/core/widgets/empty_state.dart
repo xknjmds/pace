@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 
-import 'animated_cairn.dart';
+import 'tuck.dart';
 
-/// A calm empty screen or section: the cairn, one line, an optional action.
+/// A calm empty screen or section: Tuck, one line, an optional action.
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,
     required this.title,
     this.message,
     this.action,
-    this.cairnSize = 64,
+    this.pose = TuckPose.idle,
+    this.mascotSize = 112,
   });
 
   final String title;
   final String? message;
   final Widget? action;
-  final double cairnSize;
+  final TuckPose pose;
+  final double mascotSize;
 
   @override
   Widget build(BuildContext context) {
@@ -25,11 +27,8 @@ class EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          AnimatedCairn(
-            size: cairnSize,
-            color: theme.colorScheme.primary.withValues(alpha: .85),
-          ),
-          const SizedBox(height: 20),
+          Tuck(pose: pose, size: mascotSize),
+          const SizedBox(height: 16),
           Text(
             title,
             style: theme.textTheme.titleLarge,

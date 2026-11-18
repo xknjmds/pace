@@ -10,13 +10,12 @@ import '../../../core/startup_report.dart';
 import '../../../core/time/local_time.dart';
 import '../../../core/theme/pace_colors.dart';
 import '../../../core/theme/pace_tokens.dart';
-import '../../../core/widgets/animated_cairn.dart';
 import '../../../core/widgets/cairn_progress.dart';
-import '../../../core/widgets/cairn_mark.dart';
 import '../../../core/widgets/done_check.dart';
 import '../../../core/widgets/fade_slide_in.dart';
 import '../../../core/widgets/pace_section_card.dart';
 import '../../../core/widgets/press_scale.dart';
+import '../../../core/widgets/tuck.dart';
 import '../../../routes.dart';
 import '../../deadlines/application/deadline_providers.dart';
 import '../../deadlines/domain/deadline_reminders.dart';
@@ -32,6 +31,7 @@ import '../../shell/shell_tabs.dart';
 import '../application/reminder_resync.dart';
 import '../application/today_providers.dart';
 import '../domain/today_model.dart';
+import '../domain/tuck_pose_for.dart';
 import 'top3_picker_sheet.dart';
 
 /// Answers "what do I do right now?" in one screen: the next routine step
@@ -197,10 +197,20 @@ class TodayScreen extends ConsumerWidget {
         titleSpacing: 20,
         title: Row(
           children: [
-            // On wide windows the side rail already carries the mark.
-            if (MediaQuery.sizeOf(context).width < HomeShell.wide) ...[
-              const CairnMark(size: 26),
-              const SizedBox(width: 14),
+            // Tuck mirrors the moment: morning, leaving, focus, rest.
+            if (!empty) ...[
+              Tuck(
+                key: const ValueKey('today-tuck'),
+                size: 56,
+                pose: tuckPoseFor(
+                  now: now,
+                  status: status,
+                  evening: evening,
+                  lowEnergy: lowEnergy,
+                  focusRunning: focus != null,
+                ),
+              ),
+              const SizedBox(width: 10),
             ],
             Expanded(
               child: Column(
@@ -448,7 +458,7 @@ class TodayScreen extends ConsumerWidget {
 /// scrolling never replay the entrance.
 bool _entered = false;
 
-/// First open: the cairn builds itself, then one way forward.
+/// First open: Tuck says hello, then one way forward.
 class EmptyWelcome extends StatelessWidget {
   const EmptyWelcome({super.key, required this.onSetUp});
 
@@ -461,8 +471,8 @@ class EmptyWelcome extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 20, 12, 16),
       child: Column(
         children: [
-          AnimatedCairn(size: 80, color: theme.colorScheme.primary),
-          const SizedBox(height: 24),
+          const Tuck(size: 120),
+          const SizedBox(height: 20),
           Text(
             'Progress Always Comes Eventually',
             style: theme.textTheme.titleLarge,
@@ -472,8 +482,8 @@ class EmptyWelcome extends StatelessWidget {
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 320),
             child: Text(
-              'Nothing is scheduled yet. Set up your week whenever you '
-              'are ready.',
+              'I\'m Tuck. Nothing is scheduled yet. Set up your week '
+              'whenever you are ready, and we\'ll take it one step at a time.',
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 height: 1.45,

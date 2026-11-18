@@ -50,7 +50,7 @@ class PaceMotion {
   /// Distance in logical pixels, or zero when movement is reduced.
   double offset(double px) => reduced ? 0 : px;
 
-  /// Whether purely decorative motion (staggers, the cairn drop) plays.
+  /// Whether purely decorative motion (staggers, Tuck's life motion) plays.
   bool get decorative => !reduced && !calm;
 
   static PaceMotion of(BuildContext context) {

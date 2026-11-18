@@ -7,7 +7,7 @@ import '../../../core/db/settings_provider.dart';
 import '../../../core/notifications/notification_providers.dart';
 import '../../../core/platform/platform_features.dart';
 import '../../../core/theme/pace_tokens.dart';
-import '../../../core/widgets/animated_cairn.dart';
+import '../../../core/widgets/tuck.dart';
 import '../../../core/widgets/press_scale.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/time/local_time.dart';
@@ -236,7 +236,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
       _Step.finish => [
         if (_done) ...[
           const SizedBox(height: 24),
-          const Center(child: AnimatedCairn(size: 88)),
+          const Center(child: Tuck(pose: TuckPose.proud, size: 140)),
           const SizedBox(height: 28),
           Text(
             'Sleep well.',

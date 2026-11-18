@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Launch window: the cairn on Sand (Ink at night), so opening PACE
-     goes straight from brand to the first frame with no white flash. -->
+<!-- Launch window: Tuck on Sand (Ink at night), so opening PACE goes
+     straight from brand to the first frame with no white flash. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/pace_splash_bg" />
-    <item
-        android:drawable="@drawable/splash_cairn"
-        android:gravity="center" />
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/splash_tuck" />
+    </item>
 </layer-list>
