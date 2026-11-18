@@ -250,4 +250,50 @@ void main() {
     expect(find.text('Focus: 6 min left'), findsOneWidget);
     await unmountApp(tester);
   });
+
+  testWidgets('evening: wind-down card with check-in and going to bed', (
+    tester,
+  ) async {
+    await mondayClass();
+    final now = DateTime(2026, 11, 15, 22); // Sunday night, Monday class
+    await pumpApp(tester, now);
+    expect(find.text('Winding down. Bed around 22:30.'), findsOneWidget);
+    await tester.tap(find.text('Going to bed'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('evening-card')), findsNothing);
+    expect(
+      (await db.dailyLogsDao.get(DateTime(2026, 11, 15)))?.bedLoggedAt,
+      now.toUtc(),
+    );
+    await unmountApp(tester);
+  });
+
+  testWidgets('no-class day with the week set up offers "I\'m up"', (
+    tester,
+  ) async {
+    await mondayClass();
+    final now = DateTime(2026, 11, 15, 7, 40); // Sunday
+    await pumpApp(tester, now);
+    expect(find.text('No class today. The day is yours.'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('step-wake')));
+    await tester.pumpAndSettle();
+    expect((await db.dailyLogsDao.get(now))?.wakeLoggedAt, now.toUtc());
+    expect(find.text('Up 07:30'), findsOneWidget);
+    await unmountApp(tester);
+  });
+
+  testWidgets('low-energy switch on Today re-plans reminders too', (
+    tester,
+  ) async {
+    await mondayClass();
+    await pumpApp(tester, DateTime(2026, 11, 15, 10));
+    await tester.ensureVisible(find.byType(Switch));
+    await tester.tap(find.byType(Switch));
+    await tester.pumpAndSettle();
+    final kinds = gateway.scheduled.values
+        .map((s) => s.payload!.split(':').first)
+        .toSet();
+    expect(kinds, {'wake', 'leave'});
+    await unmountApp(tester);
+  });
 }

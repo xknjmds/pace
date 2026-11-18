@@ -2,6 +2,8 @@ import '../../../core/db/app_database.dart';
 import '../../../core/notifications/reminder_actions.dart';
 import '../../../core/notifications/reminder_scheduler.dart';
 import '../../../core/time/local_time.dart';
+import '../../routine/application/morning_inputs.dart';
+import '../../routine/domain/wake_schedule.dart';
 import '../domain/deadline_reminders.dart';
 
 /// Keeps each pending task's reminders in step with its due time, its
@@ -37,9 +39,12 @@ class DeadlineReminders {
       dueAt: task.dueAt.toLocal(),
       now: t,
       eveningAt: eveningAt,
-      morningAt: LocalTime(
-        settings.targetWakeMinutes,
+      // The wake time in force on the due date: shift and weekend aware.
+      morningAt: wakeOn(
+        wakePlanFrom(settings),
+        task.dueAt.toLocal(),
       ).plusMinutes(morningOffsetMinutes),
+      lowEnergy: settings.lowEnergyEnabled,
       mutedDates: {
         for (final m in mutes)
           if (m.kind == ReminderKind.deadline && m.ownerId == taskId) m.date,

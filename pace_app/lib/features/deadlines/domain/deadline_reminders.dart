@@ -2,6 +2,9 @@ import '../../../core/notifications/reminder_draft.dart';
 import '../../../core/time/date_key.dart';
 import '../../../core/time/local_time.dart';
 
+/// Low-energy mode keeps only nudges this close to the deadline.
+const lowEnergyNudgeWindow = Duration(hours: 48);
+
 /// Which of the four nudges a reminder is.
 enum DeadlineNudge { threeDaysBefore, dayBefore, morningOf, twoHoursBefore }
 
@@ -14,7 +17,8 @@ class DeadlineReminder {
 
 /// Pure: when to nudge about a deadline. Reminders already in the past, on
 /// a muted day ("Not today"), or landing on the same minute as another are
-/// left out. A deadline under two hours away may get nothing at all.
+/// left out. A deadline under two hours away may get nothing at all. In
+/// low-energy mode only nudges inside the last 48 hours remain.
 ///
 /// [dueAt] and [now] are local. [eveningAt] is the time of day for the
 /// three-days and one-day nudges; [morningAt] for the morning-of nudge.
@@ -24,6 +28,7 @@ List<DeadlineReminder> computeDeadlineReminders({
   required LocalTime eveningAt,
   required LocalTime morningAt,
   Set<String> mutedDates = const {},
+  bool lowEnergy = false,
 }) {
   final dueDay = dateOnly(dueAt);
   DateTime daysBefore(int days, LocalTime at) =>
@@ -52,6 +57,9 @@ List<DeadlineReminder> computeDeadlineReminders({
   for (final c in candidates) {
     if (!c.fireAt.isAfter(now)) continue;
     if (!c.fireAt.isBefore(dueAt)) continue;
+    if (lowEnergy && c.fireAt.isBefore(dueAt.subtract(lowEnergyNudgeWindow))) {
+      continue;
+    }
     if (mutedDates.contains(dateKey(c.fireAt))) continue;
     if (out.isNotEmpty && _sameMinute(out.last.fireAt, c.fireAt)) continue;
     out.add(c);

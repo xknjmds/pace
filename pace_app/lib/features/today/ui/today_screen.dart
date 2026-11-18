@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/db/database_provider.dart';
 import '../../../core/db/settings_provider.dart';
+import '../../../core/time/local_time.dart';
 import '../../../core/widgets/cairn_mark.dart';
 import '../../../routes.dart';
 import '../../deadlines/application/deadline_providers.dart';
@@ -14,6 +15,8 @@ import '../../inbox/application/inbox_providers.dart';
 import '../../routine/application/morning_inputs.dart';
 import '../../routine/application/routine_providers.dart';
 import '../../routine/domain/routine_reminder_planner.dart';
+import '../../routine/domain/wake_schedule.dart';
+import '../application/reminder_resync.dart';
 import '../application/today_providers.dart';
 import '../domain/today_model.dart';
 import 'top3_picker_sheet.dart';
@@ -86,19 +89,44 @@ class TodayScreen extends ConsumerWidget {
         ? null
         : routineStatus(
             now: now,
-            inputs: morningInputsFor(settings, schedules[now.weekday]),
+            inputs: morningInputsFor(
+              settings,
+              schedules[now.weekday],
+              date: now,
+            ),
             wakeDone: log?.wakeLoggedAt != null,
             eatDone: log?.eatDoneAt != null,
             leaveDone: log?.routineDone ?? false,
             lateThresholdMinutes: settings.lateThresholdMinutes,
             lowEnergy: lowEnergy,
+            wakeAnchor: hasSchedule,
           );
+    final night = settings == null
+        ? null
+        : nightPlan(
+            plan: wakePlanFrom(settings),
+            night: nightOf(now),
+            sleepTargetMinutes: settings.sleepTargetMinutes,
+            windDownLeadMinutes: settings.windDownLeadMinutes,
+          );
+    final nightLog = night == null
+        ? null
+        : ref.watch(dailyLogProvider(dateKey(night.night))).value;
+    final evening =
+        hasSchedule &&
+        night != null &&
+        showEveningCard(
+          now: now,
+          night: night,
+          bedLogged: nightLog?.bedLoggedAt != null,
+        );
     final tomorrow = settings == null
         ? null
         : tomorrowPreview(
             morningInputsFor(
               settings,
               schedules[now.add(const Duration(days: 1)).weekday],
+              date: now.add(const Duration(days: 1)),
             ),
           );
     final top3Ids = log?.top3TaskIds ?? const <String>[];
@@ -158,6 +186,44 @@ class TodayScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
             ] else ...[
+              if (evening)
+                Card(
+                  key: const ValueKey('evening-card'),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Winding down. Bed around '
+                          '${LocalTime.of(night.bedtime.hour, night.bedtime.minute).format24()}.',
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            FilledButton.tonal(
+                              onPressed: () => Navigator.of(
+                                context,
+                              ).pushNamed(Routes.checkIn),
+                              child: const Text('Check in'),
+                            ),
+                            OutlinedButton(
+                              onPressed: () => ref
+                                  .read(routineRemindersProvider)
+                                  .done(
+                                    ReminderKind.windDown,
+                                    night.night.weekday,
+                                  ),
+                              child: const Text('Going to bed'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               if (status != null)
                 _RoutineCard(
                   status: status,
@@ -272,10 +338,7 @@ class TodayScreen extends ConsumerWidget {
               value: lowEnergy,
               onChanged: settings == null
                   ? null
-                  : (on) => ref
-                        .read(appDatabaseProvider)
-                        .settingsDao
-                        .setLowEnergy(on),
+                  : (on) => ref.read(setLowEnergyProvider)(on),
             ),
           ],
         ),
@@ -299,9 +362,32 @@ class _RoutineCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final child = switch (status) {
-      NoClassToday() => Text(
-        'No class today. The day is yours.',
-        style: theme.textTheme.bodyLarge,
+      NoClassToday(:final wake) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'No class today. The day is yours.',
+            style: theme.textTheme.bodyLarge,
+          ),
+          if (wake != null) ...[
+            const SizedBox(height: 8),
+            wake.done
+                ? Chip(
+                    avatar: Icon(
+                      Icons.check,
+                      size: 18,
+                      color: theme.colorScheme.primary,
+                    ),
+                    label: Text('Up ${wake.at.format24()}'),
+                  )
+                : ActionChip(
+                    key: const ValueKey('step-wake'),
+                    avatar: const Icon(Icons.wb_sunny_outlined, size: 18),
+                    label: Text('I\'m up · ${wake.at.format24()}'),
+                    onPressed: () => onStepDone(RoutineStep.wake),
+                  ),
+          ],
+        ],
       ),
       MorningDoesNotFit() => Text(
         'Today\'s morning does not fit the times in Settings. '

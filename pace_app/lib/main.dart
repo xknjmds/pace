@@ -16,7 +16,7 @@ Future<void> main() async {
   );
   await notifications.initialize();
   final container = containerFor(notifications, const HomeWidgetBridgeImpl());
-  await bootstrap(
+  final fromNotification = await bootstrap(
     notifications,
     container: container,
     widgetTaps: HomeWidget.widgetClicked,
@@ -26,7 +26,8 @@ Future<void> main() async {
     UncontrolledProviderScope(
       container: container,
       child: PaceApp(
-        initialRoute: routeForWidgetUri(launchedWith) ?? Routes.today,
+        initialRoute:
+            fromNotification ?? routeForWidgetUri(launchedWith) ?? Routes.today,
       ),
     ),
   );

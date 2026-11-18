@@ -187,3 +187,51 @@ and then failed adding it again. Migrations now use Drift's `stepByStep` with sc
 frozen per version (`lib/core/db/schema_versions.dart`, generated from `drift_schemas/`).
 Each step does the same thing as before. No installed copy existed (the app has never been
 built), so no real data was affected. Regenerate the steps file after every schema dump.
+
+## M9. Evening check-in and sleep log
+
+### Still to check on the phone
+
+| Check | Result | Notes |
+|---|---|---|
+| Wind-down notification arrives at bedtime minus lead time, showing tomorrow's first item | not yet run | |
+| "Going to bed" on the notification logs bed for the right night | not yet run | before noon counts as the night before |
+| Tapping the wind-down notification opens the check-in, with Today behind it | not yet run | Today is now the root route `/` |
+
+### Decisions
+
+- **Bedtime is derived, never set.** Night D's bedtime is the next morning's wake time
+  minus the sleep target. Wind-down is that minus the lead time. Change the wake time
+  and both follow.
+- **The wake anchor applies once the week is set up.** Every day gets a wake reminder,
+  including days without class. Before any weekday is configured, nothing fires.
+- **Weekend wake** is the weekday wake plus a lie-in of 0 to 60 minutes (default 60, capped
+  at 60 even if the column says more). It follows any shift under way.
+- **Gradual shift** moves the weekday wake earlier by 15 minutes every 3 calendar days from
+  the day it started, and stops exactly at the goal. It is computed from the calendar
+  alone, so a missed or late night can neither reset nor stall it. Once the goal is
+  reached, the next resync makes it the plain wake time and clears the shift. A goal that
+  is not earlier applies at once, and setting the wake time by hand stops any shift.
+- **Check-in:** tomorrow (wake, leave, class, anything due within 48 hours), top 3 for
+  tomorrow, the wake reminder with a warning if reminders are off or inexact, then "Going to
+  bed". Every step can be skipped. Low-energy mode drops the top-3 step.
+- **Today** shows an evening card from wind-down until four hours past bedtime, unless bed
+  is logged, and an "I'm up" chip on days without class.
+- **Schema v5** adds weekend leeway and the shift columns to `settings`.
+
+## M10. Low-energy mode and weekly view
+
+### Decisions
+
+- **Low-energy mode changes reminders, not just screens.** When it is on, only wake and
+  leave fire (no breakfast, no wind-down), and deadline nudges are limited to the last 48
+  hours. Every toggle (Today, Settings) goes through one provider that saves the setting
+  and re-plans all reminders, so Today and the notification shade always agree. Screens
+  already followed it: Today, Deadlines, Inbox and Focus since M6 to M8, and now
+  Check-in and Review.
+- **Weekly view** covers the last 7 days. It shows days with the routine done, the average
+  logged wake time and how many mornings it comes from, the average length of nights where
+  both ends were logged, and a sleep log of every night with anything logged ("bed not
+  logged" rather than a gap). Empty data reads "No ... logged yet". No streaks, no red, and
+  no number ever goes down because of a missed day. In low-energy mode the sleep log folds
+  into a count with a Show button.

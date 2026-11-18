@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pace/core/time/local_time.dart';
 import 'package:pace/features/routine/domain/morning_plan.dart';
 import 'package:pace/features/routine/domain/routine_reminder_planner.dart';
+import 'package:pace/features/routine/domain/wake_schedule.dart';
 
 void main() {
   // Saturday 14 Nov 2026, 06:00 local.
@@ -94,5 +95,80 @@ void main() {
       ),
       isEmpty,
     );
+  });
+
+  group('wake anchor, wind-down and low energy', () {
+    const plan = WakePlan(baseWakeMinutes: 390);
+    final windDown = const WindDownSettings(
+      wakePlan: plan,
+      sleepTargetMinutes: 480,
+      leadMinutes: 45,
+    );
+
+    test('days without class get a wake reminder when anchored', () {
+      final planned = planRoutineReminders(
+        now: now,
+        inputsByWeekday: {DateTime.monday: monday},
+        muted: {},
+        wakeFor: (d) => wakeOn(plan, d),
+        wakeAnchor: true,
+      );
+      final wakes = planned.where((p) => p.step == RoutineStep.wake);
+      expect(wakes, hasLength(7));
+      final sunday = wakes.firstWhere((p) => p.weekday == DateTime.sunday);
+      expect(sunday.draft.fireAt, DateTime(2026, 11, 15, 7, 30));
+      expect(sunday.draft.body, contains('No class today'));
+      expect(planned.where((p) => p.step == RoutineStep.leave), hasLength(1));
+    });
+
+    test('one wind-down per evening, before the derived bedtime', () {
+      final planned = planRoutineReminders(
+        now: now,
+        inputsByWeekday: {DateTime.monday: monday},
+        muted: {},
+        wakeFor: (d) => wakeOn(plan, d),
+        windDown: windDown,
+      );
+      final evenings = planned.where((p) => p.step == RoutineStep.windDown);
+      expect(evenings, hasLength(7));
+      final sunday = evenings.firstWhere((p) => p.weekday == DateTime.sunday);
+      expect(sunday.draft.fireAt, DateTime(2026, 11, 15, 21, 45));
+    });
+
+    test('low-energy mode keeps only wake and leave', () {
+      final planned = planRoutineReminders(
+        now: now,
+        inputsByWeekday: {DateTime.monday: monday},
+        muted: {},
+        wakeFor: (d) => wakeOn(plan, d),
+        wakeAnchor: true,
+        windDown: windDown,
+        lowEnergy: true,
+      );
+      expect(planned.map((p) => p.step).toSet(), {
+        RoutineStep.wake,
+        RoutineStep.leave,
+      });
+      final mon = planned.firstWhere(
+        (p) => p.weekday == DateTime.monday && p.step == RoutineStep.wake,
+      );
+      expect(mon.draft.body, isNot(contains('Breakfast')));
+    });
+
+    test('a muted wind-down skips that evening only', () {
+      final planned = planRoutineReminders(
+        now: now,
+        inputsByWeekday: {DateTime.monday: monday},
+        muted: {'windDown:6:2026-11-14'},
+        wakeFor: (d) => wakeOn(plan, d),
+        windDown: windDown,
+      );
+      final evenings = planned.where((p) => p.step == RoutineStep.windDown);
+      expect(
+        evenings.map((p) => p.weekday),
+        isNot(contains(DateTime.saturday)),
+      );
+      expect(evenings, hasLength(6));
+    });
   });
 }

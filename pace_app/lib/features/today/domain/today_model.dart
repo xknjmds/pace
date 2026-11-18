@@ -1,6 +1,7 @@
 import '../../../core/time/local_time.dart';
 import '../../routine/domain/morning_plan.dart';
 import '../../routine/domain/routine_reminder_planner.dart';
+import '../../routine/domain/wake_schedule.dart';
 
 /// One routine step as Today shows it.
 class RoutineStepItem {
@@ -18,6 +19,7 @@ class RoutineStepItem {
     RoutineStep.wake => 'Up',
     RoutineStep.eat => 'Eat',
     RoutineStep.leave => 'Leave',
+    RoutineStep.windDown => 'Wind down',
   };
 }
 
@@ -25,8 +27,12 @@ sealed class RoutineStatus {
   const RoutineStatus();
 }
 
+/// No class. With the wake anchor on, [wake] is the steady wake time to
+/// log with "I'm up".
 class NoClassToday extends RoutineStatus {
-  const NoClassToday();
+  const NoClassToday({this.wake});
+
+  final RoutineStepItem? wake;
 }
 
 class MorningDoesNotFit extends RoutineStatus {
@@ -75,11 +81,20 @@ RoutineStatus routineStatus({
   required bool leaveDone,
   required int lateThresholdMinutes,
   required bool lowEnergy,
+  bool wakeAnchor = false,
 }) {
   final plan = computeLeaveByPlan(inputs);
   switch (plan) {
     case NoClassMorning():
-      return const NoClassToday();
+      return NoClassToday(
+        wake: wakeAnchor
+            ? RoutineStepItem(
+                step: RoutineStep.wake,
+                at: inputs.targetWake,
+                done: wakeDone,
+              )
+            : null,
+      );
     case ImpossibleMorning():
       return const MorningDoesNotFit();
     case LeaveByPlan():
@@ -122,3 +137,14 @@ String? tomorrowPreview(MorningInputs tomorrow) {
     _ => null,
   };
 }
+
+/// Pure: whether Today shows the evening card for [night]. From wind-down
+/// until four hours past bedtime, unless bed has been logged.
+bool showEveningCard({
+  required DateTime now,
+  required NightPlan night,
+  required bool bedLogged,
+}) =>
+    !bedLogged &&
+    !now.isBefore(night.windDownAt) &&
+    now.isBefore(night.bedtime.add(const Duration(hours: 4)));

@@ -112,4 +112,39 @@ void main() {
     expect(routeForWidgetUri(Uri.parse('pace://other')), isNull);
     expect(routeForWidgetUri(null), isNull);
   });
+
+  test('plain notification taps open the matching screen', () {
+    expect(
+      routeForResponse(const ReminderResponse(payload: 'windDown:1')),
+      Routes.checkIn,
+    );
+    expect(
+      routeForResponse(const ReminderResponse(payload: 'focusEnd:abc')),
+      Routes.focus,
+    );
+    expect(
+      routeForResponse(const ReminderResponse(payload: 'deadline:abc')),
+      Routes.deadlines,
+    );
+    expect(routeForResponse(const ReminderResponse(payload: 'wake:1')), isNull);
+    expect(
+      routeForResponse(
+        const ReminderResponse(
+          payload: 'windDown:1',
+          actionId: ReminderActionIds.done,
+        ),
+      ),
+      isNull,
+    );
+  });
+
+  test(
+    'a cold start from the wind-down reminder returns the check-in',
+    () async {
+      gateway.launch = const ReminderResponse(payload: 'windDown:1');
+      final c = container();
+      addTearDown(c.dispose);
+      expect(await bootstrap(gateway, container: c), Routes.checkIn);
+    },
+  );
 }

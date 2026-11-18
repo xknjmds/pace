@@ -43,6 +43,22 @@ class Settings extends Table with SyncColumns {
   BoolColumn get captureShortcutEnabled =>
       boolean().withDefault(const Constant(true))();
 
+  /// v5: how much later Saturday and Sunday wake may be (0 to 60).
+  IntColumn get weekendLeewayMinutes =>
+      integer().withDefault(const Constant(60))();
+
+  /// v5: gradual wake shift. All null when no shift is under way: the wake
+  /// time moves from [wakeShiftFromMinutes] toward [wakeGoalMinutes] by
+  /// [wakeShiftStepMinutes] every [wakeShiftEveryDays] calendar days,
+  /// counted from [wakeShiftStartDate] (`yyyy-MM-dd`).
+  IntColumn get wakeGoalMinutes => integer().nullable()();
+  IntColumn get wakeShiftFromMinutes => integer().nullable()();
+  TextColumn get wakeShiftStartDate => text().nullable()();
+  IntColumn get wakeShiftStepMinutes =>
+      integer().withDefault(const Constant(15))();
+  IntColumn get wakeShiftEveryDays =>
+      integer().withDefault(const Constant(3))();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }

@@ -77,6 +77,21 @@ void main() {
     expect(r.last.fireAt, DateTime(2026, 11, 20, 4));
   });
 
+  test('low-energy mode keeps only nudges inside the last 48 hours', () {
+    final r = computeDeadlineReminders(
+      dueAt: due,
+      now: DateTime(2026, 11, 13, 12),
+      eveningAt: evening,
+      morningAt: morning,
+      lowEnergy: true,
+    );
+    expect(r.map((x) => x.nudge), [
+      DeadlineNudge.dayBefore,
+      DeadlineNudge.morningOf,
+      DeadlineNudge.twoHoursBefore,
+    ]);
+  });
+
   group('describeDue', () {
     final now = DateTime(2026, 11, 14, 10); // Saturday
     test('upcoming', () {

@@ -126,6 +126,71 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         ),
         defaultValue: const Constant(true),
       );
+  static const VerificationMeta _weekendLeewayMinutesMeta =
+      const VerificationMeta('weekendLeewayMinutes');
+  @override
+  late final GeneratedColumn<int> weekendLeewayMinutes = GeneratedColumn<int>(
+    'weekend_leeway_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(60),
+  );
+  static const VerificationMeta _wakeGoalMinutesMeta = const VerificationMeta(
+    'wakeGoalMinutes',
+  );
+  @override
+  late final GeneratedColumn<int> wakeGoalMinutes = GeneratedColumn<int>(
+    'wake_goal_minutes',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _wakeShiftFromMinutesMeta =
+      const VerificationMeta('wakeShiftFromMinutes');
+  @override
+  late final GeneratedColumn<int> wakeShiftFromMinutes = GeneratedColumn<int>(
+    'wake_shift_from_minutes',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _wakeShiftStartDateMeta =
+      const VerificationMeta('wakeShiftStartDate');
+  @override
+  late final GeneratedColumn<String> wakeShiftStartDate =
+      GeneratedColumn<String>(
+        'wake_shift_start_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _wakeShiftStepMinutesMeta =
+      const VerificationMeta('wakeShiftStepMinutes');
+  @override
+  late final GeneratedColumn<int> wakeShiftStepMinutes = GeneratedColumn<int>(
+    'wake_shift_step_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(15),
+  );
+  static const VerificationMeta _wakeShiftEveryDaysMeta =
+      const VerificationMeta('wakeShiftEveryDays');
+  @override
+  late final GeneratedColumn<int> wakeShiftEveryDays = GeneratedColumn<int>(
+    'wake_shift_every_days',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(3),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     updatedAt,
@@ -138,6 +203,12 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     lateThresholdMinutes,
     lowEnergyEnabled,
     captureShortcutEnabled,
+    weekendLeewayMinutes,
+    wakeGoalMinutes,
+    wakeShiftFromMinutes,
+    wakeShiftStartDate,
+    wakeShiftStepMinutes,
+    wakeShiftEveryDays,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -231,6 +302,60 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         ),
       );
     }
+    if (data.containsKey('weekend_leeway_minutes')) {
+      context.handle(
+        _weekendLeewayMinutesMeta,
+        weekendLeewayMinutes.isAcceptableOrUnknown(
+          data['weekend_leeway_minutes']!,
+          _weekendLeewayMinutesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('wake_goal_minutes')) {
+      context.handle(
+        _wakeGoalMinutesMeta,
+        wakeGoalMinutes.isAcceptableOrUnknown(
+          data['wake_goal_minutes']!,
+          _wakeGoalMinutesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('wake_shift_from_minutes')) {
+      context.handle(
+        _wakeShiftFromMinutesMeta,
+        wakeShiftFromMinutes.isAcceptableOrUnknown(
+          data['wake_shift_from_minutes']!,
+          _wakeShiftFromMinutesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('wake_shift_start_date')) {
+      context.handle(
+        _wakeShiftStartDateMeta,
+        wakeShiftStartDate.isAcceptableOrUnknown(
+          data['wake_shift_start_date']!,
+          _wakeShiftStartDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('wake_shift_step_minutes')) {
+      context.handle(
+        _wakeShiftStepMinutesMeta,
+        wakeShiftStepMinutes.isAcceptableOrUnknown(
+          data['wake_shift_step_minutes']!,
+          _wakeShiftStepMinutesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('wake_shift_every_days')) {
+      context.handle(
+        _wakeShiftEveryDaysMeta,
+        wakeShiftEveryDays.isAcceptableOrUnknown(
+          data['wake_shift_every_days']!,
+          _wakeShiftEveryDaysMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -280,6 +405,30 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         DriftSqlType.bool,
         data['${effectivePrefix}capture_shortcut_enabled'],
       )!,
+      weekendLeewayMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}weekend_leeway_minutes'],
+      )!,
+      wakeGoalMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}wake_goal_minutes'],
+      ),
+      wakeShiftFromMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}wake_shift_from_minutes'],
+      ),
+      wakeShiftStartDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}wake_shift_start_date'],
+      ),
+      wakeShiftStepMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}wake_shift_step_minutes'],
+      )!,
+      wakeShiftEveryDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}wake_shift_every_days'],
+      )!,
     );
   }
 
@@ -302,6 +451,19 @@ class Setting extends DataClass implements Insertable<Setting> {
 
   /// v3: keep a "capture a thought" notification with an inline reply field.
   final bool captureShortcutEnabled;
+
+  /// v5: how much later Saturday and Sunday wake may be (0 to 60).
+  final int weekendLeewayMinutes;
+
+  /// v5: gradual wake shift. All null when no shift is under way: the wake
+  /// time moves from [wakeShiftFromMinutes] toward [wakeGoalMinutes] by
+  /// [wakeShiftStepMinutes] every [wakeShiftEveryDays] calendar days,
+  /// counted from [wakeShiftStartDate] (`yyyy-MM-dd`).
+  final int? wakeGoalMinutes;
+  final int? wakeShiftFromMinutes;
+  final String? wakeShiftStartDate;
+  final int wakeShiftStepMinutes;
+  final int wakeShiftEveryDays;
   const Setting({
     required this.updatedAt,
     this.deletedAt,
@@ -313,6 +475,12 @@ class Setting extends DataClass implements Insertable<Setting> {
     required this.lateThresholdMinutes,
     required this.lowEnergyEnabled,
     required this.captureShortcutEnabled,
+    required this.weekendLeewayMinutes,
+    this.wakeGoalMinutes,
+    this.wakeShiftFromMinutes,
+    this.wakeShiftStartDate,
+    required this.wakeShiftStepMinutes,
+    required this.wakeShiftEveryDays,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -329,6 +497,18 @@ class Setting extends DataClass implements Insertable<Setting> {
     map['late_threshold_minutes'] = Variable<int>(lateThresholdMinutes);
     map['low_energy_enabled'] = Variable<bool>(lowEnergyEnabled);
     map['capture_shortcut_enabled'] = Variable<bool>(captureShortcutEnabled);
+    map['weekend_leeway_minutes'] = Variable<int>(weekendLeewayMinutes);
+    if (!nullToAbsent || wakeGoalMinutes != null) {
+      map['wake_goal_minutes'] = Variable<int>(wakeGoalMinutes);
+    }
+    if (!nullToAbsent || wakeShiftFromMinutes != null) {
+      map['wake_shift_from_minutes'] = Variable<int>(wakeShiftFromMinutes);
+    }
+    if (!nullToAbsent || wakeShiftStartDate != null) {
+      map['wake_shift_start_date'] = Variable<String>(wakeShiftStartDate);
+    }
+    map['wake_shift_step_minutes'] = Variable<int>(wakeShiftStepMinutes);
+    map['wake_shift_every_days'] = Variable<int>(wakeShiftEveryDays);
     return map;
   }
 
@@ -346,6 +526,18 @@ class Setting extends DataClass implements Insertable<Setting> {
       lateThresholdMinutes: Value(lateThresholdMinutes),
       lowEnergyEnabled: Value(lowEnergyEnabled),
       captureShortcutEnabled: Value(captureShortcutEnabled),
+      weekendLeewayMinutes: Value(weekendLeewayMinutes),
+      wakeGoalMinutes: wakeGoalMinutes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(wakeGoalMinutes),
+      wakeShiftFromMinutes: wakeShiftFromMinutes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(wakeShiftFromMinutes),
+      wakeShiftStartDate: wakeShiftStartDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(wakeShiftStartDate),
+      wakeShiftStepMinutes: Value(wakeShiftStepMinutes),
+      wakeShiftEveryDays: Value(wakeShiftEveryDays),
     );
   }
 
@@ -371,6 +563,20 @@ class Setting extends DataClass implements Insertable<Setting> {
       captureShortcutEnabled: serializer.fromJson<bool>(
         json['captureShortcutEnabled'],
       ),
+      weekendLeewayMinutes: serializer.fromJson<int>(
+        json['weekendLeewayMinutes'],
+      ),
+      wakeGoalMinutes: serializer.fromJson<int?>(json['wakeGoalMinutes']),
+      wakeShiftFromMinutes: serializer.fromJson<int?>(
+        json['wakeShiftFromMinutes'],
+      ),
+      wakeShiftStartDate: serializer.fromJson<String?>(
+        json['wakeShiftStartDate'],
+      ),
+      wakeShiftStepMinutes: serializer.fromJson<int>(
+        json['wakeShiftStepMinutes'],
+      ),
+      wakeShiftEveryDays: serializer.fromJson<int>(json['wakeShiftEveryDays']),
     );
   }
   @override
@@ -387,6 +593,12 @@ class Setting extends DataClass implements Insertable<Setting> {
       'lateThresholdMinutes': serializer.toJson<int>(lateThresholdMinutes),
       'lowEnergyEnabled': serializer.toJson<bool>(lowEnergyEnabled),
       'captureShortcutEnabled': serializer.toJson<bool>(captureShortcutEnabled),
+      'weekendLeewayMinutes': serializer.toJson<int>(weekendLeewayMinutes),
+      'wakeGoalMinutes': serializer.toJson<int?>(wakeGoalMinutes),
+      'wakeShiftFromMinutes': serializer.toJson<int?>(wakeShiftFromMinutes),
+      'wakeShiftStartDate': serializer.toJson<String?>(wakeShiftStartDate),
+      'wakeShiftStepMinutes': serializer.toJson<int>(wakeShiftStepMinutes),
+      'wakeShiftEveryDays': serializer.toJson<int>(wakeShiftEveryDays),
     };
   }
 
@@ -401,6 +613,12 @@ class Setting extends DataClass implements Insertable<Setting> {
     int? lateThresholdMinutes,
     bool? lowEnergyEnabled,
     bool? captureShortcutEnabled,
+    int? weekendLeewayMinutes,
+    Value<int?> wakeGoalMinutes = const Value.absent(),
+    Value<int?> wakeShiftFromMinutes = const Value.absent(),
+    Value<String?> wakeShiftStartDate = const Value.absent(),
+    int? wakeShiftStepMinutes,
+    int? wakeShiftEveryDays,
   }) => Setting(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -413,6 +631,18 @@ class Setting extends DataClass implements Insertable<Setting> {
     lowEnergyEnabled: lowEnergyEnabled ?? this.lowEnergyEnabled,
     captureShortcutEnabled:
         captureShortcutEnabled ?? this.captureShortcutEnabled,
+    weekendLeewayMinutes: weekendLeewayMinutes ?? this.weekendLeewayMinutes,
+    wakeGoalMinutes: wakeGoalMinutes.present
+        ? wakeGoalMinutes.value
+        : this.wakeGoalMinutes,
+    wakeShiftFromMinutes: wakeShiftFromMinutes.present
+        ? wakeShiftFromMinutes.value
+        : this.wakeShiftFromMinutes,
+    wakeShiftStartDate: wakeShiftStartDate.present
+        ? wakeShiftStartDate.value
+        : this.wakeShiftStartDate,
+    wakeShiftStepMinutes: wakeShiftStepMinutes ?? this.wakeShiftStepMinutes,
+    wakeShiftEveryDays: wakeShiftEveryDays ?? this.wakeShiftEveryDays,
   );
   Setting copyWithCompanion(SettingsCompanion data) {
     return Setting(
@@ -440,6 +670,24 @@ class Setting extends DataClass implements Insertable<Setting> {
       captureShortcutEnabled: data.captureShortcutEnabled.present
           ? data.captureShortcutEnabled.value
           : this.captureShortcutEnabled,
+      weekendLeewayMinutes: data.weekendLeewayMinutes.present
+          ? data.weekendLeewayMinutes.value
+          : this.weekendLeewayMinutes,
+      wakeGoalMinutes: data.wakeGoalMinutes.present
+          ? data.wakeGoalMinutes.value
+          : this.wakeGoalMinutes,
+      wakeShiftFromMinutes: data.wakeShiftFromMinutes.present
+          ? data.wakeShiftFromMinutes.value
+          : this.wakeShiftFromMinutes,
+      wakeShiftStartDate: data.wakeShiftStartDate.present
+          ? data.wakeShiftStartDate.value
+          : this.wakeShiftStartDate,
+      wakeShiftStepMinutes: data.wakeShiftStepMinutes.present
+          ? data.wakeShiftStepMinutes.value
+          : this.wakeShiftStepMinutes,
+      wakeShiftEveryDays: data.wakeShiftEveryDays.present
+          ? data.wakeShiftEveryDays.value
+          : this.wakeShiftEveryDays,
     );
   }
 
@@ -455,7 +703,13 @@ class Setting extends DataClass implements Insertable<Setting> {
           ..write('breakfastMinutes: $breakfastMinutes, ')
           ..write('lateThresholdMinutes: $lateThresholdMinutes, ')
           ..write('lowEnergyEnabled: $lowEnergyEnabled, ')
-          ..write('captureShortcutEnabled: $captureShortcutEnabled')
+          ..write('captureShortcutEnabled: $captureShortcutEnabled, ')
+          ..write('weekendLeewayMinutes: $weekendLeewayMinutes, ')
+          ..write('wakeGoalMinutes: $wakeGoalMinutes, ')
+          ..write('wakeShiftFromMinutes: $wakeShiftFromMinutes, ')
+          ..write('wakeShiftStartDate: $wakeShiftStartDate, ')
+          ..write('wakeShiftStepMinutes: $wakeShiftStepMinutes, ')
+          ..write('wakeShiftEveryDays: $wakeShiftEveryDays')
           ..write(')'))
         .toString();
   }
@@ -472,6 +726,12 @@ class Setting extends DataClass implements Insertable<Setting> {
     lateThresholdMinutes,
     lowEnergyEnabled,
     captureShortcutEnabled,
+    weekendLeewayMinutes,
+    wakeGoalMinutes,
+    wakeShiftFromMinutes,
+    wakeShiftStartDate,
+    wakeShiftStepMinutes,
+    wakeShiftEveryDays,
   );
   @override
   bool operator ==(Object other) =>
@@ -486,7 +746,13 @@ class Setting extends DataClass implements Insertable<Setting> {
           other.breakfastMinutes == this.breakfastMinutes &&
           other.lateThresholdMinutes == this.lateThresholdMinutes &&
           other.lowEnergyEnabled == this.lowEnergyEnabled &&
-          other.captureShortcutEnabled == this.captureShortcutEnabled);
+          other.captureShortcutEnabled == this.captureShortcutEnabled &&
+          other.weekendLeewayMinutes == this.weekendLeewayMinutes &&
+          other.wakeGoalMinutes == this.wakeGoalMinutes &&
+          other.wakeShiftFromMinutes == this.wakeShiftFromMinutes &&
+          other.wakeShiftStartDate == this.wakeShiftStartDate &&
+          other.wakeShiftStepMinutes == this.wakeShiftStepMinutes &&
+          other.wakeShiftEveryDays == this.wakeShiftEveryDays);
 }
 
 class SettingsCompanion extends UpdateCompanion<Setting> {
@@ -500,6 +766,12 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
   final Value<int> lateThresholdMinutes;
   final Value<bool> lowEnergyEnabled;
   final Value<bool> captureShortcutEnabled;
+  final Value<int> weekendLeewayMinutes;
+  final Value<int?> wakeGoalMinutes;
+  final Value<int?> wakeShiftFromMinutes;
+  final Value<String?> wakeShiftStartDate;
+  final Value<int> wakeShiftStepMinutes;
+  final Value<int> wakeShiftEveryDays;
   const SettingsCompanion({
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -511,6 +783,12 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     this.lateThresholdMinutes = const Value.absent(),
     this.lowEnergyEnabled = const Value.absent(),
     this.captureShortcutEnabled = const Value.absent(),
+    this.weekendLeewayMinutes = const Value.absent(),
+    this.wakeGoalMinutes = const Value.absent(),
+    this.wakeShiftFromMinutes = const Value.absent(),
+    this.wakeShiftStartDate = const Value.absent(),
+    this.wakeShiftStepMinutes = const Value.absent(),
+    this.wakeShiftEveryDays = const Value.absent(),
   });
   SettingsCompanion.insert({
     required DateTime updatedAt,
@@ -523,6 +801,12 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     this.lateThresholdMinutes = const Value.absent(),
     this.lowEnergyEnabled = const Value.absent(),
     this.captureShortcutEnabled = const Value.absent(),
+    this.weekendLeewayMinutes = const Value.absent(),
+    this.wakeGoalMinutes = const Value.absent(),
+    this.wakeShiftFromMinutes = const Value.absent(),
+    this.wakeShiftStartDate = const Value.absent(),
+    this.wakeShiftStepMinutes = const Value.absent(),
+    this.wakeShiftEveryDays = const Value.absent(),
   }) : updatedAt = Value(updatedAt);
   static Insertable<Setting> custom({
     Expression<DateTime>? updatedAt,
@@ -535,6 +819,12 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Expression<int>? lateThresholdMinutes,
     Expression<bool>? lowEnergyEnabled,
     Expression<bool>? captureShortcutEnabled,
+    Expression<int>? weekendLeewayMinutes,
+    Expression<int>? wakeGoalMinutes,
+    Expression<int>? wakeShiftFromMinutes,
+    Expression<String>? wakeShiftStartDate,
+    Expression<int>? wakeShiftStepMinutes,
+    Expression<int>? wakeShiftEveryDays,
   }) {
     return RawValuesInsertable({
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -551,6 +841,17 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
       if (lowEnergyEnabled != null) 'low_energy_enabled': lowEnergyEnabled,
       if (captureShortcutEnabled != null)
         'capture_shortcut_enabled': captureShortcutEnabled,
+      if (weekendLeewayMinutes != null)
+        'weekend_leeway_minutes': weekendLeewayMinutes,
+      if (wakeGoalMinutes != null) 'wake_goal_minutes': wakeGoalMinutes,
+      if (wakeShiftFromMinutes != null)
+        'wake_shift_from_minutes': wakeShiftFromMinutes,
+      if (wakeShiftStartDate != null)
+        'wake_shift_start_date': wakeShiftStartDate,
+      if (wakeShiftStepMinutes != null)
+        'wake_shift_step_minutes': wakeShiftStepMinutes,
+      if (wakeShiftEveryDays != null)
+        'wake_shift_every_days': wakeShiftEveryDays,
     });
   }
 
@@ -565,6 +866,12 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Value<int>? lateThresholdMinutes,
     Value<bool>? lowEnergyEnabled,
     Value<bool>? captureShortcutEnabled,
+    Value<int>? weekendLeewayMinutes,
+    Value<int?>? wakeGoalMinutes,
+    Value<int?>? wakeShiftFromMinutes,
+    Value<String?>? wakeShiftStartDate,
+    Value<int>? wakeShiftStepMinutes,
+    Value<int>? wakeShiftEveryDays,
   }) {
     return SettingsCompanion(
       updatedAt: updatedAt ?? this.updatedAt,
@@ -578,6 +885,12 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
       lowEnergyEnabled: lowEnergyEnabled ?? this.lowEnergyEnabled,
       captureShortcutEnabled:
           captureShortcutEnabled ?? this.captureShortcutEnabled,
+      weekendLeewayMinutes: weekendLeewayMinutes ?? this.weekendLeewayMinutes,
+      wakeGoalMinutes: wakeGoalMinutes ?? this.wakeGoalMinutes,
+      wakeShiftFromMinutes: wakeShiftFromMinutes ?? this.wakeShiftFromMinutes,
+      wakeShiftStartDate: wakeShiftStartDate ?? this.wakeShiftStartDate,
+      wakeShiftStepMinutes: wakeShiftStepMinutes ?? this.wakeShiftStepMinutes,
+      wakeShiftEveryDays: wakeShiftEveryDays ?? this.wakeShiftEveryDays,
     );
   }
 
@@ -616,6 +929,28 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
         captureShortcutEnabled.value,
       );
     }
+    if (weekendLeewayMinutes.present) {
+      map['weekend_leeway_minutes'] = Variable<int>(weekendLeewayMinutes.value);
+    }
+    if (wakeGoalMinutes.present) {
+      map['wake_goal_minutes'] = Variable<int>(wakeGoalMinutes.value);
+    }
+    if (wakeShiftFromMinutes.present) {
+      map['wake_shift_from_minutes'] = Variable<int>(
+        wakeShiftFromMinutes.value,
+      );
+    }
+    if (wakeShiftStartDate.present) {
+      map['wake_shift_start_date'] = Variable<String>(wakeShiftStartDate.value);
+    }
+    if (wakeShiftStepMinutes.present) {
+      map['wake_shift_step_minutes'] = Variable<int>(
+        wakeShiftStepMinutes.value,
+      );
+    }
+    if (wakeShiftEveryDays.present) {
+      map['wake_shift_every_days'] = Variable<int>(wakeShiftEveryDays.value);
+    }
     return map;
   }
 
@@ -631,7 +966,13 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
           ..write('breakfastMinutes: $breakfastMinutes, ')
           ..write('lateThresholdMinutes: $lateThresholdMinutes, ')
           ..write('lowEnergyEnabled: $lowEnergyEnabled, ')
-          ..write('captureShortcutEnabled: $captureShortcutEnabled')
+          ..write('captureShortcutEnabled: $captureShortcutEnabled, ')
+          ..write('weekendLeewayMinutes: $weekendLeewayMinutes, ')
+          ..write('wakeGoalMinutes: $wakeGoalMinutes, ')
+          ..write('wakeShiftFromMinutes: $wakeShiftFromMinutes, ')
+          ..write('wakeShiftStartDate: $wakeShiftStartDate, ')
+          ..write('wakeShiftStepMinutes: $wakeShiftStepMinutes, ')
+          ..write('wakeShiftEveryDays: $wakeShiftEveryDays')
           ..write(')'))
         .toString();
   }
@@ -4195,6 +4536,12 @@ typedef $$SettingsTableCreateCompanionBuilder =
       Value<int> lateThresholdMinutes,
       Value<bool> lowEnergyEnabled,
       Value<bool> captureShortcutEnabled,
+      Value<int> weekendLeewayMinutes,
+      Value<int?> wakeGoalMinutes,
+      Value<int?> wakeShiftFromMinutes,
+      Value<String?> wakeShiftStartDate,
+      Value<int> wakeShiftStepMinutes,
+      Value<int> wakeShiftEveryDays,
     });
 typedef $$SettingsTableUpdateCompanionBuilder =
     SettingsCompanion Function({
@@ -4208,6 +4555,12 @@ typedef $$SettingsTableUpdateCompanionBuilder =
       Value<int> lateThresholdMinutes,
       Value<bool> lowEnergyEnabled,
       Value<bool> captureShortcutEnabled,
+      Value<int> weekendLeewayMinutes,
+      Value<int?> wakeGoalMinutes,
+      Value<int?> wakeShiftFromMinutes,
+      Value<String?> wakeShiftStartDate,
+      Value<int> wakeShiftStepMinutes,
+      Value<int> wakeShiftEveryDays,
     });
 
 class $$SettingsTableFilterComposer
@@ -4266,6 +4619,36 @@ class $$SettingsTableFilterComposer
 
   ColumnFilters<bool> get captureShortcutEnabled => $composableBuilder(
     column: $table.captureShortcutEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get weekendLeewayMinutes => $composableBuilder(
+    column: $table.weekendLeewayMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get wakeGoalMinutes => $composableBuilder(
+    column: $table.wakeGoalMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get wakeShiftFromMinutes => $composableBuilder(
+    column: $table.wakeShiftFromMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get wakeShiftStartDate => $composableBuilder(
+    column: $table.wakeShiftStartDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get wakeShiftStepMinutes => $composableBuilder(
+    column: $table.wakeShiftStepMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get wakeShiftEveryDays => $composableBuilder(
+    column: $table.wakeShiftEveryDays,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4328,6 +4711,36 @@ class $$SettingsTableOrderingComposer
     column: $table.captureShortcutEnabled,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get weekendLeewayMinutes => $composableBuilder(
+    column: $table.weekendLeewayMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get wakeGoalMinutes => $composableBuilder(
+    column: $table.wakeGoalMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get wakeShiftFromMinutes => $composableBuilder(
+    column: $table.wakeShiftFromMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get wakeShiftStartDate => $composableBuilder(
+    column: $table.wakeShiftStartDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get wakeShiftStepMinutes => $composableBuilder(
+    column: $table.wakeShiftStepMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get wakeShiftEveryDays => $composableBuilder(
+    column: $table.wakeShiftEveryDays,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettingsTableAnnotationComposer
@@ -4382,6 +4795,36 @@ class $$SettingsTableAnnotationComposer
     column: $table.captureShortcutEnabled,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get weekendLeewayMinutes => $composableBuilder(
+    column: $table.weekendLeewayMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get wakeGoalMinutes => $composableBuilder(
+    column: $table.wakeGoalMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get wakeShiftFromMinutes => $composableBuilder(
+    column: $table.wakeShiftFromMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get wakeShiftStartDate => $composableBuilder(
+    column: $table.wakeShiftStartDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get wakeShiftStepMinutes => $composableBuilder(
+    column: $table.wakeShiftStepMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get wakeShiftEveryDays => $composableBuilder(
+    column: $table.wakeShiftEveryDays,
+    builder: (column) => column,
+  );
 }
 
 class $$SettingsTableTableManager
@@ -4422,6 +4865,12 @@ class $$SettingsTableTableManager
                 Value<int> lateThresholdMinutes = const Value.absent(),
                 Value<bool> lowEnergyEnabled = const Value.absent(),
                 Value<bool> captureShortcutEnabled = const Value.absent(),
+                Value<int> weekendLeewayMinutes = const Value.absent(),
+                Value<int?> wakeGoalMinutes = const Value.absent(),
+                Value<int?> wakeShiftFromMinutes = const Value.absent(),
+                Value<String?> wakeShiftStartDate = const Value.absent(),
+                Value<int> wakeShiftStepMinutes = const Value.absent(),
+                Value<int> wakeShiftEveryDays = const Value.absent(),
               }) => SettingsCompanion(
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -4433,6 +4882,12 @@ class $$SettingsTableTableManager
                 lateThresholdMinutes: lateThresholdMinutes,
                 lowEnergyEnabled: lowEnergyEnabled,
                 captureShortcutEnabled: captureShortcutEnabled,
+                weekendLeewayMinutes: weekendLeewayMinutes,
+                wakeGoalMinutes: wakeGoalMinutes,
+                wakeShiftFromMinutes: wakeShiftFromMinutes,
+                wakeShiftStartDate: wakeShiftStartDate,
+                wakeShiftStepMinutes: wakeShiftStepMinutes,
+                wakeShiftEveryDays: wakeShiftEveryDays,
               ),
           createCompanionCallback:
               ({
@@ -4446,6 +4901,12 @@ class $$SettingsTableTableManager
                 Value<int> lateThresholdMinutes = const Value.absent(),
                 Value<bool> lowEnergyEnabled = const Value.absent(),
                 Value<bool> captureShortcutEnabled = const Value.absent(),
+                Value<int> weekendLeewayMinutes = const Value.absent(),
+                Value<int?> wakeGoalMinutes = const Value.absent(),
+                Value<int?> wakeShiftFromMinutes = const Value.absent(),
+                Value<String?> wakeShiftStartDate = const Value.absent(),
+                Value<int> wakeShiftStepMinutes = const Value.absent(),
+                Value<int> wakeShiftEveryDays = const Value.absent(),
               }) => SettingsCompanion.insert(
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -4457,6 +4918,12 @@ class $$SettingsTableTableManager
                 lateThresholdMinutes: lateThresholdMinutes,
                 lowEnergyEnabled: lowEnergyEnabled,
                 captureShortcutEnabled: captureShortcutEnabled,
+                weekendLeewayMinutes: weekendLeewayMinutes,
+                wakeGoalMinutes: wakeGoalMinutes,
+                wakeShiftFromMinutes: wakeShiftFromMinutes,
+                wakeShiftStartDate: wakeShiftStartDate,
+                wakeShiftStepMinutes: wakeShiftStepMinutes,
+                wakeShiftEveryDays: wakeShiftEveryDays,
               ),
           withReferenceMapper: (p0) => p0
               .map(

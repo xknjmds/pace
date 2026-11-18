@@ -32,6 +32,18 @@ class DailyLogsDao extends DatabaseAccessor<AppDatabase>
             ..orderBy([(t) => OrderingTerm.asc(t.date)]))
           .get();
 
+  /// Live version of [between].
+  Stream<List<DailyLog>> watchBetween(DateTime from, DateTime to) =>
+      (select(dailyLogs)
+            ..where(
+              (t) =>
+                  t.deletedAt.isNull() &
+                  t.date.isBiggerOrEqualValue(dateKey(from)) &
+                  t.date.isSmallerOrEqualValue(dateKey(to)),
+            )
+            ..orderBy([(t) => OrderingTerm.asc(t.date)]))
+          .watch();
+
   /// Applies [change] to the day's row, creating it first if needed.
   Future<DailyLog> change(
     DateTime day,

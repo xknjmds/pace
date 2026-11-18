@@ -54,10 +54,14 @@ void main() {
     await pump(tester);
     expect(find.text('06:30'), findsOneWidget);
     expect(find.text('15 min'), findsOneWidget);
+    expect(find.text('8 h'), findsOneWidget);
+    // Saturday: tomorrow's lie-in wake 07:30 minus 8 h.
+    expect(find.text('Bed around 23:30 tonight.'), findsOneWidget);
     for (final name in weekdayNames.values) {
       expect(find.text(name), findsOneWidget);
     }
-    expect(find.text('No class'), findsNWidgets(7));
+    expect(find.text('No class · up at 06:30'), findsNWidgets(5));
+    expect(find.text('No class · up at 07:30'), findsNWidgets(2));
     expect(tester.takeException(), isNull);
     await unmount(tester);
   });
@@ -116,6 +120,52 @@ void main() {
       (s) => s.payload == 'wake:1',
     );
     expect(wake.body, contains('Breakfast first.'));
+    await unmount(tester);
+  });
+
+  testWidgets('starting a gradual shift shows where it is heading', (
+    tester,
+  ) async {
+    await pump(tester);
+    await tester.tap(find.byKey(const ValueKey('start-shift')));
+    await tester.pumpAndSettle();
+    // Time picker opens at an hour earlier; accept it.
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+
+    final s = await db.settingsDao.get();
+    expect(s.wakeGoalMinutes, 5 * 60 + 30);
+    expect(s.wakeShiftFromMinutes, 6 * 60 + 30);
+    expect(
+      find.text(
+        'Moving 15 min earlier every 3 days toward 05:30, there by 26/11.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('stop-shift')), findsOneWidget);
+    await unmount(tester);
+  });
+
+  testWidgets('low-energy switch in Settings pauses other reminders', (
+    tester,
+  ) async {
+    await db.weekdayScheduleDao.upsert(
+      weekday: DateTime.monday,
+      firstClassMinutes: 8 * 60 + 30,
+      commuteMinutes: 30,
+      prepMinutes: 30,
+    );
+    await pump(tester);
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('low-energy-setting')),
+    );
+    await tester.tap(find.byKey(const ValueKey('low-energy-setting')));
+    await tester.pumpAndSettle();
+    expect((await db.settingsDao.get()).lowEnergyEnabled, isTrue);
+    final kinds = gateway.scheduled.values
+        .map((s) => s.payload!.split(':').first)
+        .toSet();
+    expect(kinds, {'wake', 'leave'});
     await unmount(tester);
   });
 }

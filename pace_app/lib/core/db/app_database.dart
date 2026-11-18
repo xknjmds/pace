@@ -61,7 +61,7 @@ class AppDatabase extends _$AppDatabase {
   static DateTime _utcNow() => DateTime.now().toUtc();
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   /// Schema history. Never edit a released step (CLAUDE.md rule 8); add one,
   /// then regenerate: `drift_dev schema dump`, then `schema steps` into
@@ -71,6 +71,7 @@ class AppDatabase extends _$AppDatabase {
   /// - v2 (M3): every other table in the PLAN.md data model
   /// - v3 (M7): `settings.capture_shortcut_enabled`
   /// - v4 (M8): `focus_sessions.ended_at`
+  /// - v5 (M9): settings for weekend leeway and the gradual wake shift
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
@@ -104,6 +105,19 @@ class AppDatabase extends _$AppDatabase {
           'UPDATE focus_sessions SET ended_at = started_at '
           'WHERE ended_at IS NULL',
         );
+      },
+      from4To5: (m, schema) async {
+        final s = schema.settings;
+        for (final column in [
+          s.weekendLeewayMinutes,
+          s.wakeGoalMinutes,
+          s.wakeShiftFromMinutes,
+          s.wakeShiftStartDate,
+          s.wakeShiftStepMinutes,
+          s.wakeShiftEveryDays,
+        ]) {
+          await m.addColumn(s, column);
+        }
       },
     ),
     beforeOpen: (_) => settingsDao.ensureRow(),

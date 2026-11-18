@@ -7,6 +7,7 @@ import 'generated/schema.dart';
 import 'generated/schema_v1.dart' as v1;
 import 'generated/schema_v2.dart' as v2;
 import 'generated/schema_v3.dart' as v3;
+import 'generated/schema_v4.dart' as v4;
 
 void main() {
   late SchemaVerifier verifier;
@@ -33,7 +34,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 4);
+    await verifier.migrateAndValidate(db, 5);
 
     final s = await db.settingsDao.get();
     expect(s.lowEnergyEnabled, isTrue);
@@ -70,7 +71,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 4);
+    await verifier.migrateAndValidate(db, 5);
 
     final s = await db.settingsDao.get();
     expect(s.targetWakeMinutes, 7 * 60);
@@ -95,16 +96,41 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 4);
+    await verifier.migrateAndValidate(db, 5);
     expect(await db.focusSessionsDao.getActive(), isNull);
     final s = (await db.focusSessionsDao.recent()).single;
     expect(s.endedAt, DateTime.utc(2026, 11, 15, 19));
   });
 
-  test('a fresh database matches the v4 snapshot', () async {
-    final connection = await verifier.startAt(4);
+  test('a v4 database upgrades to v5 with sleep defaults', () async {
+    final schema = await verifier.schemaAt(4);
+    final old = v4.DatabaseAtV4(schema.newConnection());
+    await old
+        .into(old.settings)
+        .insert(
+          v4.SettingsCompanion.insert(
+            id: const Value(1),
+            targetWakeMinutes: const Value(7 * 60),
+            updatedAt: '2026-11-17T00:00:00.000Z',
+          ),
+        );
+    await old.close();
+
+    final db = AppDatabase(schema.newConnection());
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 5);
+    final s = await db.settingsDao.get();
+    expect(s.targetWakeMinutes, 7 * 60);
+    expect(s.weekendLeewayMinutes, 60);
+    expect(s.wakeGoalMinutes, isNull);
+    expect(s.wakeShiftStepMinutes, 15);
+    expect(s.wakeShiftEveryDays, 3);
+  });
+
+  test('a fresh database matches the v5 snapshot', () async {
+    final connection = await verifier.startAt(5);
     final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 4);
+    await verifier.migrateAndValidate(db, 5);
   });
 }

@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pace/core/time/local_time.dart';
 import 'package:pace/features/routine/domain/morning_plan.dart';
 import 'package:pace/features/routine/domain/routine_reminder_planner.dart';
+import 'package:pace/features/routine/domain/wake_schedule.dart';
 import 'package:pace/features/today/domain/today_model.dart';
 
 void main() {
@@ -125,5 +126,49 @@ void main() {
   test('tomorrow preview is one line, or nothing without a class', () {
     expect(tomorrowPreview(classDay), 'Tomorrow: class 08:30, leave by 08:00');
     expect(tomorrowPreview(freeDay), isNull);
+  });
+
+  test('no class with the wake anchor offers "I\'m up"', () {
+    final s =
+        routineStatus(
+              now: DateTime(2026, 11, 15, 7),
+              inputs: freeDay,
+              wakeDone: false,
+              eatDone: false,
+              leaveDone: false,
+              lateThresholdMinutes: 20,
+              lowEnergy: false,
+              wakeAnchor: true,
+            )
+            as NoClassToday;
+    expect(s.wake!.at, LocalTime.of(6, 30));
+    expect(
+      (status(now: DateTime(2026, 11, 15, 7), inputs: freeDay) as NoClassToday)
+          .wake,
+      isNull,
+    );
+  });
+
+  group('showEveningCard', () {
+    final night = nightPlan(
+      plan: const WakePlan(baseWakeMinutes: 390),
+      night: DateTime(2026, 11, 16),
+      sleepTargetMinutes: 480,
+      windDownLeadMinutes: 45,
+    );
+    bool show(DateTime now, {bool bed = false}) =>
+        showEveningCard(now: now, night: night, bedLogged: bed);
+
+    test('from wind-down until four hours past bedtime', () {
+      expect(show(DateTime(2026, 11, 16, 21, 44)), isFalse);
+      expect(show(DateTime(2026, 11, 16, 21, 45)), isTrue);
+      expect(show(DateTime(2026, 11, 17, 1, 0)), isTrue);
+      expect(show(DateTime(2026, 11, 17, 2, 30)), isFalse);
+      expect(show(DateTime(2026, 11, 17, 6, 0)), isFalse);
+    });
+
+    test('gone once bed is logged', () {
+      expect(show(DateTime(2026, 11, 16, 22), bed: true), isFalse);
+    });
   });
 }

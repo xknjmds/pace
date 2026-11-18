@@ -52,7 +52,11 @@ void main() {
     expect(firesFor('eat:1'), [DateTime(2026, 11, 16, 7, 15)]);
     expect(firesFor('leave:1'), [DateTime(2026, 11, 16, 8, 0)]);
     expect(firesFor('leave:2'), [DateTime(2026, 11, 17, 8, 30)]);
-    expect(firesFor('wake:3'), isEmpty);
+    // Wake anchor: days without class still get a wake reminder, and the
+    // weekend gets the hour of leeway.
+    expect(firesFor('wake:3'), [DateTime(2026, 11, 18, 6, 30)]);
+    expect(firesFor('leave:3'), isEmpty);
+    expect(firesFor('wake:7'), [DateTime(2026, 11, 15, 7, 30)]);
     final wake = gateway.scheduled.values.firstWhere(
       (s) => s.payload == 'wake:1',
     );
@@ -75,7 +79,8 @@ void main() {
     expect(firesFor('leave:1'), [DateTime(2026, 11, 16, 9, 30)]);
     expect(firesFor('leave:2'), [DateTime(2026, 11, 17, 8, 30)]);
     final live = await t.db.scheduledNotificationsDao.getLive();
-    expect(live.where((r) => r.ownerId == '1'), hasLength(3));
+    // Wake, eat, leave on Monday morning plus Monday evening's wind-down.
+    expect(live.where((r) => r.ownerId == '1'), hasLength(4));
   });
 
   test('"Not today" mutes one reminder for the day and logs nothing', () async {
@@ -165,5 +170,79 @@ void main() {
       isTrue,
     );
     expect(await t.db.dailyLogsDao.get(DateTime(2026, 11, 14)), isNull);
+  });
+
+  test(
+    'wind-down lands before a bedtime derived from tomorrow\'s wake',
+    () async {
+      await routine.resync();
+      // Sunday night: Monday wake 06:30 - 8 h sleep = 22:30, minus 45 min.
+      final sunday = gateway.scheduled.values.singleWhere(
+        (s) => s.payload == 'windDown:7',
+      );
+      expect(sunday.fireAt.toLocal(), DateTime(2026, 11, 15, 21, 45));
+      expect(sunday.body, contains('Bed around 22:30, up at 06:30'));
+      expect(sunday.body, contains('Tomorrow: class 08:30, leave by 08:00.'));
+      expect(sunday.actions.map((a) => a.label), ['Going to bed', 'Not today']);
+      // Friday night: Saturday wake has the hour of leeway, so bed is later.
+      expect(firesFor('windDown:5'), [DateTime(2026, 11, 20, 22, 45)]);
+    },
+  );
+
+  test('"Going to bed" after midnight logs the night before', () async {
+    t.now = DateTime(2026, 11, 17, 0, 40).toUtc();
+    await routine.handle(
+      const ReminderResponse(
+        payload: 'windDown:1',
+        actionId: ReminderActionIds.done,
+      ),
+    );
+    final log = await t.db.dailyLogsDao.get(DateTime(2026, 11, 16));
+    expect(log?.bedLoggedAt, t.now);
+    expect(await t.db.dailyLogsDao.get(DateTime(2026, 11, 17)), isNull);
+  });
+
+  test('gradual shift moves wake reminders on schedule and settles', () async {
+    await routine.startGradualWake(
+      goalMinutes: 6 * 60,
+      stepMinutes: 15,
+      everyDays: 3,
+    );
+    await routine.resync();
+    // Started Sat 14th at 06:30: Mon 16th still 06:30, Tue 17th 06:15.
+    expect(firesFor('wake:1'), [DateTime(2026, 11, 16, 6, 30)]);
+    expect(firesFor('wake:2'), [DateTime(2026, 11, 17, 6, 15)]);
+
+    // Two weeks later, nothing logged in between: no reset, goal held.
+    t.now = DateTime(2026, 11, 30, 5).toUtc();
+    await routine.resync();
+    expect(firesFor('wake:1'), [DateTime(2026, 11, 30, 6, 0)]);
+    final s = await t.db.settingsDao.get();
+    expect(s.targetWakeMinutes, 6 * 60);
+    expect(s.wakeGoalMinutes, isNull);
+  });
+
+  test(
+    'a later goal applies at once; setting the time stops a shift',
+    () async {
+      await routine.startGradualWake(goalMinutes: 7 * 60);
+      expect((await t.db.settingsDao.get()).targetWakeMinutes, 7 * 60);
+      expect((await t.db.settingsDao.get()).wakeGoalMinutes, isNull);
+
+      await routine.startGradualWake(goalMinutes: 6 * 60);
+      await routine.setWakeTime(6 * 60 + 45);
+      final s = await t.db.settingsDao.get();
+      expect(s.targetWakeMinutes, 6 * 60 + 45);
+      expect(s.wakeGoalMinutes, isNull);
+    },
+  );
+
+  test('low-energy mode keeps only wake and leave', () async {
+    await t.db.settingsDao.setLowEnergy(true);
+    await routine.resync();
+    final kinds = gateway.scheduled.values
+        .map((s) => s.payload!.split(':').first)
+        .toSet();
+    expect(kinds, {'wake', 'leave'});
   });
 }

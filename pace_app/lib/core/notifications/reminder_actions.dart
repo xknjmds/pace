@@ -55,6 +55,10 @@ List<ReminderAction> actionsFor(ReminderKind kind, String ownerId) {
         ReminderAction(id: ReminderActionIds.snooze, label: 'Keep going'),
       ];
     case ReminderKind.windDown:
+      return const [
+        ReminderAction(id: ReminderActionIds.done, label: 'Going to bed'),
+        ReminderAction(id: ReminderActionIds.notToday, label: 'Not today'),
+      ];
     case ReminderKind.test:
       return const [];
   }

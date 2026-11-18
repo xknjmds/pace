@@ -1,12 +1,17 @@
+import 'package:drift/drift.dart' show Value;
+
 import '../../../core/db/app_database.dart';
 import '../../../core/notifications/reminder_actions.dart';
 import '../../../core/notifications/reminder_scheduler.dart';
 import '../domain/morning_plan.dart';
 import '../domain/routine_reminder_planner.dart';
+import '../domain/wake_schedule.dart';
 import 'morning_inputs.dart';
 
-/// Keeps the wake, eat and leave reminders in step with settings, the week's
-/// schedule and "Not today" mutes, and applies what the owner does with them.
+/// Keeps the wake, eat, leave and wind-down reminders in step with settings,
+/// the week's schedule and "Not today" mutes, and applies what the owner
+/// does with them. Once the week is set up, every day gets a wake reminder
+/// (the wake anchor) and every evening a wind-down reminder.
 ///
 /// Owner ids: `"<weekday>"` for the planned reminder, `"<weekday>:snooze"`
 /// for its single snooze.
@@ -26,6 +31,7 @@ class RoutineReminders {
     RoutineStep.wake: ReminderKind.wake,
     RoutineStep.eat: ReminderKind.eat,
     RoutineStep.leave: ReminderKind.leave,
+    RoutineStep.windDown: ReminderKind.windDown,
   };
 
   /// [MorningInputs] for every weekday that has a schedule row.
@@ -39,15 +45,29 @@ class RoutineReminders {
   /// reminders. Call after any settings or schedule change and on launch.
   Future<void> resync() async {
     final t = now();
+    await _settleFinishedShift(t);
+    final settings = await db.settingsDao.get();
+    final plan = wakePlanFrom(settings);
     final inputs = await inputsByWeekday();
     final mutes = await db.reminderMutesDao.between(
       t,
       t.add(const Duration(days: 7)),
     );
+    final setUp = inputs.isNotEmpty;
     final planned = planRoutineReminders(
       now: t,
       inputsByWeekday: inputs,
       muted: {for (final m in mutes) '${m.kind.name}:${m.ownerId}:${m.date}'},
+      wakeFor: (date) => wakeOn(plan, date),
+      wakeAnchor: setUp,
+      windDown: setUp
+          ? WindDownSettings(
+              wakePlan: plan,
+              sleepTargetMinutes: settings.sleepTargetMinutes,
+              leadMinutes: settings.windDownLeadMinutes,
+            )
+          : null,
+      lowEnergy: settings.lowEnergyEnabled,
     );
     for (final entry in _steps.entries) {
       for (
@@ -64,6 +84,63 @@ class RoutineReminders {
     }
   }
 
+  /// A shift that has reached its goal becomes the plain wake time.
+  Future<void> _settleFinishedShift(DateTime t) async {
+    final s = await db.settingsDao.get();
+    final shift = wakePlanFrom(s).shift;
+    if (shift == null || dateOnly(t).isBefore(shiftReachesGoalOn(shift))) {
+      return;
+    }
+    await db.settingsDao.updateSettings(
+      (x) => x.copyWith(
+        targetWakeMinutes: shift.goalMinutes,
+        wakeGoalMinutes: const Value(null),
+        wakeShiftFromMinutes: const Value(null),
+        wakeShiftStartDate: const Value(null),
+      ),
+    );
+  }
+
+  /// Sets the wake time directly. Any shift under way stops.
+  Future<void> setWakeTime(int minutes) async {
+    await db.settingsDao.updateSettings(
+      (x) => x.copyWith(
+        targetWakeMinutes: minutes,
+        wakeGoalMinutes: const Value(null),
+        wakeShiftFromMinutes: const Value(null),
+        wakeShiftStartDate: const Value(null),
+      ),
+    );
+  }
+
+  /// Starts moving the weekday wake time toward [goalMinutes], from the
+  /// time in force today. A goal that is not earlier applies at once.
+  Future<void> startGradualWake({
+    required int goalMinutes,
+    int stepMinutes = 15,
+    int everyDays = 3,
+  }) async {
+    final t = now();
+    final current = weekdayWakeOn(
+      wakePlanFrom(await db.settingsDao.get()),
+      t,
+    ).minutesSinceMidnight;
+    if (goalMinutes >= current) {
+      await setWakeTime(goalMinutes);
+      return;
+    }
+    await db.settingsDao.updateSettings(
+      (x) => x.copyWith(
+        targetWakeMinutes: current,
+        wakeGoalMinutes: Value(goalMinutes),
+        wakeShiftFromMinutes: Value(current),
+        wakeShiftStartDate: Value(dateKey(t)),
+        wakeShiftStepMinutes: stepMinutes,
+        wakeShiftEveryDays: everyDays,
+      ),
+    );
+  }
+
   /// "Not today": silence this step for [day] without logging anything,
   /// then let the planner drop it.
   Future<void> notToday(ReminderKind kind, int weekday, DateTime day) async {
@@ -78,6 +155,7 @@ class RoutineReminders {
     final title = switch (kind) {
       ReminderKind.wake => 'Good morning',
       ReminderKind.eat => 'Breakfast',
+      ReminderKind.windDown => 'Time to wind down',
       _ => 'Time to leave',
     };
     await scheduler.replaceOwner(kind, '$weekday$snoozeOwnerSuffix', [
@@ -96,6 +174,8 @@ class RoutineReminders {
         await logs.logEat(t, t);
       case ReminderKind.leave:
         await logs.setRoutineDone(t, true);
+      case ReminderKind.windDown:
+        await logs.logBed(nightOf(t), t);
       default:
         return;
     }
