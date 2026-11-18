@@ -4,7 +4,7 @@
 **Android package ID:** `com.el.pace`
 **Tone:** calm, steady, forgiving. Copy and UI should never shame or rush the user.
 
-Personal routine and productivity app. Single user, Android only, offline-first.
+Personal routine and productivity app. Single user, Android first, offline-first.
 Read `PLAN.md` for milestones and acceptance criteria. Work on one milestone at a time.
 
 ## Purpose
@@ -16,7 +16,13 @@ The app is an external memory and a nudge, not a to-do list. Every feature must 
 
 ## Stack
 
-- Flutter + Dart, **Android only** (do not add iOS code or config)
+- Flutter + Dart. **Android is the primary target.** Web and desktop (Linux, Windows, macOS)
+  also run, with everything except reminders, notification buttons and the home-screen
+  widget (owner's decision, 2026-11-18). Platform differences go through
+  `core/platform/platform_features.dart` and the no-op gateway and widget bridge, never
+  scattered `Platform` checks. Do not add iOS code or config.
+- Web database: `web/sqlite3.wasm` and `web/drift_worker.js` must match the locked
+  `sqlite3` and `drift` versions; regenerate with `tool/build_web_db.sh` after upgrading.
 - State: Riverpod
 - Database: Drift (SQLite), local only, no backend, no accounts
 - Notifications: `flutter_local_notifications` + `timezone` + `flutter_timezone`
@@ -82,6 +88,8 @@ the schema sync-ready, see rule 9.
 - Plan first, then implement. Keep each change to one milestone.
 - Before finishing a task: `dart format .`, `flutter analyze`, `flutter test`.
 - Commit after each completed milestone with a clear message.
+- Release builds shrink resources: anything named only from Dart (like the notification
+  icon) must be listed in `android/app/src/main/res/raw/keep.xml`.
 - Notification behavior must be verified on a real device, not just the emulator.
   If it cannot be verified, say so explicitly instead of claiming it works.
 - Ask before adding any new dependency.

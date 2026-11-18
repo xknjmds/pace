@@ -5,6 +5,7 @@ import '../../../core/db/app_database.dart';
 import '../../../core/db/database_provider.dart';
 import '../../../core/db/settings_provider.dart';
 import '../../../core/notifications/notification_providers.dart';
+import '../../../core/platform/platform_features.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/time/local_time.dart';
 import '../../../routes.dart';
@@ -59,7 +60,10 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
     final lowEnergy = ref.watch(lowEnergyProvider);
     final schedules = ref.watch(weekdaySchedulesProvider).value ?? const [];
     final pending = ref.watch(pendingTasksProvider).value ?? const <Task>[];
-    final permissions = ref.watch(notificationPermissionsProvider).value;
+    final features = ref.watch(platformFeaturesProvider);
+    final permissions = features.reminders
+        ? ref.watch(notificationPermissionsProvider).value
+        : null;
     final theme = Theme.of(context);
 
     if (settings == null) return const Scaffold();
@@ -169,6 +173,13 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
           key: const ValueKey('check-in-alarm'),
           style: theme.textTheme.bodyLarge,
         ),
+        if (!features.reminders) ...[
+          const SizedBox(height: 8),
+          Text(
+            'It rings on your Android phone. There are no reminders here.',
+            style: theme.textTheme.bodyMedium,
+          ),
+        ],
         const SizedBox(height: 8),
         if (permissions != null && !permissions.notificationsGranted)
           Text(

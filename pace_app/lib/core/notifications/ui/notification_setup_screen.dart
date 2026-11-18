@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../platform/platform_features.dart';
 import '../../time/clock.dart';
 import '../../time/local_time.dart';
 import '../../db/app_database.dart';
@@ -96,6 +97,22 @@ class _NotificationSetupScreenState
 
   @override
   Widget build(BuildContext context) {
+    if (!ref.watch(platformFeaturesProvider).reminders) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Reminders')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Text(
+              'Reminders and their buttons are part of the Android app. '
+              'Everything else works here.',
+              style: Theme.of(context).textTheme.bodyLarge,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
     final gateway = ref.read(notificationGatewayProvider);
     final permissions = ref.watch(notificationPermissionsProvider);
     final pending = ref.watch(pendingRemindersProvider);

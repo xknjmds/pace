@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/db/database_provider.dart';
 import '../../../core/db/settings_provider.dart';
+import '../../../core/platform/platform_features.dart';
 import '../../../core/startup_report.dart';
 import '../../../core/time/local_time.dart';
 import '../../../core/widgets/cairn_mark.dart';
@@ -84,6 +85,7 @@ class TodayScreen extends ConsumerWidget {
     final inboxCount = ref.watch(inboxCountProvider);
     final focus = ref.watch(activeFocusProvider).value;
     final startup = ref.watch(startupReportProvider);
+    final features = ref.watch(platformFeaturesProvider);
     final theme = Theme.of(context);
 
     final hasSchedule = schedules.isNotEmpty;
@@ -153,7 +155,8 @@ class TodayScreen extends ConsumerWidget {
             onSelected: (route) => Navigator.of(context).pushNamed(route),
             itemBuilder: (_) => [
               for (final entry in _menu.entries)
-                PopupMenuItem(value: entry.value, child: Text(entry.key)),
+                if (features.reminders || entry.value != Routes.notifications)
+                  PopupMenuItem(value: entry.value, child: Text(entry.key)),
             ],
           ),
         ],

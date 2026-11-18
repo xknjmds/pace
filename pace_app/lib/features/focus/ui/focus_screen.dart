@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/db/app_database.dart';
 import '../../../core/db/settings_provider.dart';
+import '../../../core/platform/platform_features.dart';
 import '../../../core/time/clock.dart';
 import '../../deadlines/application/deadline_providers.dart';
 import '../application/focus_providers.dart';
@@ -67,6 +68,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     final active = activeAsync.value;
     final pending = ref.watch(pendingTasksProvider).value ?? const <Task>[];
     final lowEnergy = ref.watch(lowEnergyProvider);
+    final features = ref.watch(platformFeaturesProvider);
     final theme = Theme.of(context);
 
     final state = focusStateAt(
@@ -174,8 +176,11 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'You can turn the screen off. PACE will tell you '
-                        'when the time is up.',
+                        features.reminders
+                            ? 'You can turn the screen off. PACE will tell '
+                                  'you when the time is up.'
+                            : 'Keep PACE open; the time-up alert is on the '
+                                  'Android app only.',
                         style: theme.textTheme.bodySmall,
                         textAlign: TextAlign.center,
                       ),

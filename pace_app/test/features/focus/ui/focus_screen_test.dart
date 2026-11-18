@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pace/core/db/app_database.dart';
 import 'package:pace/core/db/database_provider.dart';
 import 'package:pace/core/notifications/notification_providers.dart';
+import 'package:pace/core/platform/platform_features.dart';
 import 'package:pace/core/theme/pace_theme.dart';
 import 'package:pace/core/time/clock.dart';
 import 'package:pace/features/focus/application/focus_providers.dart';
@@ -25,7 +26,11 @@ void main() {
   });
   tearDown(() => db.close());
 
-  Future<void> pump(WidgetTester tester, {String? taskId}) async {
+  Future<void> pump(
+    WidgetTester tester, {
+    String? taskId,
+    PlatformFeatures features = PlatformFeatures.android,
+  }) async {
     tester.view.physicalSize = const Size(360, 640);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -37,6 +42,7 @@ void main() {
           notificationGatewayProvider.overrideWithValue(gateway),
           clockProvider.overrideWithValue(() => now),
           secondTickProvider.overrideWith((_) => const Stream.empty()),
+          platformFeaturesProvider.overrideWithValue(features),
         ],
         child: MaterialApp(
           theme: PaceTheme.light(),
@@ -132,6 +138,16 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Near'), findsWidgets);
     expect(find.text('Far'), findsNothing);
+    await unmount(tester);
+  });
+
+  testWidgets('without reminders the countdown says to keep PACE open', (
+    tester,
+  ) async {
+    await pump(tester, features: PlatformFeatures.elsewhere);
+    await tester.tap(find.byKey(const ValueKey('focus-start')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Keep PACE open'), findsOneWidget);
     await unmount(tester);
   });
 }

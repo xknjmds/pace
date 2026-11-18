@@ -256,3 +256,30 @@ Fixes:
   setup.
 
 Not yet confirmed on the phone: a new release build is needed (disk at 1.2 GB free).
+
+## Web and desktop (2026-11-18)
+
+The owner asked for PACE to run on all devices and chose Android + web + desktop (no iOS).
+
+- **What runs where.** Everything runs everywhere: Today, deadlines, inbox, focus, check-in,
+  review and settings. Reminders, notification buttons, the shade capture shortcut and the
+  home-screen widget are Android-only. Elsewhere `main` uses `NoopNotificationGateway` and
+  `NoopHomeWidgetBridge`, which succeed quietly, so startup, the scheduler and the
+  `scheduled_notifications` table behave the same. `platformFeaturesProvider` hides or
+  rewords the Android-only parts: the Reminders menu entry and screen, the Inbox shortcut
+  switch, the Focus screen-off line, the check-in alarm step and the wind-down subtitle.
+- **Web database.** drift runs SQLite in a worker: `web/sqlite3.wasm` (from the sqlite3.dart
+  release matching sqlite3 3.5.2) and `web/drift_worker.js` (compiled from
+  `tool/drift_worker.dart` against the locked drift). Without special server headers it
+  uses IndexedDB, which is fine.
+- **Desktop database** lives in the per-app data folder (`path_provider`, now a direct
+  dependency at the already-locked 2.1.6, approved by the owner), not drift's default of
+  ~/Documents.
+- **Verified here:** `flutter build web` loaded in headless Chrome through the debugging
+  protocol. The database opened with no exceptions, Today rendered, low-energy mode
+  survived a reload, and Settings showed the web wording. `flutter build linux` ran for 10
+  seconds with no errors and created its database in ~/.local/share/com.el.pace.
+  `flutter build apk --release` succeeds and now contains `drawable/ic_stat_pace` in all
+  densities.
+- **Not verified:** Windows and macOS builds need those systems. The new APK has not been
+  run on the phone yet.

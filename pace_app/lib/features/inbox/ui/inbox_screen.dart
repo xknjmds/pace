@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/db/app_database.dart';
 import '../../../core/db/settings_provider.dart';
+import '../../../core/platform/platform_features.dart';
 import '../../../core/time/clock.dart';
 import '../../deadlines/application/deadline_providers.dart';
 import '../../deadlines/ui/task_edit_sheet.dart';
@@ -76,6 +77,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     final items = ref.watch(inboxItemsProvider).value ?? const <InboxItem>[];
     final lowEnergy = ref.watch(lowEnergyProvider);
     final settings = ref.watch(settingsProvider).value;
+    final features = ref.watch(platformFeaturesProvider);
     final capture = ref.read(inboxCaptureProvider);
     final theme = Theme.of(context);
     final hideList = lowEnergy && !_showAllInLowEnergy && items.isNotEmpty;
@@ -150,7 +152,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                   ),
                 ),
             const SizedBox(height: 24),
-            if (settings != null)
+            if (settings != null && features.reminders)
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Capture from the notification shade'),

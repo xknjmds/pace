@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'daos/daily_logs_dao.dart';
 import 'daos/focus_sessions_dao.dart';
@@ -53,10 +55,34 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor, {DateTime Function()? now})
     : now = now ?? _utcNow;
 
-  /// Opens the on-device database file.
-  factory AppDatabase.open() => AppDatabase(driftDatabase(name: 'pace'));
+  /// Opens the on-device database file. On the web it lives in the
+  /// browser's storage, run by web/sqlite3.wasm and web/drift_worker.js
+  /// (regenerate both with tool/build_web_db.sh after upgrading drift).
+  ///
+  /// On desktop the file goes in the per-app data folder (for example
+  /// ~/.local/share/com.el.pace on Linux) rather than drift's default, the
+  /// user's Documents folder. Android keeps its default, which is already
+  /// private to the app.
+  factory AppDatabase.open() => AppDatabase(
+    driftDatabase(
+      name: 'pace',
+      native: DriftNativeOptions(
+        databaseDirectory: _isDesktop ? getApplicationSupportDirectory : null,
+      ),
+      web: DriftWebOptions(
+        sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+        driftWorker: Uri.parse('drift_worker.js'),
+      ),
+    ),
+  );
 
   final DateTime Function() now;
+
+  static bool get _isDesktop =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.linux ||
+          defaultTargetPlatform == TargetPlatform.windows ||
+          defaultTargetPlatform == TargetPlatform.macOS);
 
   static DateTime _utcNow() => DateTime.now().toUtc();
 

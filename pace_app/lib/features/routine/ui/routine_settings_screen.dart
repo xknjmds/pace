@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/db/database_provider.dart';
 import '../../../core/db/settings_provider.dart';
+import '../../../core/platform/platform_features.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/time/local_time.dart';
 import '../../today/application/reminder_resync.dart';
@@ -258,6 +259,7 @@ class RoutineSettingsScreen extends ConsumerWidget {
     final byWeekday = {for (final r in rows) r.weekday: r};
     final theme = Theme.of(context);
     final now = ref.watch(clockProvider)();
+    final features = ref.watch(platformFeaturesProvider);
     final wakePlan = settings == null ? null : wakePlanFrom(settings);
     final wakeToday = wakePlan == null ? null : weekdayWakeOn(wakePlan, now);
     final shift = wakePlan?.shift;
@@ -369,7 +371,10 @@ class RoutineSettingsScreen extends ConsumerWidget {
                         key: const ValueKey('wind-down'),
                         title: const Text('Wind down'),
                         subtitle: Text(
-                          'A gentle reminder at ${hm(tonight.windDownAt)}.',
+                          features.reminders
+                              ? 'A gentle reminder at ${hm(tonight.windDownAt)}.'
+                              : 'From ${hm(tonight.windDownAt)}. The reminder '
+                                    'is on the Android app.',
                         ),
                         trailing: Text(
                           '${settings.windDownLeadMinutes} min before',
