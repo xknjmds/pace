@@ -80,10 +80,12 @@ void main() {
     expect(find.text('Set up your week'), findsOneWidget);
     // Wide window: the tabs sit in a side rail.
     expect(find.byType(NavigationRail), findsOneWidget);
-    await tester.tap(find.byTooltip('More'));
+    await tester.tap(find.text('More'));
     await tester.pumpAndSettle();
     expect(find.text('Review'), findsOneWidget);
+    // Android-only screens are left out of the hub.
     expect(find.text('Reminders'), findsNothing);
+    expect(find.text('App gate'), findsNothing);
     await unmount(tester);
   });
 

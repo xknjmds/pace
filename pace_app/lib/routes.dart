@@ -36,6 +36,9 @@ abstract final class Routes {
   static const money = '/money';
   static const calendar = '/calendar';
 
+  /// The hub tab with every other screen.
+  static const more = '/more';
+
   static Map<String, WidgetBuilder> get table => {
     today: (_) => const HomeShell(),
     deadlines: (_) => const HomeShell(initialTab: ShellTab.deadlines),
@@ -43,6 +46,7 @@ abstract final class Routes {
     inboxCapture: (_) =>
         const HomeShell(initialTab: ShellTab.inbox, startCapturing: true),
     focus: (_) => const HomeShell(initialTab: ShellTab.focus),
+    more: (_) => const HomeShell(initialTab: ShellTab.more),
     review: (_) => const ReadableWidth(child: ReviewScreen()),
     checkIn: (_) => const ReadableWidth(child: CheckInScreen()),
     settings: (_) => const ReadableWidth(child: RoutineSettingsScreen()),

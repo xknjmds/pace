@@ -237,10 +237,10 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('tabs and the menu reach every other screen', (tester) async {
+  testWidgets('tabs and the More hub reach every other screen', (tester) async {
     await pumpApp(tester, DateTime(2026, 11, 14, 10));
     // One tap away: the bottom bar.
-    for (final label in ['Today', 'Deadlines', 'Inbox', 'Focus']) {
+    for (final label in ['Today', 'Deadlines', 'Inbox', 'Focus', 'More']) {
       expect(
         find.descendant(
           of: find.byType(NavigationBar),
@@ -249,13 +249,22 @@ void main() {
         findsOneWidget,
       );
     }
-    // The rest sits in the menu.
-    await tester.tap(find.byTooltip('More'));
+    // The rest sits in the More hub.
+    await tester.tap(find.text('More'));
     await tester.pumpAndSettle();
-    for (final label in ['Review', 'Settings', 'Reminders']) {
+    for (final label in ['Review', 'Classes', 'Notes', 'Money']) {
       expect(find.text(label), findsOneWidget);
     }
-    await tester.tapAt(const Offset(10, 600)); // close the menu
+    await tester.scrollUntilVisible(
+      find.text('Reminders'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('Settings'), findsOneWidget);
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    expect(find.text('Week'), findsOneWidget);
+    await tester.pageBack();
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Inbox'));

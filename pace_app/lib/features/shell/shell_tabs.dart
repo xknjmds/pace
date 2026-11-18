@@ -2,12 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../routes.dart';
 
-/// The four places one tap away.
+/// The places one tap away. More holds everything else.
 enum ShellTab {
   today(Routes.today),
   deadlines(Routes.deadlines),
   inbox(Routes.inbox),
-  focus(Routes.focus);
+  focus(Routes.focus),
+  more(Routes.more);
 
   const ShellTab(this.route);
 

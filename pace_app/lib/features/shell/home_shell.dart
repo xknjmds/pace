@@ -9,6 +9,7 @@ import '../../core/widgets/readable_width.dart';
 import '../deadlines/ui/deadlines_screen.dart';
 import '../focus/ui/focus_screen.dart';
 import '../inbox/ui/inbox_screen.dart';
+import '../more/ui/more_screen.dart';
 import '../today/ui/today_screen.dart';
 import 'shell_tabs.dart';
 
@@ -64,6 +65,7 @@ class _HomeShellState extends ConsumerState<HomeShell>
     (Icons.event_note_outlined, Icons.event_note_rounded, 'Deadlines'),
     (Icons.inbox_outlined, Icons.inbox_rounded, 'Inbox'),
     (Icons.timer_outlined, Icons.timer_rounded, 'Focus'),
+    (Icons.grid_view_outlined, Icons.grid_view_rounded, 'More'),
   ];
 
   @override
@@ -88,6 +90,7 @@ class _HomeShellState extends ConsumerState<HomeShell>
     ShellTab.deadlines => const DeadlinesScreen(),
     ShellTab.inbox => InboxScreen(startCapturing: _captureOnBuild),
     ShellTab.focus => const FocusScreen(),
+    ShellTab.more => const MoreScreen(),
   };
 
   /// The Inbox's first build focuses the field when that is why we came.

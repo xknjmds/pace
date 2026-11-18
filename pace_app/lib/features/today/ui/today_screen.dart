@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/db/database_provider.dart';
 import '../../../core/db/settings_provider.dart';
-import '../../../core/platform/platform_features.dart';
 import '../../../core/startup_report.dart';
 import '../../../core/time/local_time.dart';
 import '../../../core/theme/pace_pastels.dart';
@@ -51,25 +50,6 @@ class TodayScreen extends ConsumerWidget {
   static const maxDeadlinesShown = 3;
 
   /// Screens that sit on top of the tabs.
-  static const _menu = [
-    ('Review', Routes.review, Icons.insights_outlined),
-    ('Class schedule', Routes.schedule, Icons.school_outlined),
-    ('Notes', Routes.notes, Icons.sticky_note_2_outlined),
-    ('Money', Routes.money, Icons.account_balance_wallet_outlined),
-    ('App gate', Routes.gate, Icons.do_not_disturb_on_outlined),
-    ('Calendar', Routes.calendar, Icons.event_outlined),
-    ('Settings', Routes.settings, Icons.tune_rounded),
-    ('Reminders', Routes.notifications, Icons.notifications_none_rounded),
-  ];
-
-  /// Menu entries this device can use.
-  static bool _offered(String route, PlatformFeatures f) => switch (route) {
-    Routes.notifications => f.reminders,
-    Routes.gate => f.appBlocking,
-    Routes.calendar => f.calendarSync,
-    _ => true,
-  };
-
   /// Shows a tab in the home shell, or pushes the screen when Today runs
   /// on its own.
   static void _go(BuildContext context, ShellTab tab, {bool capture = false}) {
@@ -124,7 +104,6 @@ class TodayScreen extends ConsumerWidget {
     final inboxCount = ref.watch(inboxCountProvider);
     final focus = ref.watch(activeFocusProvider).value;
     final startup = ref.watch(startupReportProvider);
-    final features = ref.watch(platformFeaturesProvider);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
@@ -284,28 +263,6 @@ class TodayScreen extends ConsumerWidget {
             ),
           ],
         ),
-        actions: [
-          PopupMenuButton<String>(
-            tooltip: 'More',
-            icon: const Icon(Icons.more_horiz_rounded),
-            onSelected: (route) => Navigator.of(context).pushNamed(route),
-            itemBuilder: (_) => [
-              for (final (label, route, icon) in _menu)
-                if (_offered(route, features))
-                  PopupMenuItem(
-                    value: route,
-                    child: Row(
-                      children: [
-                        Icon(icon, size: 20, color: scheme.onSurfaceVariant),
-                        const SizedBox(width: 12),
-                        Text(label),
-                      ],
-                    ),
-                  ),
-            ],
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       floatingActionButton: empty
           ? null
