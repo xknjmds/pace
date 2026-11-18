@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/db/app_database.dart';
@@ -7,7 +8,14 @@ import '../../../core/db/settings_provider.dart';
 import '../../../core/platform/platform_features.dart';
 import '../../../core/startup_report.dart';
 import '../../../core/time/local_time.dart';
+import '../../../core/theme/pace_tokens.dart';
+import '../../../core/widgets/animated_cairn.dart';
+import '../../../core/widgets/cairn_progress.dart';
 import '../../../core/widgets/cairn_mark.dart';
+import '../../../core/widgets/done_check.dart';
+import '../../../core/widgets/fade_slide_in.dart';
+import '../../../core/widgets/pace_section_card.dart';
+import '../../../core/widgets/press_scale.dart';
 import '../../../routes.dart';
 import '../../deadlines/application/deadline_providers.dart';
 import '../../deadlines/domain/deadline_reminders.dart';
@@ -18,6 +26,8 @@ import '../../routine/application/morning_inputs.dart';
 import '../../routine/application/routine_providers.dart';
 import '../../routine/domain/routine_reminder_planner.dart';
 import '../../routine/domain/wake_schedule.dart';
+import '../../shell/home_shell.dart';
+import '../../shell/shell_tabs.dart';
 import '../application/reminder_resync.dart';
 import '../application/today_providers.dart';
 import '../domain/today_model.dart';
@@ -32,14 +42,22 @@ class TodayScreen extends ConsumerWidget {
   static const deadlineWindow = Duration(hours: 48);
   static const maxDeadlinesShown = 3;
 
-  static const _menu = <String, String>{
-    'Deadlines': Routes.deadlines,
-    'Inbox': Routes.inbox,
-    'Focus': Routes.focus,
-    'Review': Routes.review,
-    'Settings': Routes.settings,
-    'Reminders': Routes.notifications,
-  };
+  /// Screens that sit on top of the tabs.
+  static const _menu = [
+    ('Review', Routes.review, Icons.insights_outlined),
+    ('Settings', Routes.settings, Icons.tune_rounded),
+    ('Reminders', Routes.notifications, Icons.notifications_none_rounded),
+  ];
+
+  /// Shows a tab in the home shell, or pushes the screen when Today runs
+  /// on its own.
+  static void _go(BuildContext context, ShellTab tab, {bool capture = false}) {
+    if (!HomeShell.open(context, tab, capture: capture)) {
+      Navigator.of(
+        context,
+      ).pushNamed(capture ? Routes.inboxCapture : tab.route);
+    }
+  }
 
   static const _kinds = {
     RoutineStep.wake: ReminderKind.wake,
@@ -87,6 +105,7 @@ class TodayScreen extends ConsumerWidget {
     final startup = ref.watch(startupReportProvider);
     final features = ref.watch(platformFeaturesProvider);
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
 
     final hasSchedule = schedules.isNotEmpty;
     final status = settings == null
@@ -146,218 +165,273 @@ class TodayScreen extends ConsumerWidget {
     final empty =
         !hasSchedule && pending.isEmpty && inboxCount == 0 && focus == null;
 
+    // The first build after launch eases the blocks in, once.
+    final stagger = !_entered;
+    if (stagger) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _entered = true);
+    }
+    var order = 0;
+    Widget enter(Widget child) =>
+        FadeSlideIn(index: order++, enabled: stagger, child: child);
+
+    void markSubmitted(Task t) =>
+        ref.read(deadlineRemindersProvider).markSubmitted(t.id);
+
+    final focusText = focus == null
+        ? null
+        : switch (focusStateAt(
+            now: now,
+            startedAt: focus.startedAt.toLocal(),
+            plannedMinutes: focus.durationMinutes,
+          )) {
+            // Round up: 5:30 left reads "6 min left".
+            FocusRunning(:final remaining) =>
+              'Focus: ${(remaining.inSeconds + 59) ~/ 60} min left',
+            _ => 'Focus: time is up',
+          };
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Today'),
+        toolbarHeight: 68,
+        titleSpacing: 20,
+        title: Row(
+          children: [
+            const CairnMark(size: 26),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    longDate(now),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  Text(
+                    greetingFor(now),
+                    style: theme.textTheme.headlineSmall,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
           PopupMenuButton<String>(
             tooltip: 'More',
+            icon: const Icon(Icons.more_horiz_rounded),
             onSelected: (route) => Navigator.of(context).pushNamed(route),
             itemBuilder: (_) => [
-              for (final entry in _menu.entries)
-                if (features.reminders || entry.value != Routes.notifications)
-                  PopupMenuItem(value: entry.value, child: Text(entry.key)),
+              for (final (label, route, icon) in _menu)
+                if (features.reminders || route != Routes.notifications)
+                  PopupMenuItem(
+                    value: route,
+                    child: Row(
+                      children: [
+                        Icon(icon, size: 20, color: scheme.onSurfaceVariant),
+                        const SizedBox(width: 12),
+                        Text(label),
+                      ],
+                    ),
+                  ),
             ],
           ),
+          const SizedBox(width: 8),
         ],
       ),
+      floatingActionButton: empty
+          ? null
+          : FloatingActionButton(
+              tooltip: 'Write it down',
+              onPressed: () => _go(context, ShellTab.inbox, capture: true),
+              child: const Icon(Icons.edit_outlined),
+            ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+          padding: PaceSpace.screen,
           children: [
             if (!startup.ok)
-              Card(
-                key: const ValueKey('startup-problem'),
-                child: ListTile(
-                  leading: const Icon(Icons.info_outline),
-                  title: const Text('Reminders did not start properly'),
-                  subtitle: const Text(
-                    'Everything else works. Check the reminder setup.',
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () =>
-                      Navigator.of(context).pushNamed(Routes.notifications),
-                ),
-              ),
-            if (empty) ...[
-              const SizedBox(height: 16),
-              const Center(child: CairnMark(size: 72)),
-              const SizedBox(height: 16),
-              Text(
-                'Progress Always Comes Eventually',
-                style: theme.textTheme.titleMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Nothing is scheduled yet. Set up your week whenever you '
-                'are ready.',
-                style: theme.textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Center(
-                child: FilledButton.tonal(
-                  onPressed: () =>
-                      Navigator.of(context).pushNamed(Routes.settings),
-                  child: const Text('Set up your week'),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ] else ...[
-              if (evening)
+              enter(
                 Card(
-                  key: const ValueKey('evening-card'),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  key: const ValueKey('startup-problem'),
+                  color: scheme.secondaryContainer,
+                  child: ListTile(
+                    leading: const Icon(Icons.info_outline_rounded),
+                    title: const Text('Reminders did not start properly'),
+                    subtitle: const Text(
+                      'Everything else works. Check the reminder setup.',
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () =>
+                        Navigator.of(context).pushNamed(Routes.notifications),
+                  ),
+                ),
+              ),
+            if (empty)
+              enter(
+                EmptyWelcome(
+                  onSetUp: () =>
+                      Navigator.of(context).pushNamed(Routes.settings),
+                ),
+              )
+            else ...[
+              if (evening)
+                enter(
+                  _EveningCard(
+                    bedtime: LocalTime.of(
+                      night.bedtime.hour,
+                      night.bedtime.minute,
+                    ),
+                    onCheckIn: () =>
+                        Navigator.of(context).pushNamed(Routes.checkIn),
+                    onBed: () => ref
+                        .read(routineRemindersProvider)
+                        .done(ReminderKind.windDown, night.night.weekday),
+                  ),
+                ),
+              if (status != null)
+                enter(
+                  _RoutineCard(
+                    status: status,
+                    onStepDone: (step) => _markStep(ref, step, now),
+                    onOutTheDoor: () => _outTheDoor(ref, now),
+                  ),
+                ),
+              if (focusText != null || inboxCount > 0)
+                enter(
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
-                        Text(
-                          'Winding down. Bed around '
-                          '${LocalTime.of(night.bedtime.hour, night.bedtime.minute).format24()}.',
-                          style: theme.textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
+                        if (focusText != null)
+                          _StatusPill(
+                            key: const ValueKey('focus-line'),
+                            icon: Icons.timer_outlined,
+                            text: focusText,
+                            onTap: () => _go(context, ShellTab.focus),
+                          ),
+                        if (inboxCount > 0)
+                          _StatusPill(
+                            key: const ValueKey('inbox-count'),
+                            icon: Icons.inbox_outlined,
+                            text: 'Inbox: $inboxCount waiting',
+                            onTap: () => _go(context, ShellTab.inbox),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              if (!lowEnergy)
+                enter(
+                  PaceSectionCard(
+                    title: 'Top 3',
+                    icon: Icons.flag_outlined,
+                    action: TextButton(
+                      onPressed: () =>
+                          _pickTop3(context, ref, now, pending, top3Ids),
+                      child: Text(top3.isEmpty ? 'Pick' : 'Change'),
+                    ),
+                    child: top3.isEmpty
+                        ? _Hint(
+                            pending.isEmpty
+                                ? 'No open deadlines. Add some, or enjoy the room.'
+                                : 'Pick up to three things to move today.',
+                          )
+                        : Column(
+                            children: [
+                              for (final t in top3)
+                                _TaskRow(
+                                  key: ValueKey('top3-${t.id}'),
+                                  task: t,
+                                  now: now,
+                                  onSubmitted: () => markSubmitted(t),
+                                ),
+                            ],
+                          ),
+                  ),
+                ),
+              enter(
+                PaceSectionCard(
+                  title: 'Due soon',
+                  icon: Icons.event_note_outlined,
+                  action: TextButton(
+                    onPressed: () => _go(context, ShellTab.deadlines),
+                    child: const Text('All'),
+                  ),
+                  child: soon.isEmpty
+                      ? const _Hint('Nothing due in the next two days.')
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            FilledButton.tonal(
-                              onPressed: () => Navigator.of(
-                                context,
-                              ).pushNamed(Routes.checkIn),
-                              child: const Text('Check in'),
-                            ),
-                            OutlinedButton(
-                              onPressed: () => ref
-                                  .read(routineRemindersProvider)
-                                  .done(
-                                    ReminderKind.windDown,
-                                    night.night.weekday,
+                            for (final t in soon.take(maxDeadlinesShown))
+                              _TaskRow(
+                                key: ValueKey('soon-${t.id}'),
+                                task: t,
+                                now: now,
+                                onSubmitted: () => markSubmitted(t),
+                              ),
+                            if (soon.length > maxDeadlinesShown)
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(8, 4, 0, 0),
+                                child: Text(
+                                  'and ${soon.length - maxDeadlinesShown} more',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: scheme.onSurfaceVariant,
                                   ),
-                              child: const Text('Going to bed'),
-                            ),
+                                ),
+                              ),
                           ],
+                        ),
+                ),
+              ),
+              if (!lowEnergy && tomorrow != null)
+                enter(
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 6, 4, 2),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.wb_twilight_rounded,
+                          size: 18,
+                          color: scheme.tertiary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            tomorrow,
+                            key: const ValueKey('tomorrow-preview'),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
-              if (status != null)
-                _RoutineCard(
-                  status: status,
-                  onStepDone: (step) => _markStep(ref, step, now),
-                  onOutTheDoor: () => _outTheDoor(ref, now),
-                ),
-              if (!lowEnergy)
-                _Section(
-                  title: 'Top 3',
-                  action: TextButton(
-                    onPressed: () =>
-                        _pickTop3(context, ref, now, pending, top3Ids),
-                    child: Text(top3.isEmpty ? 'Pick' : 'Change'),
-                  ),
-                  child: top3.isEmpty
-                      ? Text(
-                          pending.isEmpty
-                              ? 'No open deadlines. Add some, or enjoy the room.'
-                              : 'Pick up to three things to move today.',
-                          style: theme.textTheme.bodyMedium,
-                        )
-                      : Column(
-                          children: [
-                            for (final t in top3)
-                              _TaskRow(
-                                task: t,
-                                now: now,
-                                onSubmitted: () => ref
-                                    .read(deadlineRemindersProvider)
-                                    .markSubmitted(t.id),
-                              ),
-                          ],
-                        ),
-                ),
-              _Section(
-                title: 'Due soon',
-                action: TextButton(
-                  onPressed: () =>
-                      Navigator.of(context).pushNamed(Routes.deadlines),
-                  child: const Text('All'),
-                ),
-                child: soon.isEmpty
-                    ? Text(
-                        'Nothing due in the next two days.',
-                        style: theme.textTheme.bodyMedium,
-                      )
-                    : Column(
-                        children: [
-                          for (final t in soon.take(maxDeadlinesShown))
-                            _TaskRow(
-                              task: t,
-                              now: now,
-                              onSubmitted: () => ref
-                                  .read(deadlineRemindersProvider)
-                                  .markSubmitted(t.id),
-                            ),
-                          if (soon.length > maxDeadlinesShown)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                'and ${soon.length - maxDeadlinesShown} more',
-                                style: theme.textTheme.bodySmall,
-                              ),
-                            ),
-                        ],
-                      ),
-              ),
-              if (focus != null)
-                ListTile(
-                  key: const ValueKey('focus-line'),
-                  dense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                  leading: const Icon(Icons.timer_outlined, size: 20),
-                  title: Text(switch (focusStateAt(
-                    now: now,
-                    startedAt: focus.startedAt.toLocal(),
-                    plannedMinutes: focus.durationMinutes,
-                  )) {
-                    // Round up: 5:30 left reads "6 min left".
-                    FocusRunning(:final remaining) =>
-                      'Focus: ${(remaining.inSeconds + 59) ~/ 60} min left',
-                    _ => 'Focus: time is up',
-                  }, style: theme.textTheme.bodyMedium),
-                  onTap: () => Navigator.of(context).pushNamed(Routes.focus),
-                ),
-              if (inboxCount > 0)
-                ListTile(
-                  key: const ValueKey('inbox-count'),
-                  dense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                  leading: const Icon(Icons.inbox_outlined, size: 20),
-                  title: Text(
-                    'Inbox: $inboxCount waiting',
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                  onTap: () => Navigator.of(context).pushNamed(Routes.inbox),
-                ),
-              if (!lowEnergy && tomorrow != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-                  child: Text(
-                    tomorrow,
-                    key: const ValueKey('tomorrow-preview'),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ),
             ],
-            SwitchListTile(
-              dense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-              title: const Text('Low-energy mode'),
-              value: lowEnergy,
-              onChanged: settings == null
-                  ? null
-                  : (on) => ref.read(setLowEnergyProvider)(on),
+            const SizedBox(height: 8),
+            enter(
+              Card(
+                color: lowEnergy ? scheme.secondaryContainer : null,
+                child: SwitchListTile(
+                  secondary: Icon(
+                    lowEnergy ? Icons.spa_rounded : Icons.spa_outlined,
+                    color: lowEnergy ? scheme.primary : null,
+                  ),
+                  title: const Text('Low-energy mode'),
+                  subtitle: const Text('Shows only what matters today.'),
+                  value: lowEnergy,
+                  onChanged: settings == null
+                      ? null
+                      : (on) => ref.read(setLowEnergyProvider)(on),
+                ),
+              ),
             ),
           ],
         ),
@@ -366,6 +440,194 @@ class TodayScreen extends ConsumerWidget {
   }
 }
 
+/// Set once the first Today build has eased in, so later rebuilds and
+/// scrolling never replay the entrance.
+bool _entered = false;
+
+/// First open: the cairn builds itself, then one way forward.
+class EmptyWelcome extends StatelessWidget {
+  const EmptyWelcome({super.key, required this.onSetUp});
+
+  final VoidCallback onSetUp;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 20, 12, 16),
+      child: Column(
+        children: [
+          AnimatedCairn(size: 80, color: theme.colorScheme.primary),
+          const SizedBox(height: 24),
+          Text(
+            'Progress Always Comes Eventually',
+            style: theme.textTheme.titleLarge,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 320),
+            child: Text(
+              'Nothing is scheduled yet. Set up your week whenever you '
+              'are ready.',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.45,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 20),
+          PressScale(
+            child: FilledButton.icon(
+              onPressed: onSetUp,
+              icon: const Icon(Icons.arrow_forward_rounded),
+              iconAlignment: IconAlignment.end,
+              label: const Text('Set up your week'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Hint extends StatelessWidget {
+  const _Hint(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Text(
+        text,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
+class _EveningCard extends StatelessWidget {
+  const _EveningCard({
+    required this.bedtime,
+    required this.onCheckIn,
+    required this.onBed,
+  });
+
+  final LocalTime bedtime;
+  final VoidCallback onCheckIn;
+  final VoidCallback onBed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Card(
+      key: const ValueKey('evening-card'),
+      color: scheme.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.bedtime_outlined,
+                  size: 20,
+                  color: scheme.onSecondaryContainer,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Winding down. Bed around ${bedtime.format24()}.',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: scheme.onSecondaryContainer,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                PressScale(
+                  child: FilledButton(
+                    onPressed: onCheckIn,
+                    child: const Text('Check in'),
+                  ),
+                ),
+                PressScale(
+                  child: OutlinedButton(
+                    onPressed: onBed,
+                    child: const Text('Going to bed'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A small tappable line about something already under way.
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({
+    super.key,
+    required this.icon,
+    required this.text,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String text;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return PressScale(
+      child: Material(
+        color: scheme.surfaceContainerLow,
+        shape: StadiumBorder(side: BorderSide(color: scheme.outlineVariant)),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 18, color: scheme.primary),
+                const SizedBox(width: 8),
+                Text(text, style: theme.textTheme.labelLarge),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The hero: what to do right now, with the morning as a cairn that fills
+/// one stone per step.
 class _RoutineCard extends StatelessWidget {
   const _RoutineCard({
     required this.status,
@@ -380,137 +642,341 @@ class _RoutineCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final child = switch (status) {
-      NoClassToday(:final wake) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'No class today. The day is yours.',
-            style: theme.textTheme.bodyLarge,
-          ),
-          if (wake != null) ...[
-            const SizedBox(height: 8),
-            wake.done
-                ? Chip(
-                    avatar: Icon(
-                      Icons.check,
-                      size: 18,
-                      color: theme.colorScheme.primary,
-                    ),
-                    label: Text('Up ${wake.at.format24()}'),
-                  )
-                : ActionChip(
-                    key: const ValueKey('step-wake'),
-                    avatar: const Icon(Icons.wb_sunny_outlined, size: 18),
-                    label: Text('I\'m up · ${wake.at.format24()}'),
-                    onPressed: () => onStepDone(RoutineStep.wake),
-                  ),
-          ],
-        ],
-      ),
-      MorningDoesNotFit() => Text(
-        'Today\'s morning does not fit the times in Settings. '
-        'Worth a look.',
-        style: theme.textTheme.bodyLarge,
-      ),
-      RoutineAllDone() => Row(
-        children: [
-          Icon(Icons.check_circle, color: theme.colorScheme.primary),
-          const SizedBox(width: 12),
-          Text('Routine done for today.', style: theme.textTheme.bodyLarge),
-        ],
-      ),
-      RunningLate(:final title, :final subtitle) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: theme.textTheme.titleLarge),
-          const SizedBox(height: 4),
-          Text(subtitle, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 8),
-          FilledButton(
-            onPressed: onOutTheDoor,
-            child: const Text('I\'m out the door'),
-          ),
-        ],
-      ),
-      StepsRemaining(:final steps, :final next) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Next: ${next.label.toLowerCase()} at ${next.at.format24()}',
-            style: theme.textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              for (final s in steps)
-                s.done
-                    ? Chip(
-                        avatar: Icon(
-                          Icons.check,
-                          size: 18,
-                          color: theme.colorScheme.primary,
-                        ),
-                        label: Text('${s.label} ${s.at.format24()}'),
-                      )
-                    : ActionChip(
-                        key: ValueKey('step-${s.step.name}'),
-                        avatar: const Icon(Icons.circle_outlined, size: 18),
-                        label: Text('${s.label} ${s.at.format24()}'),
-                        onPressed: () => onStepDone(s.step),
-                      ),
+    final scheme = theme.colorScheme;
+    // Running late gets the warm dawn tone, never red.
+    final late = status is RunningLate;
+    final bg = late ? scheme.tertiaryContainer : scheme.primaryContainer;
+    final fg = late ? scheme.onTertiaryContainer : scheme.onPrimaryContainer;
+    final title = theme.textTheme.headlineSmall?.copyWith(color: fg);
+    final body = theme.textTheme.bodyLarge?.copyWith(color: fg);
+
+    final (Widget content, List<bool>? stones) = switch (status) {
+      NoClassToday(:final wake) => (
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('No class today. The day is yours.', style: body),
+            if (wake != null) ...[
+              const SizedBox(height: 12),
+              _StepPill(
+                stepKey: const ValueKey('step-wake'),
+                icon: Icons.wb_sunny_outlined,
+                label: wake.done
+                    ? 'Up ${wake.at.format24()}'
+                    : 'I\'m up · ${wake.at.format24()}',
+                done: wake.done,
+                onTap: () => onStepDone(RoutineStep.wake),
+              ),
             ],
-          ),
-        ],
+          ],
+        ),
+        null,
+      ),
+      MorningDoesNotFit() => (
+        Text(
+          'Today\'s morning does not fit the times in Settings. '
+          'Worth a look.',
+          style: body,
+        ),
+        null,
+      ),
+      RoutineAllDone() => (
+        Row(
+          children: [
+            Icon(Icons.check_circle_rounded, color: scheme.primary),
+            const SizedBox(width: 12),
+            Expanded(child: Text('Routine done for today.', style: body)),
+          ],
+        ),
+        const [true, true, true],
+      ),
+      RunningLate(:final title, :final subtitle, :final steps) => (
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: theme.textTheme.headlineMedium?.copyWith(color: fg),
+            ),
+            const SizedBox(height: 4),
+            Text(subtitle, style: body),
+            const SizedBox(height: 14),
+            PressScale(
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: scheme.tertiary,
+                  foregroundColor: scheme.onTertiary,
+                ),
+                onPressed: onOutTheDoor,
+                icon: const Icon(Icons.directions_walk_rounded),
+                label: const Text('I\'m out the door'),
+              ),
+            ),
+          ],
+        ),
+        [for (final s in steps) s.done],
+      ),
+      StepsRemaining(:final steps, :final next) => (
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Next: ${next.label.toLowerCase()} at ${next.at.format24()}',
+              style: title,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                for (final (i, s) in steps.indexed) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  Expanded(
+                    child: _StepTile(
+                      stepKey: ValueKey('step-${s.step.name}'),
+                      label: s.label,
+                      time: s.at.format24(),
+                      done: s.done,
+                      isNext: s == next,
+                      onTap: () => onStepDone(s.step),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+        [for (final s in steps) s.done],
       ),
     };
-    return Card(
+
+    final motion = PaceMotion.of(context);
+    return AnimatedContainer(
       key: const ValueKey('routine-card'),
-      child: Padding(padding: const EdgeInsets.all(16), child: child),
+      duration: PaceMotion.standard,
+      curve: PaceMotion.easeOut,
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(color: bg, borderRadius: PaceRadius.cardAll),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    late ? 'One thing now' : 'Right now',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: fg.withValues(alpha: .72),
+                    ),
+                  ),
+                ),
+                if (stones != null)
+                  CairnProgress(
+                    done: stones,
+                    width: 30,
+                    color: late ? scheme.tertiary : scheme.primary,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            AnimatedSwitcher(
+              duration: PaceMotion.standard,
+              switchInCurve: PaceMotion.easeOut,
+              switchOutCurve: Curves.easeIn,
+              layoutBuilder: (current, previous) => Stack(
+                alignment: Alignment.topLeft,
+                children: [...previous, ?current],
+              ),
+              transitionBuilder: (child, a) => FadeTransition(
+                opacity: a,
+                child: SlideTransition(
+                  position: Tween(
+                    begin: Offset(0, motion.offset(.08)),
+                    end: Offset.zero,
+                  ).animate(a),
+                  child: child,
+                ),
+              ),
+              child: KeyedSubtree(
+                key: ValueKey(_stateKey(status)),
+                child: content,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _stateKey(RoutineStatus s) => switch (s) {
+    StepsRemaining(:final next) => 'steps-${next.step.name}',
+    _ => s.runtimeType.toString(),
+  };
+}
+
+/// One routine step. Tap to log it; done steps show a check and stay calm.
+class _StepPill extends StatelessWidget {
+  const _StepPill({
+    required this.stepKey,
+    required this.icon,
+    required this.label,
+    required this.done,
+    required this.onTap,
+  });
+
+  final Key stepKey;
+  final IconData icon;
+  final String label;
+  final bool done;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final fg = done ? scheme.onPrimary : scheme.onSurface;
+    final pill = AnimatedContainer(
+      duration: PaceMotion.standard,
+      curve: PaceMotion.easeOut,
+      padding: const EdgeInsets.fromLTRB(12, 9, 14, 9),
+      decoration: ShapeDecoration(
+        color: done ? scheme.primary : scheme.surfaceContainerLowest,
+        shape: const StadiumBorder(),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedSwitcher(
+            duration: PaceMotion.quick,
+            child: Icon(
+              done ? Icons.check_rounded : icon,
+              key: ValueKey(done),
+              size: 18,
+              color: done ? fg : scheme.primary,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(label, style: theme.textTheme.labelLarge?.copyWith(color: fg)),
+        ],
+      ),
+    );
+    if (done) return Semantics(label: '$label, done', child: pill);
+    return PressScale(
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          key: stepKey,
+          customBorder: const StadiumBorder(),
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
+          child: pill,
+        ),
+      ),
     );
   }
 }
 
-class _Section extends StatelessWidget {
-  const _Section({
-    required this.title,
-    required this.child,
-    required this.action,
+/// One routine step in the hero strip: label over time. Tap to log it.
+/// The next step is lifted; done steps fill with a check.
+class _StepTile extends StatelessWidget {
+  const _StepTile({
+    required this.stepKey,
+    required this.label,
+    required this.time,
+    required this.done,
+    required this.isNext,
+    required this.onTap,
   });
 
-  final String title;
-  final Widget child;
-  final Widget action;
+  final Key stepKey;
+  final String label;
+  final String time;
+  final bool done;
+  final bool isNext;
+  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 8, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final fg = done ? scheme.onPrimary : scheme.onSurface;
+    final tile = AnimatedContainer(
+      duration: PaceMotion.standard,
+      curve: PaceMotion.easeOut,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: done
+            ? scheme.primary
+            : isNext
+            ? scheme.surfaceContainerLowest
+            : scheme.surfaceContainerLowest.withValues(alpha: .55),
+        borderRadius: BorderRadius.circular(PaceRadius.s),
+      ),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleSmall,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: fg.withValues(alpha: .75),
+                  ),
                 ),
-              ),
-              action,
-            ],
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    time,
+                    maxLines: 1,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: fg,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          child,
+          AnimatedSwitcher(
+            duration: PaceMotion.quick,
+            child: done
+                ? Icon(Icons.check_rounded, size: 18, color: fg)
+                : const SizedBox(width: 18),
+          ),
         ],
       ),
-    ),
-  );
+    );
+    if (done) return Semantics(label: '$label $time, done', child: tile);
+    return PressScale(
+      child: Semantics(
+        button: true,
+        label: 'Mark $label done',
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            key: stepKey,
+            borderRadius: BorderRadius.circular(PaceRadius.s),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              onTap();
+            },
+            child: tile,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _TaskRow extends StatelessWidget {
   const _TaskRow({
+    super.key,
     required this.task,
     required this.now,
     required this.onSubmitted,
@@ -521,21 +987,32 @@ class _TaskRow extends StatelessWidget {
   final VoidCallback onSubmitted;
 
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      IconButton(
-        tooltip: 'Submitted',
-        visualDensity: VisualDensity.compact,
-        icon: const Icon(Icons.radio_button_unchecked, size: 20),
-        onPressed: onSubmitted,
-      ),
-      Expanded(
-        child: Text(
-          '${task.title} · ${describeDue(task.dueAt, now)}',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        DoneCheck(onDone: onSubmitted),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: task.title,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                TextSpan(
+                  text: ' · ${describeDue(task.dueAt, now)}',
+                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+            style: theme.textTheme.bodyLarge,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
-      ),
-    ],
-  );
+      ],
+    );
+  }
 }

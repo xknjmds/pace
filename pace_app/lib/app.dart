@@ -26,6 +26,7 @@ class PaceApp extends ConsumerWidget {
       darkTheme: PaceTheme.dark(),
       initialRoute: initialRoute,
       routes: Routes.table,
+      onGenerateInitialRoutes: Routes.initialStack,
       debugShowCheckedModeBanner: false,
       builder: (context, child) =>
           PaceMotionScope(calm: calm, child: child ?? const SizedBox.shrink()),

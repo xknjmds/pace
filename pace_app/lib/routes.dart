@@ -1,17 +1,15 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 import 'core/notifications/ui/notification_setup_screen.dart';
-import 'features/deadlines/ui/deadlines_screen.dart';
-import 'features/focus/ui/focus_screen.dart';
-import 'features/inbox/ui/inbox_screen.dart';
 import 'features/review/ui/check_in_screen.dart';
 import 'features/review/ui/review_screen.dart';
 import 'features/routine/ui/routine_settings_screen.dart';
-import 'features/today/ui/today_screen.dart';
+import 'features/shell/home_shell.dart';
+import 'features/shell/shell_tabs.dart';
 
-/// Named routes. Today is home and the root, so a cold start into any
-/// other screen (from a notification or the widget) still has Today
-/// underneath it: Flutter builds the stack from the path's segments.
+/// Named routes. Today, Deadlines, Inbox and Focus are tabs of one home
+/// shell, which is always the root; other screens are pushed on top, so a
+/// cold start into any of them still has the shell underneath.
 abstract final class Routes {
   static const today = '/';
   static const deadlines = '/deadlines';
@@ -28,14 +26,41 @@ abstract final class Routes {
   static const notifications = '/notifications';
 
   static Map<String, WidgetBuilder> get table => {
-    today: (_) => const TodayScreen(),
-    deadlines: (_) => const DeadlinesScreen(),
-    inbox: (_) => const InboxScreen(),
-    inboxCapture: (_) => const InboxScreen(startCapturing: true),
-    focus: (_) => const FocusScreen(),
+    today: (_) => const HomeShell(),
+    deadlines: (_) => const HomeShell(initialTab: ShellTab.deadlines),
+    inbox: (_) => const HomeShell(initialTab: ShellTab.inbox),
+    inboxCapture: (_) =>
+        const HomeShell(initialTab: ShellTab.inbox, startCapturing: true),
+    focus: (_) => const HomeShell(initialTab: ShellTab.focus),
     review: (_) => const ReviewScreen(),
     checkIn: (_) => const CheckInScreen(),
     settings: (_) => const RoutineSettingsScreen(),
     notifications: (_) => const NotificationSetupScreen(),
   };
+
+  static Route<void> _route(String name) => MaterialPageRoute(
+    settings: RouteSettings(name: name),
+    builder: table[name]!,
+  );
+
+  /// The stack a cold start opens with: a tab route is the shell alone;
+  /// any other screen sits on top of the shell at Today.
+  static List<Route<dynamic>> initialStack(String name) {
+    if (!table.containsKey(name)) return [_route(today)];
+    if (ShellTab.forRoute(name) != null) return [_route(name)];
+    return [_route(today), _route(name)];
+  }
+
+  /// Opens [route] while the app runs (a notification or widget tap): tabs
+  /// switch in the shell, other screens are pushed on top of it.
+  static void open(NavigatorState? nav, ShellRequests shell, String route) {
+    if (nav == null) return;
+    final tab = ShellTab.forRoute(route);
+    if (tab == null) {
+      nav.pushNamed(route);
+      return;
+    }
+    nav.popUntil((r) => r.isFirst);
+    shell.open(tab, capture: route == inboxCapture);
+  }
 }

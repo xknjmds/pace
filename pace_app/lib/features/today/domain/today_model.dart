@@ -148,3 +148,38 @@ bool showEveningCard({
     !bedLogged &&
     !now.isBefore(night.windDownAt) &&
     now.isBefore(night.bedtime.add(const Duration(hours: 4)));
+
+/// Pure: a gentle greeting for the time of day.
+String greetingFor(DateTime now) => switch (now.hour) {
+  >= 5 && < 12 => 'Good morning',
+  >= 12 && < 18 => 'Good afternoon',
+  _ => 'Good evening',
+};
+
+const _longWeekdays = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+const _longMonths = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+/// Pure: "Monday, 16 November".
+String longDate(DateTime d) =>
+    '${_longWeekdays[d.weekday - 1]}, ${d.day} ${_longMonths[d.month - 1]}';

@@ -134,7 +134,7 @@ abstract final class PaceTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        margin: const EdgeInsets.symmetric(vertical: 6),
+        margin: const EdgeInsets.symmetric(vertical: 5),
         color: scheme.surfaceContainerLow,
         surfaceTintColor: Colors.transparent,
         clipBehavior: Clip.antiAlias,

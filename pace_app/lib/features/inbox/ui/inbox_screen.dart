@@ -7,6 +7,7 @@ import '../../../core/platform/platform_features.dart';
 import '../../../core/time/clock.dart';
 import '../../deadlines/application/deadline_providers.dart';
 import '../../deadlines/ui/task_edit_sheet.dart';
+import '../../shell/shell_tabs.dart';
 import '../application/inbox_providers.dart';
 
 /// Quick capture and a short queue to sort later: each item becomes a
@@ -74,6 +75,14 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // "Write it down" from elsewhere while this tab is already built.
+    ref.listen(shellRequestProvider, (_, next) {
+      if (next?.capture ?? false) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _focus.requestFocus();
+        });
+      }
+    });
     final items = ref.watch(inboxItemsProvider).value ?? const <InboxItem>[];
     final lowEnergy = ref.watch(lowEnergyProvider);
     final settings = ref.watch(settingsProvider).value;

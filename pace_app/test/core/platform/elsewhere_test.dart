@@ -78,9 +78,11 @@ void main() {
   ) async {
     await pumpApp(tester);
     expect(find.text('Set up your week'), findsOneWidget);
+    // Wide window: the tabs sit in a side rail.
+    expect(find.byType(NavigationRail), findsOneWidget);
     await tester.tap(find.byTooltip('More'));
     await tester.pumpAndSettle();
-    expect(find.text('Deadlines'), findsOneWidget);
+    expect(find.text('Review'), findsOneWidget);
     expect(find.text('Reminders'), findsNothing);
     await unmount(tester);
   });

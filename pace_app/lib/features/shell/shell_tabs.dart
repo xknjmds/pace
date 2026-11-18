@@ -1,0 +1,44 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../routes.dart';
+
+/// The four places one tap away.
+enum ShellTab {
+  today(Routes.today),
+  deadlines(Routes.deadlines),
+  inbox(Routes.inbox),
+  focus(Routes.focus);
+
+  const ShellTab(this.route);
+
+  final String route;
+
+  /// The tab a route opens, or null for screens pushed on top.
+  static ShellTab? forRoute(String route) => route == Routes.inboxCapture
+      ? ShellTab.inbox
+      : ShellTab.values.where((t) => t.route == route).firstOrNull;
+}
+
+/// A request to show a tab; [capture] also focuses the Inbox field.
+/// [serial] makes repeated identical requests still count.
+class ShellRequest {
+  const ShellRequest(this.tab, {this.capture = false, this.serial = 0});
+
+  final ShellTab tab;
+  final bool capture;
+  final int serial;
+}
+
+class ShellRequests extends Notifier<ShellRequest?> {
+  int _serial = 0;
+
+  @override
+  ShellRequest? build() => null;
+
+  void open(ShellTab tab, {bool capture = false}) =>
+      state = ShellRequest(tab, capture: capture, serial: ++_serial);
+}
+
+final shellRequestProvider = NotifierProvider<ShellRequests, ShellRequest?>(
+  ShellRequests.new,
+);

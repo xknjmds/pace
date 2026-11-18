@@ -215,23 +215,41 @@ void main() {
     await unmountApp(tester);
   });
 
-  testWidgets('overflow menu reaches every other screen', (tester) async {
+  testWidgets('tabs and the menu reach every other screen', (tester) async {
     await pumpApp(tester, DateTime(2026, 11, 14, 10));
+    // One tap away: the bottom bar.
+    for (final label in ['Today', 'Deadlines', 'Inbox', 'Focus']) {
+      expect(
+        find.descendant(
+          of: find.byType(NavigationBar),
+          matching: find.text(label),
+        ),
+        findsOneWidget,
+      );
+    }
+    // The rest sits in the menu.
     await tester.tap(find.byTooltip('More'));
     await tester.pumpAndSettle();
-    for (final label in [
-      'Deadlines',
-      'Inbox',
-      'Focus',
-      'Review',
-      'Settings',
-      'Reminders',
-    ]) {
+    for (final label in ['Review', 'Settings', 'Reminders']) {
       expect(find.text(label), findsOneWidget);
     }
+    await tester.tapAt(const Offset(10, 600)); // close the menu
+    await tester.pumpAndSettle();
+
     await tester.tap(find.text('Inbox'));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('capture-field')), findsOneWidget);
+    await unmountApp(tester);
+  });
+
+  testWidgets('back on another tab returns to Today', (tester) async {
+    await pumpApp(tester, DateTime(2026, 11, 14, 10));
+    await tester.tap(find.text('Deadlines'));
+    await tester.pumpAndSettle();
+    expect(find.text('Set up your week'), findsNothing);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Set up your week'), findsOneWidget);
     await unmountApp(tester);
   });
 
@@ -293,7 +311,7 @@ void main() {
   ) async {
     await mondayClass();
     await pumpApp(tester, DateTime(2026, 11, 15, 10));
-    await tester.ensureVisible(find.byType(Switch));
+    await tester.scrollUntilVisible(find.byType(Switch), 200);
     await tester.tap(find.byType(Switch));
     await tester.pumpAndSettle();
     final kinds = gateway.scheduled.values

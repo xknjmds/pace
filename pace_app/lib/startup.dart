@@ -14,6 +14,7 @@ import 'features/deadlines/application/deadline_providers.dart';
 import 'features/focus/application/focus_providers.dart';
 import 'features/inbox/application/inbox_providers.dart';
 import 'features/routine/application/routine_providers.dart';
+import 'features/shell/shell_tabs.dart';
 import 'routes.dart';
 
 /// Brings reminders, the capture shortcut and the home-screen widget in
@@ -70,15 +71,21 @@ Future<String?> bootstrap(
   gateway.responses.listen((r) async {
     await report.guard('notification response', () => router.dispatch(r));
     final route = routeForResponse(r);
-    if (route != null) PaceApp.navigatorKey.currentState?.pushNamed(route);
+    if (route != null) _open(container, route);
   });
 
   widgetTaps.listen((uri) {
     final route = routeForWidgetUri(uri);
-    if (route != null) PaceApp.navigatorKey.currentState?.pushNamed(route);
+    if (route != null) _open(container, route);
   });
   return launch == null ? null : routeForResponse(launch!);
 }
+
+void _open(ProviderContainer container, String route) => Routes.open(
+  PaceApp.navigatorKey.currentState,
+  container.read(shellRequestProvider.notifier),
+  route,
+);
 
 /// Where a plain tap on a notification leads. Button presses are handled
 /// in place and stay on whatever screen is open.
