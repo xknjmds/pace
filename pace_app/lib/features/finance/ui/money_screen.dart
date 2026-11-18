@@ -12,6 +12,8 @@ import '../application/finance_providers.dart';
 import '../domain/budget_summary.dart';
 import '../domain/money.dart';
 import '../../../core/widgets/pace_page.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/pace_tile.dart';
 
 /// Spending in plain totals: this period, by category, and what is left
 /// of the budget. Going over is said neutrally (CLAUDE.md rule 12).
@@ -180,7 +182,9 @@ class _MoneyScreenState extends ConsumerState<MoneyScreen> {
                   Text(
                     money(summary.spentMinor),
                     key: const ValueKey('spent-total'),
-                    style: theme.textTheme.headlineMedium,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -216,61 +220,56 @@ class _MoneyScreenState extends ConsumerState<MoneyScreen> {
         else ...[
           if (summary.byCategory.isNotEmpty) ...[
             const SectionHeader('By category'),
-            Card(
-              child: Column(
-                children: [
-                  for (final c in summary.byCategory)
-                    ListTile(
-                      title: Text(c.category),
-                      trailing: Text(money(c.amountMinor)),
-                    ),
-                ],
-              ),
+            PaceGroup(
+              children: [
+                for (final c in summary.byCategory)
+                  PaceTile(
+                    icon: Icons.label_outline_rounded,
+                    title: c.category,
+                    value: money(c.amountMinor),
+                  ),
+              ],
             ),
           ],
           const SectionHeader('Spent this period'),
           if (recent.isEmpty)
-            const Card(child: ListTile(title: Text('Nothing logged yet')))
+            EmptyState(
+              title: period == Period.weekly
+                  ? 'Nothing spent yet this week.'
+                  : 'Nothing spent yet this month.',
+              message: 'Tap Spent when money goes out. It only counts.',
+              mascotSize: 96,
+            )
           else
-            Card(
-              child: Column(
-                children: [
-                  for (final e in recent)
-                    ListTile(
-                      key: ValueKey('expense-${e.id}'),
-                      title: Text(
-                        e.note.isEmpty
-                            ? e.category
-                            : '${e.category} · ${e.note}',
-                      ),
-                      subtitle: Text(_when(e.spentAt.toLocal(), now)),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(money(e.amountMinor)),
-                          IconButton(
-                            tooltip: 'Remove',
-                            icon: const Icon(Icons.close_rounded),
-                            onPressed: () async {
-                              final dao = ref
-                                  .read(appDatabaseProvider)
-                                  .financeDao;
-                              await dao.removeExpense(e.id);
-                              if (!context.mounted) return;
-                              showUndo(
-                                context,
-                                message:
-                                    'Removed ${money(e.amountMinor)} · '
-                                    '${e.category}.',
-                                onUndo: () => dao.restoreExpense(e.id),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
+            PaceGroup(
+              children: [
+                for (final e in recent)
+                  PaceTile(
+                    key: ValueKey('expense-${e.id}'),
+                    icon: Icons.receipt_long_rounded,
+                    title: e.note.isEmpty
+                        ? e.category
+                        : '${e.category} · ${e.note}',
+                    subtitle: _when(e.spentAt.toLocal(), now),
+                    value: money(e.amountMinor),
+                    trailing: IconButton(
+                      tooltip: 'Remove',
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () async {
+                        final dao = ref.read(appDatabaseProvider).financeDao;
+                        await dao.removeExpense(e.id);
+                        if (!context.mounted) return;
+                        showUndo(
+                          context,
+                          message:
+                              'Removed ${money(e.amountMinor)} · '
+                              '${e.category}.',
+                          onUndo: () => dao.restoreExpense(e.id),
+                        );
+                      },
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
         ],
       ],

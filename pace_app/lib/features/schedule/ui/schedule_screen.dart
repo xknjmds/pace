@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/db/settings_provider.dart';
 import '../../../core/platform/platform_features.dart';
-import '../../../core/theme/pace_tokens.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/section_header.dart';
@@ -16,6 +15,9 @@ import '../application/schedule_providers.dart';
 import '../domain/schedule_parser.dart';
 import 'class_block_sheet.dart';
 import 'import_review_screen.dart';
+import '../../../core/widgets/pace_page.dart';
+import '../../../core/theme/pace_pastels.dart';
+import '../../../core/widgets/pace_tile.dart';
 
 /// The week's classes. Typed in by hand, or read from a photo of the
 /// schedule and reviewed before anything is saved.
@@ -110,96 +112,96 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     // Low-energy mode lists only today, with the week one tap away.
     final days = lowEnergy && !_showWeek ? [today] : weekdayNames.keys.toList();
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Class schedule')),
+    return PacePage(
+      title: 'Class schedule',
+      subtitle: 'Your week of classes.',
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _add,
         icon: const Icon(Icons.add_rounded),
         label: const Text('Add a class'),
       ),
-      body: ListView(
-        padding: PaceSpace.screen,
-        children: [
-          if (features.scheduleImport)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Read a photo of your schedule',
-                      style: theme.textTheme.titleMedium,
+      children: [
+        if (features.scheduleImport)
+          Card(
+            color: PacePastels.of(context).leave.fill,
+            elevation: 0,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Read a photo of your schedule',
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Read on this phone, nothing is uploaded. You check '
+                    'every class before it is saved.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Read on this phone, nothing is uploaded. You check '
-                      'every class before it is saved.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                  ),
+                  const SizedBox(height: 12),
+                  if (_reading)
+                    const LinearProgressIndicator()
+                  else
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        FilledButton.tonalIcon(
+                          onPressed: () => _import(camera: true),
+                          icon: const Icon(Icons.photo_camera_outlined),
+                          label: const Text('Take a photo'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () => _import(camera: false),
+                          icon: const Icon(Icons.photo_library_outlined),
+                          label: const Text('From gallery'),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    if (_reading)
-                      const LinearProgressIndicator()
-                    else
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          FilledButton.tonalIcon(
-                            onPressed: () => _import(camera: true),
-                            icon: const Icon(Icons.photo_camera_outlined),
-                            label: const Text('Take a photo'),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: () => _import(camera: false),
-                            icon: const Icon(Icons.photo_library_outlined),
-                            label: const Text('From gallery'),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
+                ],
               ),
             ),
-          if (blocks.isEmpty)
-            const EmptyState(
-              title: 'No classes yet',
-              message:
-                  'Add your classes to see them on Today and on the '
-                  'home-screen widget.',
-            )
-          else ...[
-            for (final d in days) ...[
-              SectionHeader(
-                d == today ? '${weekdayNames[d]} (today)' : weekdayNames[d]!,
-              ),
-              _DayCard(
-                blocks: [
-                  for (final b in blocks)
-                    if (b.weekday == d) b,
-                ],
-                onTap: _edit,
-                onDelete: (b) async {
-                  final service = ref.read(scheduleServiceProvider);
-                  await service.remove(b.id);
-                  if (!context.mounted) return;
-                  showUndo(
-                    context,
-                    message: 'Removed ${quoted(b.subject)}.',
-                    onUndo: () => service.restore(b.id),
-                  );
-                },
-              ),
-            ],
-            if (lowEnergy)
-              TextButton(
-                onPressed: () => setState(() => _showWeek = !_showWeek),
-                child: Text(_showWeek ? 'Only today' : 'Show the whole week'),
-              ),
+          ),
+        if (blocks.isEmpty)
+          const EmptyState(
+            title: 'No classes yet',
+            message:
+                'Add your classes to see them on Today and on the '
+                'home-screen widget.',
+          )
+        else ...[
+          for (final d in days) ...[
+            SectionHeader(
+              d == today ? '${weekdayNames[d]} (today)' : weekdayNames[d]!,
+            ),
+            _DayCard(
+              blocks: [
+                for (final b in blocks)
+                  if (b.weekday == d) b,
+              ],
+              onTap: _edit,
+              onDelete: (b) async {
+                final service = ref.read(scheduleServiceProvider);
+                await service.remove(b.id);
+                if (!context.mounted) return;
+                showUndo(
+                  context,
+                  message: 'Removed ${quoted(b.subject)}.',
+                  onUndo: () => service.restore(b.id),
+                );
+              },
+            ),
           ],
+          if (lowEnergy)
+            TextButton(
+              onPressed: () => setState(() => _showWeek = !_showWeek),
+              child: Text(_showWeek ? 'Only today' : 'Show the whole week'),
+            ),
         ],
-      ),
+      ],
     );
   }
 }
@@ -217,23 +219,25 @@ class _DayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (blocks.isEmpty) {
-      return const Card(child: ListTile(title: Text('No classes')));
-    }
-    return Card(
-      child: Column(
-        children: [
+    return PaceGroup(
+      children: [
+        if (blocks.isEmpty)
+          const PaceTile(
+            icon: Icons.free_breakfast_outlined,
+            title: 'No classes',
+          )
+        else
           for (final b in blocks)
-            ListTile(
+            PaceTile(
               key: ValueKey('block-${b.id}'),
-              title: Text(b.subject),
-              subtitle: Text(
-                [
-                  formatSpan(b.startMinutes, b.endMinutes),
-                  if (b.room != null) 'Room ${b.room}',
-                  if (b.source == BlockSource.image) 'from photo',
-                ].join(' · '),
-              ),
+              icon: Icons.school_rounded,
+              kind: PastelKind.leave,
+              title: b.subject,
+              subtitle: [
+                formatSpan(b.startMinutes, b.endMinutes),
+                if (b.room != null) 'Room ${b.room}',
+                if (b.source == BlockSource.image) 'from photo',
+              ].join(' · '),
               onTap: () => onTap(b),
               trailing: IconButton(
                 tooltip: 'Remove',
@@ -241,8 +245,7 @@ class _DayCard extends StatelessWidget {
                 onPressed: () => onDelete(b),
               ),
             ),
-        ],
-      ),
+      ],
     );
   }
 }

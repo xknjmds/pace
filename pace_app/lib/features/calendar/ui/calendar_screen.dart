@@ -10,6 +10,8 @@ import '../../../core/widgets/section_header.dart';
 import '../application/calendar_providers.dart';
 import '../application/calendar_service.dart';
 import '../../../core/widgets/pace_page.dart';
+import '../../../core/theme/pace_pastels.dart';
+import '../../../core/widgets/pace_tile.dart';
 
 /// Optional, read-only Google Calendar. Events are cached and still show
 /// offline. PACE works fully without this ever being set up.
@@ -65,78 +67,83 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       title: 'Calendar',
       subtitle: 'Your Google Calendar, read-only.',
       children: [
-        Text(
-          'Shows your Google Calendar events next to your classes on '
-          'Today and on the widget. Read-only: PACE never changes your '
-          'calendar. Completely optional.',
-          style: theme.textTheme.bodyMedium,
-        ),
-        const SizedBox(height: 12),
-        if (!configured)
-          const Card(
-            child: ListTile(
-              leading: Icon(Icons.info_outline_rounded),
-              title: Text('Not set up in this build'),
-              subtitle: Text(
-                'Calendar sync needs a Google Cloud OAuth client id, passed '
-                'when building: --dart-define=PACE_GOOGLE_CLIENT_ID=… '
-                'Everything else works without it.',
-              ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+          child: Text(
+            'Shows your Google Calendar events next to your classes on '
+            'Today and on the widget. Read-only: PACE never changes your '
+            'calendar. Completely optional.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.45,
             ),
+          ),
+        ),
+        if (!configured)
+          const PaceGroup(
+            children: [
+              PaceTile(
+                icon: Icons.info_outline_rounded,
+                kind: PastelKind.focus,
+                title: 'Not set up in this build',
+                subtitle:
+                    'Calendar sync needs a Google Cloud OAuth client id, '
+                    'passed when building: '
+                    '--dart-define=PACE_GOOGLE_CLIENT_ID=… Everything else '
+                    'works without it.',
+              ),
+            ],
           )
         else
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.event_outlined),
-                  title: Text(connected ? 'Connected' : 'Not connected'),
-                  subtitle: connected
-                      ? Text(
-                          'Last updated '
-                          '${_ago(settings!.calendarSyncedAt!.toLocal(), now)}',
-                        )
-                      : null,
+          PaceGroup(
+            children: [
+              PaceTile(
+                icon: Icons.event_rounded,
+                kind: PastelKind.focus,
+                title: connected ? 'Connected' : 'Not connected',
+                subtitle: connected
+                    ? 'Last updated '
+                          '${_ago(settings!.calendarSyncedAt!.toLocal(), now)}'
+                    : null,
+              ),
+              if (message != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Text(message, style: theme.textTheme.bodyMedium),
                 ),
-                if (message != null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: Text(message, style: theme.textTheme.bodyMedium),
-                  ),
-                if (_busy)
-                  const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: LinearProgressIndicator(),
-                  )
-                else
-                  OverflowBar(
-                    alignment: MainAxisAlignment.end,
-                    spacing: 8,
-                    children: [
-                      if (connected)
-                        TextButton(
-                          onPressed: () async {
-                            await service.signOut();
-                            setState(() => _last = null);
-                          },
-                          child: const Text('Sign out'),
-                        ),
-                      if (connected && _last != SyncResult.needsReconnect)
-                        FilledButton.tonal(
-                          onPressed: () => _run(service.refresh),
-                          child: const Text('Refresh'),
-                        )
-                      else
-                        FilledButton(
-                          key: const ValueKey('calendar-connect'),
-                          onPressed: () => _run(service.connect),
-                          child: Text(connected ? 'Reconnect' : 'Connect'),
-                        ),
-                    ],
-                  ),
-                const SizedBox(height: 8),
-              ],
-            ),
+              if (_busy)
+                const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: LinearProgressIndicator(),
+                )
+              else
+                OverflowBar(
+                  alignment: MainAxisAlignment.end,
+                  spacing: 8,
+                  children: [
+                    if (connected)
+                      TextButton(
+                        onPressed: () async {
+                          await service.signOut();
+                          setState(() => _last = null);
+                        },
+                        child: const Text('Sign out'),
+                      ),
+                    if (connected && _last != SyncResult.needsReconnect)
+                      FilledButton.tonal(
+                        onPressed: () => _run(service.refresh),
+                        child: const Text('Refresh'),
+                      )
+                    else
+                      FilledButton(
+                        key: const ValueKey('calendar-connect'),
+                        onPressed: () => _run(service.connect),
+                        child: Text(connected ? 'Reconnect' : 'Connect'),
+                      ),
+                  ],
+                ),
+              const SizedBox(height: 8),
+            ],
           ),
         if (connected && !lowEnergy) ...[
           const SectionHeader('Next two weeks'),
@@ -170,16 +177,23 @@ class _Upcoming extends ConsumerWidget {
       stream: stream,
       builder: (context, snap) {
         final events = snap.data ?? const <CalendarEvent>[];
-        if (events.isEmpty) {
-          return const Card(child: ListTile(title: Text('No events')));
-        }
-        return Card(
-          child: Column(
-            children: [
+        return PaceGroup(
+          children: [
+            if (events.isEmpty)
+              const PaceTile(
+                icon: Icons.event_available_rounded,
+                kind: PastelKind.focus,
+                title: 'Nothing in the next two weeks.',
+              )
+            else
               for (final e in events)
-                ListTile(title: Text(e.title), subtitle: Text(_describe(e))),
-            ],
-          ),
+                PaceTile(
+                  icon: Icons.event_rounded,
+                  kind: PastelKind.focus,
+                  title: e.title,
+                  subtitle: _describe(e),
+                ),
+          ],
         );
       },
     );
