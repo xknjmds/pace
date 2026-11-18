@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 
@@ -18,6 +20,7 @@ import 'startup.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  registerFontLicense();
   if (isUnsupportedPlatform) {
     runApp(const UnsupportedPlatformApp());
     return;
@@ -64,3 +67,9 @@ Future<void> main() async {
     ),
   );
 }
+
+/// Figtree ships with the app under the SIL Open Font License.
+void registerFontLicense() => LicenseRegistry.addLicense(() async* {
+  final text = await rootBundle.loadString('assets/fonts/OFL.txt');
+  yield LicenseEntryWithLineBreaks(const ['Figtree'], text);
+});

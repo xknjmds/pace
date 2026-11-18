@@ -70,6 +70,22 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  assets:
+    - assets/fonts/OFL.txt
+
+  # Figtree (SIL Open Font License 1.1), the UI typeface. See assets/fonts/OFL.txt.
+  fonts:
+    - family: Figtree
+      fonts:
+        - asset: assets/fonts/Figtree-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Figtree-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Figtree-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Figtree-Bold.ttf
+          weight: 700
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

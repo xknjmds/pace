@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/db/settings_provider.dart';
 import 'core/theme/pace_theme.dart';
+import 'core/theme/pace_tokens.dart';
 import 'routes.dart';
 
-class PaceApp extends StatelessWidget {
+class PaceApp extends ConsumerWidget {
   const PaceApp({super.key, this.initialRoute = Routes.today});
 
   /// Where the app opens; the home-screen widget can ask for the Inbox.
@@ -13,7 +16,9 @@ class PaceApp extends StatelessWidget {
   static final navigatorKey = GlobalKey<NavigatorState>();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Low-energy mode also quiets decorative motion everywhere.
+    final calm = ref.watch(lowEnergyProvider);
     return MaterialApp(
       title: 'PACE',
       navigatorKey: navigatorKey,
@@ -22,6 +27,8 @@ class PaceApp extends StatelessWidget {
       initialRoute: initialRoute,
       routes: Routes.table,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) =>
+          PaceMotionScope(calm: calm, child: child ?? const SizedBox.shrink()),
     );
   }
 }

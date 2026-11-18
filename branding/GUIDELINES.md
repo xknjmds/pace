@@ -34,7 +34,8 @@ On photos use the white or black version on a calm area, or the Moss tile with t
 
 ## 5. Typography
 - The wordmark is **constructed geometry**, not a font. Never retype it.
-- UI and tagline: the app's UI font (Roboto on Android by default), regular weight, normal tracking.
+- UI and tagline: **Figtree** (SIL Open Font License, bundled in `pace_app/assets/fonts/`). Regular for body,
+  SemiBold for titles, Bold for screen headlines; times and countdowns use tabular figures. Tagline in Regular, normal tracking.
   Set the tagline "Progress Always Comes Eventually" in sentence case below the stacked lockup, one clear-space unit away, never inside the logo files.
 
 ## 6. Android
