@@ -7,6 +7,7 @@ import '../../../core/db/settings_provider.dart';
 import '../../../core/time/clock.dart';
 import '../application/deadline_providers.dart';
 import '../domain/deadline_reminders.dart';
+import '../../../routes.dart';
 import 'task_edit_sheet.dart';
 
 /// Pending deadlines, past-due ones first, then what has been submitted.
@@ -118,6 +119,9 @@ class DeadlinesScreen extends ConsumerWidget {
                         onSubmitted: () => service.markSubmitted(t.id),
                         onNotToday: () => service.notToday(t.id, now),
                         onDelete: () => service.remove(t.id),
+                        onJustStart: () => Navigator.of(
+                          context,
+                        ).pushNamed(Routes.focus, arguments: t.id),
                       ),
                   ],
                   if (upcoming.isNotEmpty) ...[
@@ -131,6 +135,9 @@ class DeadlinesScreen extends ConsumerWidget {
                         onSubmitted: () => service.markSubmitted(t.id),
                         onNotToday: () => service.notToday(t.id, now),
                         onDelete: () => service.remove(t.id),
+                        onJustStart: () => Navigator.of(
+                          context,
+                        ).pushNamed(Routes.focus, arguments: t.id),
                       ),
                   ],
                   if (submitted.isNotEmpty && !lowEnergy) ...[
@@ -182,6 +189,7 @@ class _TaskTile extends StatelessWidget {
     required this.onSubmitted,
     required this.onNotToday,
     required this.onDelete,
+    required this.onJustStart,
   });
 
   final Task task;
@@ -191,6 +199,7 @@ class _TaskTile extends StatelessWidget {
   final VoidCallback onSubmitted;
   final VoidCallback onNotToday;
   final VoidCallback onDelete;
+  final VoidCallback onJustStart;
 
   @override
   Widget build(BuildContext context) {
@@ -218,11 +227,13 @@ class _TaskTile extends StatelessWidget {
         trailing: PopupMenuButton<String>(
           tooltip: 'More',
           onSelected: (v) => switch (v) {
+            'just_start' => onJustStart(),
             'not_today' => onNotToday(),
             'delete' => onDelete(),
             _ => null,
           },
           itemBuilder: (_) => const [
+            PopupMenuItem(value: 'just_start', child: Text('Just start')),
             PopupMenuItem(value: 'not_today', child: Text('Not today')),
             PopupMenuItem(value: 'delete', child: Text('Delete')),
           ],

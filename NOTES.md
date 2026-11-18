@@ -149,3 +149,41 @@ adb shell cmd appops get com.el.pace SCHEDULE_EXACT_ALARM
   from both v1 and v2.
 - **Low-energy mode** folds the Inbox list into one line ("N things waiting. They can
   wait."), and capturing still works.
+
+## M8. "Just start" timer
+
+### Still to check on the phone
+
+| Check | Result | Notes |
+|---|---|---|
+| Timer completes with the screen off and the "10 minutes done" notification arrives on time | not yet run | exact alarm through the scheduler, no foreground service |
+| "Stop here" / "Keep going" on that notification | not yet run | both open the app, like the routine buttons |
+
+### Decisions
+
+- **No foreground service, no new dependency.** A session stores `started_at` and the planned
+  minutes; the countdown is worked out from the wall clock whenever the screen looks, and the
+  time-up alert is an exact scheduled notification (owner = session id). Screen off, app
+  killed or phone rebooted, the answer is the same. The trade-off: no live countdown in the
+  notification shade.
+- **Schema v4 adds `focus_sessions.ended_at`.** A null value means the session is live,
+  either running or past its end and waiting for a choice. Sessions from before v4 are
+  marked ended at their start time.
+- **Recorded minutes are time actually focused.** Stopping early records whole minutes
+  spent. Stopping after the alarm records the planned 10, never the idle time after it.
+  "Keep going" ends the first session as completed and starts a fresh 10 minutes from now,
+  so two rows hold 10 + 10 rather than one row with the gap included.
+- **Only 10 minutes is offered.** The point is that starting is small. Stopping early is
+  met with "That counts", never a failure state.
+- **Entry points:** Focus in the Today menu, "Just start" in each deadline's menu
+  (preselects the task), and a "Focus: N min left" line on Today while a session is live.
+  In low-energy mode the task picker lists only tasks due within 48 hours.
+
+### Fixed: upgrades from v1 were broken since M3
+
+The v1 to v2 step created tables from their *current* Dart definitions, so once v4 added a
+column to `focus_sessions`, a v1 to v4 upgrade created it with `ended_at` already present
+and then failed adding it again. Migrations now use Drift's `stepByStep` with schemas
+frozen per version (`lib/core/db/schema_versions.dart`, generated from `drift_schemas/`).
+Each step does the same thing as before. No installed copy existed (the app has never been
+built), so no real data was affected. Regenerate the steps file after every schema dump.

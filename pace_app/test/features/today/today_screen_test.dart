@@ -239,4 +239,15 @@ void main() {
     expect(find.byKey(const ValueKey('capture-field')), findsOneWidget);
     await unmountApp(tester);
   });
+
+  testWidgets('a running focus session shows on Today', (tester) async {
+    final now = DateTime(2026, 11, 14, 19, 4);
+    await db.focusSessionsDao.start(
+      startedAt: DateTime(2026, 11, 14, 19),
+      durationMinutes: 10,
+    );
+    await pumpApp(tester, now);
+    expect(find.text('Focus: 6 min left'), findsOneWidget);
+    await unmountApp(tester);
+  });
 }

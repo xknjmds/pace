@@ -9,6 +9,7 @@ import 'daos/scheduled_notifications_dao.dart';
 import 'daos/settings_dao.dart';
 import 'daos/tasks_dao.dart';
 import 'daos/weekday_schedule_dao.dart';
+import 'schema_versions.dart';
 import 'tables.dart';
 import 'uuid.dart';
 
@@ -60,34 +61,51 @@ class AppDatabase extends _$AppDatabase {
   static DateTime _utcNow() => DateTime.now().toUtc();
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
-  /// Schema history. Never edit a released step (CLAUDE.md rule 8); add one.
+  /// Schema history. Never edit a released step (CLAUDE.md rule 8); add one,
+  /// then regenerate: `drift_dev schema dump`, then `schema steps` into
+  /// schema_versions.dart and `schema generate` into test/core/db/generated.
   ///
   /// - v1 (M1): `settings`
   /// - v2 (M3): every other table in the PLAN.md data model
   /// - v3 (M7): `settings.capture_shortcut_enabled`
+  /// - v4 (M8): `focus_sessions.ended_at`
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
-    onUpgrade: (m, from, to) async {
-      if (from < 2) {
+    // Each step runs against the schema frozen at its version
+    // (schema_versions.dart, generated from drift_schemas/), so a table
+    // created in an early step never already has a later step's columns.
+    onUpgrade: stepByStep(
+      from1To2: (m, schema) async {
         for (final table in <TableInfo<Table, Object>>[
-          weekdaySchedules,
-          tasks,
-          inboxItems,
-          dailyLogs,
-          focusSessions,
-          scheduledNotifications,
-          reminderMutes,
+          schema.weekdaySchedules,
+          schema.tasks,
+          schema.inboxItems,
+          schema.dailyLogs,
+          schema.focusSessions,
+          schema.scheduledNotifications,
+          schema.reminderMutes,
         ]) {
           await m.createTable(table);
         }
-      }
-      if (from < 3) {
-        await m.addColumn(settings, settings.captureShortcutEnabled);
-      }
-    },
+      },
+      from2To3: (m, schema) async {
+        await m.addColumn(
+          schema.settings,
+          schema.settings.captureShortcutEnabled,
+        );
+      },
+      from3To4: (m, schema) async {
+        await m.addColumn(schema.focusSessions, schema.focusSessions.endedAt);
+        // Sessions from before v4 are history, not live timers.
+        await customStatement(
+          'UPDATE focus_sessions SET ended_at = started_at '
+          'WHERE ended_at IS NULL',
+        );
+      },
+    ),
     beforeOpen: (_) => settingsDao.ensureRow(),
   );
 }

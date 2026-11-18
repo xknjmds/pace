@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pace/core/db/app_database.dart';
@@ -6,6 +6,7 @@ import 'package:pace/core/db/app_database.dart';
 import 'generated/schema.dart';
 import 'generated/schema_v1.dart' as v1;
 import 'generated/schema_v2.dart' as v2;
+import 'generated/schema_v3.dart' as v3;
 
 void main() {
   late SchemaVerifier verifier;
@@ -32,7 +33,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 3);
+    await verifier.migrateAndValidate(db, 4);
 
     final s = await db.settingsDao.get();
     expect(s.lowEnergyEnabled, isTrue);
@@ -43,7 +44,7 @@ void main() {
     expect(await db.scheduledNotificationsDao.getLive(), isEmpty);
   });
 
-  test('a v2 database upgrades to v3 and keeps its rows', () async {
+  test('a v2 database upgrades to the latest and keeps its rows', () async {
     final schema = await verifier.schemaAt(2);
     final old = v2.DatabaseAtV2(schema.newConnection());
     await old
@@ -69,7 +70,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 3);
+    await verifier.migrateAndValidate(db, 4);
 
     final s = await db.settingsDao.get();
     expect(s.targetWakeMinutes, 7 * 60);
@@ -77,10 +78,33 @@ void main() {
     expect((await db.inboxDao.getUnprocessed()).single.body, 'buy index cards');
   });
 
-  test('a fresh database matches the v3 snapshot', () async {
-    final connection = await verifier.startAt(3);
+  test('v3 focus sessions become history, not live timers', () async {
+    final schema = await verifier.schemaAt(3);
+    final old = v3.DatabaseAtV3(schema.newConnection());
+    await old
+        .into(old.focusSessions)
+        .insert(
+          v3.FocusSessionsCompanion.insert(
+            id: 'f-1',
+            startedAt: '2026-11-15T19:00:00.000Z',
+            durationMinutes: 10,
+            updatedAt: '2026-11-15T19:10:00.000Z',
+          ),
+        );
+    await old.close();
+
+    final db = AppDatabase(schema.newConnection());
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 4);
+    expect(await db.focusSessionsDao.getActive(), isNull);
+    final s = (await db.focusSessionsDao.recent()).single;
+    expect(s.endedAt, DateTime.utc(2026, 11, 15, 19));
+  });
+
+  test('a fresh database matches the v4 snapshot', () async {
+    final connection = await verifier.startAt(4);
     final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 3);
+    await verifier.migrateAndValidate(db, 4);
   });
 }

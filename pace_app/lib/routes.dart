@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'core/notifications/ui/notification_setup_screen.dart';
 import 'core/widgets/coming_soon_screen.dart';
 import 'features/deadlines/ui/deadlines_screen.dart';
+import 'features/focus/ui/focus_screen.dart';
 import 'features/inbox/ui/inbox_screen.dart';
 import 'features/routine/ui/routine_settings_screen.dart';
 import 'features/today/ui/today_screen.dart';
@@ -25,7 +26,7 @@ abstract final class Routes {
     deadlines: (_) => const DeadlinesScreen(),
     inbox: (_) => const InboxScreen(),
     inboxCapture: (_) => const InboxScreen(startCapturing: true),
-    focus: (_) => const ComingSoonScreen(title: 'Focus'),
+    focus: (_) => const FocusScreen(),
     review: (_) => const ComingSoonScreen(title: 'Review'),
     settings: (_) => const RoutineSettingsScreen(),
     notifications: (_) => const NotificationSetupScreen(),

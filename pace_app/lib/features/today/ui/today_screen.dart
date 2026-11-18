@@ -8,6 +8,8 @@ import '../../../core/widgets/cairn_mark.dart';
 import '../../../routes.dart';
 import '../../deadlines/application/deadline_providers.dart';
 import '../../deadlines/domain/deadline_reminders.dart';
+import '../../focus/application/focus_providers.dart';
+import '../../focus/domain/focus_timer.dart';
 import '../../inbox/application/inbox_providers.dart';
 import '../../routine/application/morning_inputs.dart';
 import '../../routine/application/routine_providers.dart';
@@ -76,6 +78,7 @@ class TodayScreen extends ConsumerWidget {
     final pending = ref.watch(pendingTasksProvider).value ?? const <Task>[];
     final lowEnergy = ref.watch(lowEnergyProvider);
     final inboxCount = ref.watch(inboxCountProvider);
+    final focus = ref.watch(activeFocusProvider).value;
     final theme = Theme.of(context);
 
     final hasSchedule = schedules.isNotEmpty;
@@ -108,7 +111,8 @@ class TodayScreen extends ConsumerWidget {
         .where((t) => t.dueAt.toLocal().isBefore(now.add(deadlineWindow)))
         .toList();
 
-    final empty = !hasSchedule && pending.isEmpty && inboxCount == 0;
+    final empty =
+        !hasSchedule && pending.isEmpty && inboxCount == 0 && focus == null;
 
     return Scaffold(
       appBar: AppBar(
@@ -221,6 +225,24 @@ class TodayScreen extends ConsumerWidget {
                         ],
                       ),
               ),
+              if (focus != null)
+                ListTile(
+                  key: const ValueKey('focus-line'),
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  leading: const Icon(Icons.timer_outlined, size: 20),
+                  title: Text(switch (focusStateAt(
+                    now: now,
+                    startedAt: focus.startedAt.toLocal(),
+                    plannedMinutes: focus.durationMinutes,
+                  )) {
+                    // Round up: 5:30 left reads "6 min left".
+                    FocusRunning(:final remaining) =>
+                      'Focus: ${(remaining.inSeconds + 59) ~/ 60} min left',
+                    _ => 'Focus: time is up',
+                  }, style: theme.textTheme.bodyMedium),
+                  onTap: () => Navigator.of(context).pushNamed(Routes.focus),
+                ),
               if (inboxCount > 0)
                 ListTile(
                   key: const ValueKey('inbox-count'),

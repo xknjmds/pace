@@ -8,6 +8,7 @@ import 'core/notifications/notification_gateway.dart';
 import 'core/notifications/notification_providers.dart';
 import 'core/notifications/reminder_response_router.dart';
 import 'features/deadlines/application/deadline_providers.dart';
+import 'features/focus/application/focus_providers.dart';
 import 'features/inbox/application/inbox_providers.dart';
 import 'features/routine/application/routine_providers.dart';
 import 'routes.dart';
@@ -38,6 +39,7 @@ Future<void> bootstrap(
     container.read(routineRemindersProvider).handle,
     container.read(deadlineRemindersProvider).handle,
     capture.handle,
+    container.read(focusServiceProvider).handle,
   ]);
   final launch = await gateway.launchResponse();
   if (launch != null) await router.dispatch(launch);

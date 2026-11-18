@@ -99,11 +99,18 @@ class DailyLogs extends Table with SyncColumns {
   Set<Column<Object>> get primaryKey => {date};
 }
 
+/// A "just start" session. While [endedAt] is null the session is live:
+/// running until `startedAt + durationMinutes`, then waiting for the owner
+/// to stop or keep going. Once ended, [durationMinutes] is the time
+/// actually spent and [completed] says whether the planned time was reached.
 class FocusSessions extends Table with UuidKey, SyncColumns {
   TextColumn get taskId => text().nullable()();
   DateTimeColumn get startedAt => dateTime()();
   IntColumn get durationMinutes => integer()();
   BoolColumn get completed => boolean().withDefault(const Constant(false))();
+
+  /// v4.
+  DateTimeColumn get endedAt => dateTime().nullable()();
 }
 
 /// What a reminder is for. The owner id's meaning depends on the kind:
