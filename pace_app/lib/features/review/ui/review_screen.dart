@@ -5,6 +5,7 @@ import '../../../core/db/settings_provider.dart';
 import '../../../core/theme/pace_pastels.dart';
 import '../../../core/theme/pace_tokens.dart';
 import '../../../core/time/local_time.dart';
+import '../../../core/widgets/pace_tile.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../routes.dart';
 import '../application/review_providers.dart';
@@ -87,50 +88,46 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           ),
         ),
         const SectionHeader('Last 7 days'),
-        Card(
-          child: Column(
-            children: [
-              _Stat(
-                key: const ValueKey('routine-days'),
-                badge: summary.routineDays == 0
-                    ? const _IconBadge(Icons.check_circle_outline_rounded)
-                    : _NumberBadge(summary.routineDays),
-                title: summary.routineDays == 0
-                    ? 'No routine days logged yet'
-                    : 'Routine done on ${summary.routineDays} '
-                          '${summary.routineDays == 1 ? 'day' : 'days'}',
+        PaceGroup(
+          children: [
+            PaceTile(
+              key: const ValueKey('routine-days'),
+              leading: summary.routineDays == 0
+                  ? const _IconBadge(Icons.check_circle_outline_rounded)
+                  : _NumberBadge(summary.routineDays),
+              title: summary.routineDays == 0
+                  ? 'No routine days logged yet'
+                  : 'Routine done on ${summary.routineDays} '
+                        '${summary.routineDays == 1 ? 'day' : 'days'}',
+            ),
+            PaceTile(
+              key: const ValueKey('average-wake'),
+              leading: _IconBadge(
+                Icons.wb_sunny_outlined,
+                color: pastels.morning.ink,
+                background: pastels.morning.fill,
               ),
-              const Divider(indent: 72),
-              _Stat(
-                key: const ValueKey('average-wake'),
-                badge: _IconBadge(
-                  Icons.wb_sunny_outlined,
-                  color: pastels.morning.ink,
-                  background: pastels.morning.fill,
-                ),
-                title: summary.averageWake == null
-                    ? 'No wake times logged yet'
-                    : 'Up around ${summary.averageWake!.format24()} '
-                          'on average',
-                subtitle: summary.wakeDays == 0
-                    ? 'Tap "I\'m up" on Today to log one.'
-                    : 'From ${summary.wakeDays} '
-                          '${summary.wakeDays == 1 ? 'morning' : 'mornings'}',
+              title: summary.averageWake == null
+                  ? 'No wake times logged yet'
+                  : 'Up around ${summary.averageWake!.format24()} '
+                        'on average',
+              subtitle: summary.wakeDays == 0
+                  ? 'Tap "I\'m up" on Today to log one.'
+                  : 'From ${summary.wakeDays} '
+                        '${summary.wakeDays == 1 ? 'morning' : 'mornings'}',
+            ),
+            PaceTile(
+              key: const ValueKey('average-sleep'),
+              leading: _IconBadge(
+                Icons.bedtime_outlined,
+                color: pastels.evening.ink,
+                background: pastels.evening.fill,
               ),
-              const Divider(indent: 72),
-              _Stat(
-                key: const ValueKey('average-sleep'),
-                badge: _IconBadge(
-                  Icons.bedtime_outlined,
-                  color: pastels.evening.ink,
-                  background: pastels.evening.fill,
-                ),
-                title: avgSleep == null
-                    ? 'No full nights logged yet'
-                    : 'About ${formatSleep(avgSleep)} of sleep a night',
-              ),
-            ],
-          ),
+              title: avgSleep == null
+                  ? 'No full nights logged yet'
+                  : 'About ${formatSleep(avgSleep)} of sleep a night',
+            ),
+          ],
         ),
         SectionHeader(
           'Sleep log',
@@ -151,32 +148,20 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                   'in the morning fill this in.',
                 )
               : nightsVisible
-              ? Card(
-                  child: Column(
-                    children: [
-                      for (final (i, e) in summary.sleep.indexed) ...[
-                        if (i > 0) const Divider(indent: 16, endIndent: 16),
-                        ListTile(
-                          title: Text(
-                            '${_weekdays[e.night.weekday - 1]} night',
-                          ),
-                          subtitle: Text(
+              ? PaceGroup(
+                  children: [
+                    for (final e in summary.sleep)
+                      PaceTile(
+                        icon: Icons.bedtime_rounded,
+                        kind: PastelKind.evening,
+                        title: '${_weekdays[e.night.weekday - 1]} night',
+                        subtitle:
                             '${e.bedAt == null ? 'bed not logged' : 'bed ${_hm(e.bedAt!)}'}'
                             ' · '
                             '${e.wakeAt == null ? 'up not logged' : 'up ${_hm(e.wakeAt!)}'}',
-                          ),
-                          trailing: e.slept == null
-                              ? null
-                              : Text(
-                                  formatSleep(e.slept!),
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    color: scheme.secondary,
-                                  ),
-                                ),
-                        ),
-                      ],
-                    ],
-                  ),
+                        value: e.slept == null ? null : formatSleep(e.slept!),
+                      ),
+                  ],
                 )
               : _Note(
                   '${summary.sleep.length} '
@@ -204,48 +189,6 @@ class _Note extends StatelessWidget {
         style: theme.textTheme.bodyMedium?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),
-      ),
-    );
-  }
-}
-
-class _Stat extends StatelessWidget {
-  const _Stat({
-    super.key,
-    required this.badge,
-    required this.title,
-    this.subtitle,
-  });
-
-  final Widget badge;
-  final String title;
-  final String? subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      child: Row(
-        children: [
-          badge,
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: theme.textTheme.titleMedium),
-                if (subtitle != null)
-                  Text(
-                    subtitle!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

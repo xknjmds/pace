@@ -324,7 +324,12 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
     };
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Just start')),
+      // Same large title as the other screens, kept in the bar so the
+      // timer can sit centred below it.
+      appBar: AppBar(
+        toolbarHeight: 76,
+        title: Text('Just start', style: theme.textTheme.headlineMedium),
+      ),
       body: SafeArea(
         child: activeAsync.isLoading && active == null
             ? const SizedBox.shrink()

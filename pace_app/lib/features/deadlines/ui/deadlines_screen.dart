@@ -4,11 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/db/app_database.dart';
 import '../../../core/db/settings_provider.dart';
-import '../../../core/theme/pace_tokens.dart';
 import '../../../core/theme/pace_pastels.dart';
 import '../../../core/time/clock.dart';
 import '../../../core/widgets/done_check.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/pace_page.dart';
 import '../../../core/widgets/tuck.dart';
 import '../../../core/widgets/fade_slide_in.dart';
 import '../../../core/widgets/section_header.dart';
@@ -117,97 +117,85 @@ class DeadlinesScreen extends ConsumerWidget {
       ),
     );
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Deadlines')),
+    return PacePage(
+      title: 'Deadlines',
+      subtitle: 'Everything with a date, gently in order.',
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _addOrEdit(context, ref),
         icon: const Icon(Icons.add_rounded),
         label: const Text('Add'),
       ),
-      body: SafeArea(
-        child: shown.isEmpty && submitted.isEmpty
-            ? Center(
-                child: SingleChildScrollView(
-                  child: lowEnergy
-                      ? const EmptyState(
-                          pose: TuckPose.resting,
-                          title: 'Nothing due in the next two days.',
-                          message: 'Low-energy mode shows only what is close.',
-                        )
-                      : const EmptyState(
-                          title: 'No deadlines yet',
-                          message:
-                              'Add one when you get it. PACE will nudge you '
-                              'gently as it gets close.',
-                        ),
-                ),
-              )
-            : ListView(
-                padding: PaceSpace.screen,
+      children: [
+        if (shown.isEmpty && submitted.isEmpty)
+          lowEnergy
+              ? const EmptyState(
+                  pose: TuckPose.resting,
+                  title: 'Nothing due in the next two days.',
+                  message: 'Low-energy mode shows only what is close.',
+                )
+              : const EmptyState(
+                  title: 'No deadlines yet',
+                  message:
+                      'Add one when you get it. PACE will nudge you '
+                      'gently as it gets close.',
+                )
+        else ...[
+          if (lowEnergy)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 4),
+              child: Row(
                 children: [
-                  if (lowEnergy)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4, bottom: 4),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.spa_outlined,
-                            size: 18,
-                            color: scheme.secondary,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Low-energy mode: only the next two days.',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ],
+                  Icon(Icons.spa_outlined, size: 18, color: scheme.secondary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Low-energy mode: only the next two days.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
                       ),
                     ),
-                  if (overdue.isNotEmpty) ...[
-                    const SectionHeader('Still open'),
-                    for (final t in overdue) tile(t, pastDue: true),
-                  ],
-                  if (upcoming.isNotEmpty) ...[
-                    const SectionHeader('Coming up'),
-                    for (final t in upcoming) tile(t, pastDue: false),
-                  ],
-                  if (submitted.isNotEmpty && !lowEnergy) ...[
-                    const SectionHeader('Submitted'),
-                    Card(
-                      child: Column(
-                        children: [
-                          for (final (n, t) in submitted.indexed) ...[
-                            if (n > 0) const Divider(indent: 56),
-                            ListTile(
-                              key: ValueKey('done-${t.id}'),
-                              leading: Icon(
-                                Icons.check_circle_rounded,
-                                color: scheme.secondary,
-                              ),
-                              title: Text(
-                                t.title,
-                                style: TextStyle(
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ),
-                              subtitle: Text(describeDue(t.dueAt, now)),
-                              trailing: TextButton(
-                                onPressed: () => service.markPending(t.id),
-                                child: const Text('Reopen'),
-                              ),
-                            ),
-                          ],
-                        ],
+                  ),
+                ],
+              ),
+            ),
+          if (overdue.isNotEmpty) ...[
+            const SectionHeader('Still open'),
+            for (final t in overdue) tile(t, pastDue: true),
+          ],
+          if (upcoming.isNotEmpty) ...[
+            const SectionHeader('Coming up'),
+            for (final t in upcoming) tile(t, pastDue: false),
+          ],
+          if (submitted.isNotEmpty && !lowEnergy) ...[
+            const SectionHeader('Submitted'),
+            Card(
+              child: Column(
+                children: [
+                  for (final (n, t) in submitted.indexed) ...[
+                    if (n > 0) const Divider(indent: 56),
+                    ListTile(
+                      key: ValueKey('done-${t.id}'),
+                      leading: Icon(
+                        Icons.check_circle_rounded,
+                        color: scheme.secondary,
+                      ),
+                      title: Text(
+                        t.title,
+                        style: TextStyle(color: scheme.onSurfaceVariant),
+                      ),
+                      subtitle: Text(describeDue(t.dueAt, now)),
+                      trailing: TextButton(
+                        onPressed: () => service.markPending(t.id),
+                        child: const Text('Reopen'),
                       ),
                     ),
                   ],
                 ],
               ),
-      ),
+            ),
+          ],
+        ],
+      ],
     );
   }
 }
