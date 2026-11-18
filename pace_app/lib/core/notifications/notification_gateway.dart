@@ -46,6 +46,17 @@ abstract interface class NotificationGateway {
 
   Future<void> cancel(int id);
 
+  /// Shows (or refreshes) a quiet, persistent notification right now. Used
+  /// for the capture shortcut; an action with an input hint gets a reply
+  /// field whose text arrives through the background handler.
+  Future<void> showPersistent({
+    required int id,
+    required String title,
+    required String body,
+    required String payload,
+    List<ReminderAction> actions = const [],
+  });
+
   Future<List<PendingReminder>> pending();
 
   /// Taps and button presses while the app is running or being resumed.

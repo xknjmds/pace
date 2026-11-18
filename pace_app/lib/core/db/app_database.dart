@@ -60,12 +60,13 @@ class AppDatabase extends _$AppDatabase {
   static DateTime _utcNow() => DateTime.now().toUtc();
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   /// Schema history. Never edit a released step (CLAUDE.md rule 8); add one.
   ///
   /// - v1 (M1): `settings`
   /// - v2 (M3): every other table in the PLAN.md data model
+  /// - v3 (M7): `settings.capture_shortcut_enabled`
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
@@ -82,6 +83,9 @@ class AppDatabase extends _$AppDatabase {
         ]) {
           await m.createTable(table);
         }
+      }
+      if (from < 3) {
+        await m.addColumn(settings, settings.captureShortcutEnabled);
       }
     },
     beforeOpen: (_) => settingsDao.ensureRow(),

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand: Sand surface, Moss accent (branding/GUIDELINES.md). -->
+    <color name="pace_widget_surface">#F3EEE6</color>
+    <color name="pace_widget_accent">#35665A</color>
+    <color name="pace_widget_on_accent">#FFFFFF</color>
+    <color name="pace_widget_text">#2B3330</color>
+
+    <string name="widget_title">PACE</string>
+    <string name="widget_capture">Write it down</string>
+    <string name="widget_capture_description">Write a thought down in the PACE inbox</string>
+    <string name="widget_inbox_clear">Inbox is clear</string>
+    <string name="widget_inbox_one">1 thing in the inbox</string>
+    <string name="widget_inbox_many">%1$d things in the inbox</string>
+    <string name="widget_description">Write a thought down in one tap</string>
+</resources>

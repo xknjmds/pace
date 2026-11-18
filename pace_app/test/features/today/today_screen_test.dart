@@ -5,9 +5,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pace/app.dart';
 import 'package:pace/core/db/app_database.dart';
 import 'package:pace/core/db/database_provider.dart';
+import 'package:pace/core/home_widget/home_widget_providers.dart';
 import 'package:pace/core/notifications/notification_providers.dart';
 import 'package:pace/core/time/clock.dart';
 
+import '../../core/home_widget/fake_home_widget_bridge.dart';
 import '../../core/notifications/fake_notification_gateway.dart';
 
 void main() {
@@ -33,6 +35,7 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           notificationGatewayProvider.overrideWithValue(gateway),
+          homeWidgetBridgeProvider.overrideWithValue(FakeHomeWidgetBridge()),
           clockProvider.overrideWithValue(() => now),
         ],
         child: const PaceApp(),
@@ -222,7 +225,18 @@ void main() {
     }
     await tester.tap(find.text('Inbox'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Coming soon'), findsOneWidget);
+    expect(find.byKey(const ValueKey('capture-field')), findsOneWidget);
+    await unmountApp(tester);
+  });
+
+  testWidgets('inbox count shows on Today and opens the Inbox', (tester) async {
+    await db.inboxDao.add('one');
+    await db.inboxDao.add('two');
+    await pumpApp(tester, DateTime(2026, 11, 14, 10));
+    expect(find.text('Inbox: 2 waiting'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('inbox-count')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('capture-field')), findsOneWidget);
     await unmountApp(tester);
   });
 }

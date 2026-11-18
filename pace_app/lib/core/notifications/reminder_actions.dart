@@ -2,10 +2,16 @@ import '../db/tables.dart';
 
 /// A button on a notification. Tapping opens the app, which handles it.
 class ReminderAction {
-  const ReminderAction({required this.id, required this.label});
+  const ReminderAction({required this.id, required this.label, this.inputHint});
 
   final String id;
   final String label;
+
+  /// When set, the button takes free text typed in the notification shade
+  /// and the app handles it in the background without opening.
+  final String? inputHint;
+
+  bool get takesInput => inputHint != null;
 }
 
 /// Action ids, shared by the scheduler and the handlers.
@@ -53,10 +59,13 @@ List<ReminderAction> actionsFor(ReminderKind kind, String ownerId) {
 /// What the user did with a notification: tapped it ([actionId] null) or
 /// pressed one of its buttons.
 class ReminderResponse {
-  const ReminderResponse({required this.payload, this.actionId});
+  const ReminderResponse({required this.payload, this.actionId, this.input});
 
   final String? payload;
   final String? actionId;
+
+  /// Text typed into an action with an input field.
+  final String? input;
 }
 
 /// Payload format `kind:ownerId`. Returns null for anything else.

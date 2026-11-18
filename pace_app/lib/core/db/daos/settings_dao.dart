@@ -34,4 +34,7 @@ class SettingsDao extends DatabaseAccessor<AppDatabase>
 
   Future<void> setLowEnergy(bool enabled) =>
       updateSettings((s) => s.copyWith(lowEnergyEnabled: enabled));
+
+  Future<void> setCaptureShortcut(bool enabled) =>
+      updateSettings((s) => s.copyWith(captureShortcutEnabled: enabled));
 }

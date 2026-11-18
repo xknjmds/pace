@@ -30,6 +30,16 @@ class FakeNotificationGateway implements NotificationGateway {
   final responseController = StreamController<ReminderResponse>.broadcast();
   ReminderResponse? launch;
   final cancelled = <int>[];
+  final persistent =
+      <
+        int,
+        ({
+          String title,
+          String body,
+          String payload,
+          List<ReminderAction> actions,
+        })
+      >{};
 
   @override
   Future<void> initialize() async => initializeCalls++;
@@ -81,6 +91,23 @@ class FakeNotificationGateway implements NotificationGateway {
   Future<void> cancel(int id) async {
     cancelled.add(id);
     scheduled.remove(id);
+    persistent.remove(id);
+  }
+
+  @override
+  Future<void> showPersistent({
+    required int id,
+    required String title,
+    required String body,
+    required String payload,
+    List<ReminderAction> actions = const [],
+  }) async {
+    persistent[id] = (
+      title: title,
+      body: body,
+      payload: payload,
+      actions: actions,
+    );
   }
 
   @override

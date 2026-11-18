@@ -115,3 +115,37 @@ adb shell cmd appops get com.el.pace SCHEDULE_EXACT_ALARM
   with an "and N more" line. The top-3 picker allows at most three and saves to `daily_logs`.
 - **Low-energy mode** hides Top 3, the eat step and the tomorrow line; the toggle stays on
   Today. Verified to fit a 360x640 phone without scrolling in the widget tests.
+
+## M7. Quick capture
+
+### Still to check on the phone
+
+| Check | Result | Notes |
+|---|---|---|
+| Kotlin widget provider and manifest compile (`flutter build apk`) | not yet run | disk too full to build; nothing Android-side has been compiled |
+| Widget can be added; shows the inbox count; count updates after capturing | not yet run | |
+| "Write it down" on the widget opens the Inbox with the keyboard up | not yet run | cold start and while running |
+| Reply in the capture notification saves without opening the app | not yet run | background isolate, see below |
+| Capture notification is silent and does not buzz on every refresh | not yet run | low-importance channel |
+
+### Decisions
+
+- **Two ways to capture without the app's main screen.** The home-screen widget opens PACE
+  straight into the Inbox with the field focused (`pace://capture`). The optional, quiet
+  "Got a thought?" notification has an inline reply field. Text typed there goes in
+  without opening the app. A widget cannot take text input on Android, so the notification
+  is the only way to capture without opening anything. It is on by default and can be
+  turned off on the Inbox screen.
+- **Inline replies run in the notification plugin's background isolate**
+  (`captureFromNotificationBackground`). That engine registers all plugins, so it opens
+  its own Drift connection to the same file, saves the item, re-shows the shortcut (which
+  clears Android's "sending" state), refreshes the widget and closes the connection. Two
+  connections to one SQLite file is fine for these single-row writes, but it has not been
+  seen working on a device.
+- **The widget is plain RemoteViews** (no Glance), in Sand and Moss with a dark variant.
+  It shows only the inbox count and one button, so it never needs a scheduled refresh.
+  The count is pushed whenever the inbox changes.
+- **Schema v3** adds `settings.capture_shortcut_enabled` (default on), with a migration test
+  from both v1 and v2.
+- **Low-energy mode** folds the Inbox list into one line ("N things waiting. They can
+  wait."), and capturing still works.

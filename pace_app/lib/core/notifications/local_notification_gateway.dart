@@ -14,8 +14,14 @@ import 'reminder_actions.dart';
 
 /// [NotificationGateway] backed by flutter_local_notifications on Android.
 class LocalNotificationGateway implements NotificationGateway {
-  LocalNotificationGateway({FlutterLocalNotificationsPlugin? plugin})
-    : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
+  LocalNotificationGateway({
+    FlutterLocalNotificationsPlugin? plugin,
+    this.backgroundHandler,
+  }) : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
+
+  /// Top-level `@pragma('vm:entry-point')` function the plugin runs in a
+  /// background isolate for actions that do not open the app.
+  final void Function(NotificationResponse)? backgroundHandler;
 
   final FlutterLocalNotificationsPlugin _plugin;
   final _responses = StreamController<ReminderResponse>.broadcast();
@@ -36,8 +42,13 @@ class LocalNotificationGateway implements NotificationGateway {
         android: AndroidInitializationSettings('ic_stat_pace'),
       ),
       onDidReceiveNotificationResponse: (r) => _responses.add(
-        ReminderResponse(payload: r.payload, actionId: r.actionId),
+        ReminderResponse(
+          payload: r.payload,
+          actionId: r.actionId,
+          input: r.input,
+        ),
       ),
+      onDidReceiveBackgroundNotificationResponse: backgroundHandler,
     );
     await _android?.createNotificationChannel(
       const AndroidNotificationChannel(
@@ -45,6 +56,16 @@ class LocalNotificationGateway implements NotificationGateway {
         NotificationChannels.remindersName,
         description: NotificationChannels.remindersDescription,
         importance: Importance.high,
+      ),
+    );
+    await _android?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        NotificationChannels.capture,
+        NotificationChannels.captureName,
+        description: NotificationChannels.captureDescription,
+        importance: Importance.low,
+        playSound: false,
+        enableVibration: false,
       ),
     );
   }
@@ -66,7 +87,11 @@ class LocalNotificationGateway implements NotificationGateway {
     final details = await _plugin.getNotificationAppLaunchDetails();
     final r = details?.notificationResponse;
     if (details?.didNotificationLaunchApp != true || r == null) return null;
-    return ReminderResponse(payload: r.payload, actionId: r.actionId);
+    return ReminderResponse(
+      payload: r.payload,
+      actionId: r.actionId,
+      input: r.input,
+    );
   }
 
   @override
@@ -123,17 +148,7 @@ class LocalNotificationGateway implements NotificationGateway {
           importance: Importance.high,
           priority: Priority.high,
           category: AndroidNotificationCategory.reminder,
-          actions: [
-            for (final a in actions)
-              // Opens the app, which applies the action. Background-isolate
-              // handling can replace this once verified on a device.
-              AndroidNotificationAction(
-                a.id,
-                a.label,
-                showsUserInterface: true,
-                cancelNotification: true,
-              ),
-          ],
+          actions: _androidActions(actions),
         ),
       ),
       androidScheduleMode: switch (mode) {
@@ -143,6 +158,51 @@ class LocalNotificationGateway implements NotificationGateway {
     );
     return mode;
   }
+
+  /// Buttons without input open the app, which applies the action. Buttons
+  /// with input stay in the shade and run [backgroundHandler].
+  List<AndroidNotificationAction> _androidActions(
+    List<ReminderAction> actions,
+  ) => [
+    for (final a in actions)
+      AndroidNotificationAction(
+        a.id,
+        a.label,
+        showsUserInterface: !a.takesInput,
+        cancelNotification: !a.takesInput,
+        inputs: a.takesInput
+            ? [AndroidNotificationActionInput(label: a.inputHint)]
+            : const [],
+      ),
+  ];
+
+  @override
+  Future<void> showPersistent({
+    required int id,
+    required String title,
+    required String body,
+    required String payload,
+    List<ReminderAction> actions = const [],
+  }) => _plugin.show(
+    id: id,
+    title: title,
+    body: body,
+    payload: payload,
+    notificationDetails: NotificationDetails(
+      android: AndroidNotificationDetails(
+        NotificationChannels.capture,
+        NotificationChannels.captureName,
+        channelDescription: NotificationChannels.captureDescription,
+        importance: Importance.low,
+        priority: Priority.low,
+        ongoing: true,
+        autoCancel: false,
+        silent: true,
+        showWhen: false,
+        actions: _androidActions(actions),
+      ),
+    ),
+  );
 
   @override
   Future<void> cancel(int id) => _plugin.cancel(id: id);

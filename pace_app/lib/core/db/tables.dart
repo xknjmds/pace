@@ -39,6 +39,10 @@ class Settings extends Table with SyncColumns {
   BoolColumn get lowEnergyEnabled =>
       boolean().withDefault(const Constant(false))();
 
+  /// v3: keep a "capture a thought" notification with an inline reply field.
+  BoolColumn get captureShortcutEnabled =>
+      boolean().withDefault(const Constant(true))();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }

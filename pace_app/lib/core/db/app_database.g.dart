@@ -111,6 +111,21 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _captureShortcutEnabledMeta =
+      const VerificationMeta('captureShortcutEnabled');
+  @override
+  late final GeneratedColumn<bool> captureShortcutEnabled =
+      GeneratedColumn<bool>(
+        'capture_shortcut_enabled',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("capture_shortcut_enabled" IN (0, 1))',
+        ),
+        defaultValue: const Constant(true),
+      );
   @override
   List<GeneratedColumn> get $columns => [
     updatedAt,
@@ -122,6 +137,7 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     breakfastMinutes,
     lateThresholdMinutes,
     lowEnergyEnabled,
+    captureShortcutEnabled,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -206,6 +222,15 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         ),
       );
     }
+    if (data.containsKey('capture_shortcut_enabled')) {
+      context.handle(
+        _captureShortcutEnabledMeta,
+        captureShortcutEnabled.isAcceptableOrUnknown(
+          data['capture_shortcut_enabled']!,
+          _captureShortcutEnabledMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -251,6 +276,10 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         DriftSqlType.bool,
         data['${effectivePrefix}low_energy_enabled'],
       )!,
+      captureShortcutEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}capture_shortcut_enabled'],
+      )!,
     );
   }
 
@@ -270,6 +299,9 @@ class Setting extends DataClass implements Insertable<Setting> {
   final int breakfastMinutes;
   final int lateThresholdMinutes;
   final bool lowEnergyEnabled;
+
+  /// v3: keep a "capture a thought" notification with an inline reply field.
+  final bool captureShortcutEnabled;
   const Setting({
     required this.updatedAt,
     this.deletedAt,
@@ -280,6 +312,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     required this.breakfastMinutes,
     required this.lateThresholdMinutes,
     required this.lowEnergyEnabled,
+    required this.captureShortcutEnabled,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -295,6 +328,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     map['breakfast_minutes'] = Variable<int>(breakfastMinutes);
     map['late_threshold_minutes'] = Variable<int>(lateThresholdMinutes);
     map['low_energy_enabled'] = Variable<bool>(lowEnergyEnabled);
+    map['capture_shortcut_enabled'] = Variable<bool>(captureShortcutEnabled);
     return map;
   }
 
@@ -311,6 +345,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       breakfastMinutes: Value(breakfastMinutes),
       lateThresholdMinutes: Value(lateThresholdMinutes),
       lowEnergyEnabled: Value(lowEnergyEnabled),
+      captureShortcutEnabled: Value(captureShortcutEnabled),
     );
   }
 
@@ -333,6 +368,9 @@ class Setting extends DataClass implements Insertable<Setting> {
         json['lateThresholdMinutes'],
       ),
       lowEnergyEnabled: serializer.fromJson<bool>(json['lowEnergyEnabled']),
+      captureShortcutEnabled: serializer.fromJson<bool>(
+        json['captureShortcutEnabled'],
+      ),
     );
   }
   @override
@@ -348,6 +386,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       'breakfastMinutes': serializer.toJson<int>(breakfastMinutes),
       'lateThresholdMinutes': serializer.toJson<int>(lateThresholdMinutes),
       'lowEnergyEnabled': serializer.toJson<bool>(lowEnergyEnabled),
+      'captureShortcutEnabled': serializer.toJson<bool>(captureShortcutEnabled),
     };
   }
 
@@ -361,6 +400,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     int? breakfastMinutes,
     int? lateThresholdMinutes,
     bool? lowEnergyEnabled,
+    bool? captureShortcutEnabled,
   }) => Setting(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -371,6 +411,8 @@ class Setting extends DataClass implements Insertable<Setting> {
     breakfastMinutes: breakfastMinutes ?? this.breakfastMinutes,
     lateThresholdMinutes: lateThresholdMinutes ?? this.lateThresholdMinutes,
     lowEnergyEnabled: lowEnergyEnabled ?? this.lowEnergyEnabled,
+    captureShortcutEnabled:
+        captureShortcutEnabled ?? this.captureShortcutEnabled,
   );
   Setting copyWithCompanion(SettingsCompanion data) {
     return Setting(
@@ -395,6 +437,9 @@ class Setting extends DataClass implements Insertable<Setting> {
       lowEnergyEnabled: data.lowEnergyEnabled.present
           ? data.lowEnergyEnabled.value
           : this.lowEnergyEnabled,
+      captureShortcutEnabled: data.captureShortcutEnabled.present
+          ? data.captureShortcutEnabled.value
+          : this.captureShortcutEnabled,
     );
   }
 
@@ -409,7 +454,8 @@ class Setting extends DataClass implements Insertable<Setting> {
           ..write('windDownLeadMinutes: $windDownLeadMinutes, ')
           ..write('breakfastMinutes: $breakfastMinutes, ')
           ..write('lateThresholdMinutes: $lateThresholdMinutes, ')
-          ..write('lowEnergyEnabled: $lowEnergyEnabled')
+          ..write('lowEnergyEnabled: $lowEnergyEnabled, ')
+          ..write('captureShortcutEnabled: $captureShortcutEnabled')
           ..write(')'))
         .toString();
   }
@@ -425,6 +471,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     breakfastMinutes,
     lateThresholdMinutes,
     lowEnergyEnabled,
+    captureShortcutEnabled,
   );
   @override
   bool operator ==(Object other) =>
@@ -438,7 +485,8 @@ class Setting extends DataClass implements Insertable<Setting> {
           other.windDownLeadMinutes == this.windDownLeadMinutes &&
           other.breakfastMinutes == this.breakfastMinutes &&
           other.lateThresholdMinutes == this.lateThresholdMinutes &&
-          other.lowEnergyEnabled == this.lowEnergyEnabled);
+          other.lowEnergyEnabled == this.lowEnergyEnabled &&
+          other.captureShortcutEnabled == this.captureShortcutEnabled);
 }
 
 class SettingsCompanion extends UpdateCompanion<Setting> {
@@ -451,6 +499,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
   final Value<int> breakfastMinutes;
   final Value<int> lateThresholdMinutes;
   final Value<bool> lowEnergyEnabled;
+  final Value<bool> captureShortcutEnabled;
   const SettingsCompanion({
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -461,6 +510,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     this.breakfastMinutes = const Value.absent(),
     this.lateThresholdMinutes = const Value.absent(),
     this.lowEnergyEnabled = const Value.absent(),
+    this.captureShortcutEnabled = const Value.absent(),
   });
   SettingsCompanion.insert({
     required DateTime updatedAt,
@@ -472,6 +522,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     this.breakfastMinutes = const Value.absent(),
     this.lateThresholdMinutes = const Value.absent(),
     this.lowEnergyEnabled = const Value.absent(),
+    this.captureShortcutEnabled = const Value.absent(),
   }) : updatedAt = Value(updatedAt);
   static Insertable<Setting> custom({
     Expression<DateTime>? updatedAt,
@@ -483,6 +534,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Expression<int>? breakfastMinutes,
     Expression<int>? lateThresholdMinutes,
     Expression<bool>? lowEnergyEnabled,
+    Expression<bool>? captureShortcutEnabled,
   }) {
     return RawValuesInsertable({
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -497,6 +549,8 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
       if (lateThresholdMinutes != null)
         'late_threshold_minutes': lateThresholdMinutes,
       if (lowEnergyEnabled != null) 'low_energy_enabled': lowEnergyEnabled,
+      if (captureShortcutEnabled != null)
+        'capture_shortcut_enabled': captureShortcutEnabled,
     });
   }
 
@@ -510,6 +564,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Value<int>? breakfastMinutes,
     Value<int>? lateThresholdMinutes,
     Value<bool>? lowEnergyEnabled,
+    Value<bool>? captureShortcutEnabled,
   }) {
     return SettingsCompanion(
       updatedAt: updatedAt ?? this.updatedAt,
@@ -521,6 +576,8 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
       breakfastMinutes: breakfastMinutes ?? this.breakfastMinutes,
       lateThresholdMinutes: lateThresholdMinutes ?? this.lateThresholdMinutes,
       lowEnergyEnabled: lowEnergyEnabled ?? this.lowEnergyEnabled,
+      captureShortcutEnabled:
+          captureShortcutEnabled ?? this.captureShortcutEnabled,
     );
   }
 
@@ -554,6 +611,11 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     if (lowEnergyEnabled.present) {
       map['low_energy_enabled'] = Variable<bool>(lowEnergyEnabled.value);
     }
+    if (captureShortcutEnabled.present) {
+      map['capture_shortcut_enabled'] = Variable<bool>(
+        captureShortcutEnabled.value,
+      );
+    }
     return map;
   }
 
@@ -568,7 +630,8 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
           ..write('windDownLeadMinutes: $windDownLeadMinutes, ')
           ..write('breakfastMinutes: $breakfastMinutes, ')
           ..write('lateThresholdMinutes: $lateThresholdMinutes, ')
-          ..write('lowEnergyEnabled: $lowEnergyEnabled')
+          ..write('lowEnergyEnabled: $lowEnergyEnabled, ')
+          ..write('captureShortcutEnabled: $captureShortcutEnabled')
           ..write(')'))
         .toString();
   }
@@ -4080,6 +4143,7 @@ typedef $$SettingsTableCreateCompanionBuilder =
       Value<int> breakfastMinutes,
       Value<int> lateThresholdMinutes,
       Value<bool> lowEnergyEnabled,
+      Value<bool> captureShortcutEnabled,
     });
 typedef $$SettingsTableUpdateCompanionBuilder =
     SettingsCompanion Function({
@@ -4092,6 +4156,7 @@ typedef $$SettingsTableUpdateCompanionBuilder =
       Value<int> breakfastMinutes,
       Value<int> lateThresholdMinutes,
       Value<bool> lowEnergyEnabled,
+      Value<bool> captureShortcutEnabled,
     });
 
 class $$SettingsTableFilterComposer
@@ -4145,6 +4210,11 @@ class $$SettingsTableFilterComposer
 
   ColumnFilters<bool> get lowEnergyEnabled => $composableBuilder(
     column: $table.lowEnergyEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get captureShortcutEnabled => $composableBuilder(
+    column: $table.captureShortcutEnabled,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4202,6 +4272,11 @@ class $$SettingsTableOrderingComposer
     column: $table.lowEnergyEnabled,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get captureShortcutEnabled => $composableBuilder(
+    column: $table.captureShortcutEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettingsTableAnnotationComposer
@@ -4251,6 +4326,11 @@ class $$SettingsTableAnnotationComposer
     column: $table.lowEnergyEnabled,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get captureShortcutEnabled => $composableBuilder(
+    column: $table.captureShortcutEnabled,
+    builder: (column) => column,
+  );
 }
 
 class $$SettingsTableTableManager
@@ -4290,6 +4370,7 @@ class $$SettingsTableTableManager
                 Value<int> breakfastMinutes = const Value.absent(),
                 Value<int> lateThresholdMinutes = const Value.absent(),
                 Value<bool> lowEnergyEnabled = const Value.absent(),
+                Value<bool> captureShortcutEnabled = const Value.absent(),
               }) => SettingsCompanion(
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -4300,6 +4381,7 @@ class $$SettingsTableTableManager
                 breakfastMinutes: breakfastMinutes,
                 lateThresholdMinutes: lateThresholdMinutes,
                 lowEnergyEnabled: lowEnergyEnabled,
+                captureShortcutEnabled: captureShortcutEnabled,
               ),
           createCompanionCallback:
               ({
@@ -4312,6 +4394,7 @@ class $$SettingsTableTableManager
                 Value<int> breakfastMinutes = const Value.absent(),
                 Value<int> lateThresholdMinutes = const Value.absent(),
                 Value<bool> lowEnergyEnabled = const Value.absent(),
+                Value<bool> captureShortcutEnabled = const Value.absent(),
               }) => SettingsCompanion.insert(
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -4322,6 +4405,7 @@ class $$SettingsTableTableManager
                 breakfastMinutes: breakfastMinutes,
                 lateThresholdMinutes: lateThresholdMinutes,
                 lowEnergyEnabled: lowEnergyEnabled,
+                captureShortcutEnabled: captureShortcutEnabled,
               ),
           withReferenceMapper: (p0) => p0
               .map(

@@ -8,6 +8,7 @@ import '../../../core/widgets/cairn_mark.dart';
 import '../../../routes.dart';
 import '../../deadlines/application/deadline_providers.dart';
 import '../../deadlines/domain/deadline_reminders.dart';
+import '../../inbox/application/inbox_providers.dart';
 import '../../routine/application/morning_inputs.dart';
 import '../../routine/application/routine_providers.dart';
 import '../../routine/domain/routine_reminder_planner.dart';
@@ -74,6 +75,7 @@ class TodayScreen extends ConsumerWidget {
     final log = ref.watch(dailyLogProvider(dateKey(now))).value;
     final pending = ref.watch(pendingTasksProvider).value ?? const <Task>[];
     final lowEnergy = ref.watch(lowEnergyProvider);
+    final inboxCount = ref.watch(inboxCountProvider);
     final theme = Theme.of(context);
 
     final hasSchedule = schedules.isNotEmpty;
@@ -106,7 +108,7 @@ class TodayScreen extends ConsumerWidget {
         .where((t) => t.dueAt.toLocal().isBefore(now.add(deadlineWindow)))
         .toList();
 
-    final empty = !hasSchedule && pending.isEmpty;
+    final empty = !hasSchedule && pending.isEmpty && inboxCount == 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -219,6 +221,18 @@ class TodayScreen extends ConsumerWidget {
                         ],
                       ),
               ),
+              if (inboxCount > 0)
+                ListTile(
+                  key: const ValueKey('inbox-count'),
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  leading: const Icon(Icons.inbox_outlined, size: 20),
+                  title: Text(
+                    'Inbox: $inboxCount waiting',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  onTap: () => Navigator.of(context).pushNamed(Routes.inbox),
+                ),
               if (!lowEnergy && tomorrow != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
