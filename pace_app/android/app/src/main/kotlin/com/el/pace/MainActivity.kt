@@ -1,9 +1,12 @@
 package com.el.pace
 
 import android.app.AppOpsManager
+import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Process
 import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
@@ -12,11 +15,14 @@ import io.flutter.plugin.common.MethodChannel
 
 /**
  * The Flutter activity, plus the "com.el.pace/gate" channel the app gate
- * uses (lib/features/blocking/application/app_gate.dart).
+ * uses (lib/features/blocking/application/app_gate.dart) and the
+ * "com.el.pace/device" channel for the phone maker's settings pages
+ * (lib/core/platform/device_settings.dart).
  */
 class MainActivity : FlutterActivity() {
   override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
     super.configureFlutterEngine(flutterEngine)
+    configureDeviceChannel(flutterEngine)
     MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.el.pace/gate")
         .setMethodCallHandler { call, result ->
           val store = GateStore(this)
@@ -65,6 +71,71 @@ class MainActivity : FlutterActivity() {
             else -> result.notImplemented()
           }
         }
+  }
+
+  private fun configureDeviceChannel(flutterEngine: FlutterEngine) {
+    MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.el.pace/device")
+        .setMethodCallHandler { call, result ->
+          when (call.method) {
+            "manufacturer" -> result.success(Build.MANUFACTURER ?: "")
+            "openAutoStart" -> result.success(openAutoStart())
+            "openAppDetails" -> {
+              openAppDetails()
+              result.success(null)
+            }
+            else -> result.notImplemented()
+          }
+        }
+  }
+
+  /**
+   * Brand auto-start pages. They are private screens of each maker's
+   * security app and move between versions, so each is only tried; the
+   * app info page is the fallback.
+   */
+  private val autoStartPages =
+      listOf(
+          "com.miui.securitycenter" to
+              "com.miui.permcenter.autostart.AutoStartManagementActivity",
+          "com.coloros.safecenter" to
+              "com.coloros.safecenter.permission.startup.StartupAppListActivity",
+          "com.coloros.safecenter" to
+              "com.coloros.safecenter.startupapp.StartupAppListActivity",
+          "com.oplus.safecenter" to
+              "com.oplus.safecenter.permission.startup.StartupAppListActivity",
+          "com.oppo.safe" to "com.oppo.safe.permission.startup.StartupAppListActivity",
+          "com.vivo.permissionmanager" to
+              "com.vivo.permissionmanager.activity.BgStartUpManagerActivity",
+          "com.iqoo.secure" to "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity",
+          "com.huawei.systemmanager" to
+              "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity",
+          "com.huawei.systemmanager" to
+              "com.huawei.systemmanager.optimize.process.ProtectActivity",
+          "com.transsion.phonemaster" to "com.cyin.himgr.autostart.AutoStartActivity",
+      )
+
+  private fun openAutoStart(): Boolean {
+    for ((pkg, cls) in autoStartPages) {
+      try {
+        startActivity(
+            Intent().setComponent(ComponentName(pkg, cls))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        return true
+      } catch (_: ActivityNotFoundException) {
+      } catch (_: SecurityException) {}
+    }
+    openAppDetails()
+    return false
+  }
+
+  private fun openAppDetails() {
+    try {
+      startActivity(
+          Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
+              .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (_: ActivityNotFoundException) {
+      startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
   }
 
   private fun hasUsageAccess(): Boolean {

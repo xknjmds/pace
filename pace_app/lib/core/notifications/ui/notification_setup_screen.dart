@@ -10,7 +10,9 @@ import '../../platform/platform_features.dart';
 import '../../time/clock.dart';
 import '../../time/local_time.dart';
 import '../../db/app_database.dart';
+import '../../platform/device_settings.dart';
 import '../notification_permissions.dart';
+import '../phone_maker_guide.dart';
 import '../notification_providers.dart';
 import '../../widgets/pace_page.dart';
 
@@ -174,6 +176,13 @@ class _NotificationSetupScreenState
           action: 'Turn off optimisation',
           onPressed: () => _run(gateway.requestBatteryUnrestricted),
         ),
+        if (guideFor(ref.watch(manufacturerProvider).value ?? '')
+            case final guide?)
+          _MakerCard(
+            guide: guide,
+            onAutoStart: () => ref.read(deviceSettingsProvider).openAutoStart(),
+            onAppInfo: () => ref.read(deviceSettingsProvider).openAppDetails(),
+          ),
         const SectionHeader('Check it works'),
         Card(
           child: Padding(
@@ -333,6 +342,95 @@ class _StepCard extends StatelessWidget {
                 ],
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Brand extras: the steps a phone maker adds on top of Android's own.
+class _MakerCard extends StatelessWidget {
+  const _MakerCard({
+    required this.guide,
+    required this.onAutoStart,
+    required this.onAppInfo,
+  });
+
+  final PhoneMakerGuide guide;
+  final VoidCallback onAutoStart;
+  final VoidCallback onAppInfo;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      key: const ValueKey('maker-guide'),
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        borderRadius: PaceRadius.cardAll,
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: .6)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'On your ${guide.brand} phone',
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'This brand can close apps on its own to save battery. These '
+              'steps keep reminders arriving. Names differ a little between '
+              'versions.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 10),
+            for (final (i, step) in guide.steps.indexed)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 22,
+                      child: Text(
+                        '${i + 1}.',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(step, style: theme.textTheme.bodyMedium),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                if (guide.hasAutoStartPage)
+                  PressScale(
+                    child: FilledButton.tonal(
+                      key: const ValueKey('open-autostart'),
+                      onPressed: onAutoStart,
+                      child: const Text('Open auto-start'),
+                    ),
+                  ),
+                TextButton(
+                  key: const ValueKey('open-app-info'),
+                  onPressed: onAppInfo,
+                  child: const Text('App info'),
+                ),
+              ],
+            ),
           ],
         ),
       ),

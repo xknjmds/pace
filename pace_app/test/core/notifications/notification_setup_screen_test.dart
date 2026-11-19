@@ -5,6 +5,7 @@ import 'package:drift/native.dart';
 import 'package:pace/core/db/app_database.dart';
 import 'package:pace/core/db/database_provider.dart';
 import 'package:pace/core/notifications/notification_permissions.dart';
+import 'package:pace/core/platform/device_settings.dart';
 import 'package:pace/core/notifications/notification_providers.dart';
 import 'package:pace/core/notifications/ui/notification_setup_screen.dart';
 import 'package:pace/core/theme/pace_theme.dart';
@@ -24,6 +25,7 @@ void main() {
     NotificationPermissions state = NotificationPermissions.none,
     bool grantOnRequest = true,
     Size size = const Size(360, 1600),
+    DeviceSettings device = const _FakeDevice(''),
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
@@ -39,6 +41,7 @@ void main() {
           appDatabaseProvider.overrideWithValue(db),
           notificationGatewayProvider.overrideWithValue(gateway),
           clockProvider.overrideWithValue(() => frozen),
+          deviceSettingsProvider.overrideWithValue(device),
         ],
         child: MaterialApp(
           theme: PaceTheme.light(),
@@ -162,4 +165,41 @@ void main() {
       );
     },
   );
+
+  testWidgets('a Xiaomi phone gets its own steps and auto-start button', (
+    tester,
+  ) async {
+    final device = _FakeDevice.recording('Xiaomi');
+    await pump(tester, device: device);
+    expect(find.byKey(const ValueKey('maker-guide')), findsOneWidget);
+    expect(find.text('On your Xiaomi, Redmi or POCO phone'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('open-autostart')));
+    await tester.pumpAndSettle();
+    expect(device.opened, ['autostart']);
+  });
+
+  testWidgets('stock Android shows no brand card', (tester) async {
+    await pump(tester, device: _FakeDevice('Google'));
+    expect(find.byKey(const ValueKey('maker-guide')), findsNothing);
+  });
+}
+
+class _FakeDevice implements DeviceSettings {
+  const _FakeDevice(this.maker) : opened = const [];
+
+  _FakeDevice.recording(this.maker) : opened = [];
+
+  final String maker;
+  final List<String> opened;
+
+  @override
+  Future<String> manufacturer() async => maker;
+  @override
+  Future<bool> openAutoStart() async {
+    opened.add('autostart');
+    return true;
+  }
+
+  @override
+  Future<void> openAppDetails() async => opened.add('details');
 }

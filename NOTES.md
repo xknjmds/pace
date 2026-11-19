@@ -360,3 +360,17 @@ a real phone**, so A2 and B1 are not done in the PLAN.md sense.
 - The local `test/zz_shots` goldens for the late card (`late0748`, `late0804`) now differ,
   because the card shows recovery tips. Regenerate them with `--update-goldens` if the new
   look is right.
+
+### D3. Reliable reminders on brand phones
+- Built into the existing Reminders screen (`core/notifications/ui/notification_setup_screen.dart`),
+  which already had notifications, exact timing, battery optimisation and the one-minute test
+  reminder. The first-run setup now ends there on Android.
+- New: a brand card from `guideFor(Build.MANUFACTURER)` for Xiaomi/Redmi/POCO,
+  OPPO/realme/OnePlus, vivo, Infinix/TECNO/itel, Huawei/Honor and Samsung, through the new
+  `com.el.pace/device` channel. "Open auto-start" tries each maker's private settings
+  activity in turn and falls back to App info. Those activity names move between OS versions;
+  any that fail just fall through.
+- **Verified here:** `assembleDebug` compiles the Kotlin.
+- **Not verified:** that any auto-start page actually opens, and that the test reminder fires
+  with the screen locked on the owner's phone **and on a budget Xiaomi or OPPO phone**. This
+  is the D3 "done when" and it is still open.
