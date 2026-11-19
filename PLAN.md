@@ -353,6 +353,92 @@ Done when
 
 ---
 
+## Phase D: ready to sell (from pitch panel feedback, 2026-11-19)
+
+The panel suggested activity detection, ranking, a discipline index, gamification, vouchers, a pre-survey and mental health support. Each idea is reshaped to fit PACE's rules:
+- Nothing resets, and there is no score that can fall.
+- No ranking against others.
+- Sensors only suggest, and the user confirms (like rule 10).
+- The app stays offline.
+
+Selling: Play Store, offline, with a PACE+ subscription (₱49/month, plus yearly and lifetime). There is no backend. D-Launch ships first; each D-Update is its own release, ordered by closed-test feedback.
+
+### D-Launch
+
+**D1. First-run setup survey**
+- Shown once and skippable (settings `onboarded_at`). It asks:
+  - school start per weekday
+  - commute and get-ready minutes
+  - wake time and sleep target
+  - morning or night person
+  - optionally, a schedule photo import (A3)
+- A pure function maps the answers to settings and weekday schedules. Ends with the D3 reliability step.
+
+Done when
+- A fresh install reaches a working Today screen with a leave-by time in under 2 minutes
+- Skipping always works, and every answer can be changed later in settings
+
+**D2. Recovery plan, mood, welcome back, steady mode**
+- Recovery plan: build on `computeLatePlan`, as a calm "Here's the new plan" card with one tap to accept
+- Optional evening mood (good, okay, drained) in a nullable `daily_logs.mood`. "Drained" offers a
+  light day tomorrow (low-energy mode for that date only), never automatically. Trends show neutral counts
+- Offline "If you're struggling" page with bundled hotline numbers. It says plainly it is not therapy
+- Welcome back: after 5 or more days away, a light plan for today, and the gap is never mentioned
+- Steady mode: fewer reminders (wake and leave only) for settled routines, offered gently and reversible
+
+Done when
+- Re-plan, `isReturning` and steady-mode filters are unit tested
+- Mood survives a restart, and the light day affects only that date
+- No screen judges a "drained" answer
+
+**D3. Reliable reminders setup (Android)**
+- Guided battery and auto-start steps for the detected phone maker (Xiaomi/Redmi/POCO, Oppo/realme,
+  Vivo, Infinix/Tecno, Samsung, Huawei), with buttons to the right settings pages and a fallback
+- "Test a reminder" schedules one through `scheduled_notifications`, 1 minute ahead
+
+Done when
+- The test reminder fires with the screen locked on the owner's phone and on a budget Xiaomi or Oppo phone
+
+**D4. PACE+ subscription and Play Store release**
+- `in_app_purchase` (ask first). Entitlement comes from Play's cached purchases, with no backend. When a
+  subscription lapses, nothing the user made is locked
+- Free: the routine core, recovery, mood, help page, welcome back, steady mode. Mental health and recovery
+  are never paywalled. PACE+: blocking gate, extra widget layouts, finance, analytics depth, later
+  extras. The owner confirms prices and the split first
+- Calendar sync is hidden at launch (sensitive scope needs Google verification)
+- Release prep: privacy policy, Data Safety form, content rating, Play declarations for usage access
+  and overlay, store listing, and a closed test with 12+ testers for 14 days. Findings go in `NOTES.md`
+
+Done when
+- Purchase, restore and cancel work in a test track on a real phone
+- The free core works with no purchase and offline
+
+### D-Updates
+
+**D5. Tuck's journey.** A pure function `journeyFrom(daysDone)` returns a position that never decreases. Personal-first milestones replace ranking. No new table. Respects reduced motion and low-energy mode.
+
+**D6. Self-set rewards.** A `rewards` table. The user writes their own ("5 days done → milk tea"). An unclaimed reward never expires.
+
+**D7. Next-routine suggestions and year-in-review.** Gentle, dismissible suggestions for the next thing to work on. An end-of-school-year recap with positive totals only.
+
+**D8. Activity spike (Android).**
+- Wake: first screen use from usage events, using the existing permission.
+- Movement: step counter (`ACTIVITY_RECOGNITION`, ask first).
+- Sleep: compare the phone-use gap with the optional Google Sleep API (`play-services-location`, ask first). No continuous accelerometer service.
+- Record accuracy for 3 nights in `NOTES.md`, and stop if neither approach is reliable.
+
+**D9. Activity suggestions.**
+- "Up at 6:42. Use that?", a movement-done suggestion, and a sleep estimate saved to a nullable `daily_logs.sleep_estimated_start`.
+- Pure `estimateSleep` and `suggestFromSignals` functions, with tests.
+- One tap to accept, never automatic. The wording checks and never accuses.
+- Gated by `activityDetection` in `platform_features.dart`, with an off switch.
+
+**D10. Calendar sync returns** after Google verification.
+
+Not planned for now: an AI chatbot (needs a network), and partner vouchers (need a backend, M11 at the earliest).
+
+---
+
 ## M11. Accounts and sync (the SaaS version, after v2)
 
 Drift stays the source of truth on the device. Supabase (Postgres, auth, row-level security)
