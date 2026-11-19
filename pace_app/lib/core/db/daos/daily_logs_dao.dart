@@ -76,4 +76,8 @@ class DailyLogsDao extends DatabaseAccessor<AppDatabase>
 
   Future<DailyLog> setRoutineDone(DateTime day, bool done) =>
       change(day, (_) => DailyLogsCompanion(routineDone: Value(done)));
+
+  /// Null clears it.
+  Future<DailyLog> setMood(DateTime day, Mood? mood) =>
+      change(day, (_) => DailyLogsCompanion(mood: Value(mood)));
 }

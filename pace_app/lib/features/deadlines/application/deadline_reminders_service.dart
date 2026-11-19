@@ -1,3 +1,4 @@
+import '../../../core/energy/low_energy.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/notifications/reminder_actions.dart';
 import '../../../core/notifications/reminder_scheduler.dart';
@@ -44,7 +45,7 @@ class DeadlineReminders {
         wakePlanFrom(settings),
         task.dueAt.toLocal(),
       ).plusMinutes(morningOffsetMinutes),
-      lowEnergy: settings.lowEnergyEnabled,
+      lowEnergy: settings.lowEnergyAt(t),
       mutedDates: {
         for (final m in mutes)
           if (m.kind == ReminderKind.deadline && m.ownerId == taskId) m.date,

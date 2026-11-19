@@ -24,6 +24,7 @@ import '../../habits/application/habit_providers.dart';
 import '../../habits/application/habit_service.dart';
 import '../../habits/domain/habit_planner.dart';
 import '../../habits/ui/habit_sheet.dart';
+import '../../wellbeing/application/wellbeing_providers.dart';
 import 'weekday_edit_sheet.dart';
 
 final weekdaySchedulesProvider = StreamProvider<List<WeekdaySchedule>>(
@@ -408,6 +409,27 @@ class RoutineSettingsScreen extends ConsumerWidget {
                   'reminders pause.',
               value: settings.lowEnergyEnabled,
               onChanged: (on) => ref.read(setLowEnergyProvider)(on),
+            ),
+            PaceTile.toggle(
+              key: const ValueKey('steady-setting'),
+              icon: Icons.landscape_rounded,
+              kind: PastelKind.leave,
+              title: 'Steady mode',
+              subtitle:
+                  'For mornings that run on their own: only the wake and '
+                  'leave reminders. Today stays the same.',
+              value: settings.steadyMode,
+              onChanged: (on) =>
+                  ref.read(wellbeingServiceProvider).setSteadyMode(on),
+            ),
+            PaceTile(
+              key: const ValueKey('support-setting'),
+              icon: Icons.favorite_outline_rounded,
+              kind: PastelKind.evening,
+              title: 'If you\'re struggling',
+              subtitle: 'Kind words and people to call',
+              chevron: true,
+              onTap: () => Navigator.of(context).pushNamed(Routes.support),
             ),
           ],
         ),

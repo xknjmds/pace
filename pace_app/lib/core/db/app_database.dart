@@ -117,7 +117,7 @@ class AppDatabase extends _$AppDatabase {
   static DateTime _utcNow() => DateTime.now().toUtc();
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   /// Schema history. Never edit a released step (CLAUDE.md rule 8); add one,
   /// then regenerate: `drift_dev schema dump`, then `schema steps` into
@@ -133,6 +133,8 @@ class AppDatabase extends _$AppDatabase {
   ///   `tasks.submitted_at`
   /// - v7 (v2.1): `check_ins`; `tasks.submit_note`
   /// - v8 (D1): `settings.onboarded_at`
+  /// - v9 (D2): `daily_logs.mood`; settings for the light day, steady mode
+  ///   and welcome back
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
@@ -215,6 +217,19 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(schema.settings, schema.settings.onboardedAt);
         // Anyone upgrading has already set the app up by hand.
         await customStatement('UPDATE settings SET onboarded_at = updated_at');
+      },
+      from8To9: (m, schema) async {
+        await m.addColumn(schema.dailyLogs, schema.dailyLogs.mood);
+        final s = schema.settings;
+        for (final column in [
+          s.lightDayDate,
+          s.steadyMode,
+          s.steadyOfferDismissedAt,
+          s.lastOpenedAt,
+          s.welcomeBackDate,
+        ]) {
+          await m.addColumn(s, column);
+        }
       },
     ),
     beforeOpen: (_) => settingsDao.ensureRow(),

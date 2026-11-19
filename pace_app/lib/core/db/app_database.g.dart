@@ -296,6 +296,65 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _lightDayDateMeta = const VerificationMeta(
+    'lightDayDate',
+  );
+  @override
+  late final GeneratedColumn<String> lightDayDate = GeneratedColumn<String>(
+    'light_day_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _steadyModeMeta = const VerificationMeta(
+    'steadyMode',
+  );
+  @override
+  late final GeneratedColumn<bool> steadyMode = GeneratedColumn<bool>(
+    'steady_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("steady_mode" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _steadyOfferDismissedAtMeta =
+      const VerificationMeta('steadyOfferDismissedAt');
+  @override
+  late final GeneratedColumn<DateTime> steadyOfferDismissedAt =
+      GeneratedColumn<DateTime>(
+        'steady_offer_dismissed_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastOpenedAtMeta = const VerificationMeta(
+    'lastOpenedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastOpenedAt = GeneratedColumn<DateTime>(
+    'last_opened_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _welcomeBackDateMeta = const VerificationMeta(
+    'welcomeBackDate',
+  );
+  @override
+  late final GeneratedColumn<String> welcomeBackDate = GeneratedColumn<String>(
+    'welcome_back_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     updatedAt,
@@ -322,6 +381,11 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     unlockMinutes,
     calendarSyncedAt,
     onboardedAt,
+    lightDayDate,
+    steadyMode,
+    steadyOfferDismissedAt,
+    lastOpenedAt,
+    welcomeBackDate,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -541,6 +605,48 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         ),
       );
     }
+    if (data.containsKey('light_day_date')) {
+      context.handle(
+        _lightDayDateMeta,
+        lightDayDate.isAcceptableOrUnknown(
+          data['light_day_date']!,
+          _lightDayDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('steady_mode')) {
+      context.handle(
+        _steadyModeMeta,
+        steadyMode.isAcceptableOrUnknown(data['steady_mode']!, _steadyModeMeta),
+      );
+    }
+    if (data.containsKey('steady_offer_dismissed_at')) {
+      context.handle(
+        _steadyOfferDismissedAtMeta,
+        steadyOfferDismissedAt.isAcceptableOrUnknown(
+          data['steady_offer_dismissed_at']!,
+          _steadyOfferDismissedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_opened_at')) {
+      context.handle(
+        _lastOpenedAtMeta,
+        lastOpenedAt.isAcceptableOrUnknown(
+          data['last_opened_at']!,
+          _lastOpenedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('welcome_back_date')) {
+      context.handle(
+        _welcomeBackDateMeta,
+        welcomeBackDate.isAcceptableOrUnknown(
+          data['welcome_back_date']!,
+          _welcomeBackDateMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -646,6 +752,26 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}onboarded_at'],
       ),
+      lightDayDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}light_day_date'],
+      ),
+      steadyMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}steady_mode'],
+      )!,
+      steadyOfferDismissedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}steady_offer_dismissed_at'],
+      ),
+      lastOpenedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_opened_at'],
+      ),
+      welcomeBackDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}welcome_back_date'],
+      ),
     );
   }
 
@@ -701,6 +827,22 @@ class Setting extends DataClass implements Insertable<Setting> {
 
   /// v8: when the first-run setup was finished or skipped; null shows it.
   final DateTime? onboardedAt;
+
+  /// v9: a one-day low-energy mode (`yyyy-MM-dd`), offered after a drained
+  /// evening or a return after time away. Past dates mean nothing.
+  final String? lightDayDate;
+
+  /// v9: fewer routine reminders (wake and leave only) once mornings are
+  /// steady. [steadyOfferDismissedAt] remembers a "no thanks".
+  final bool steadyMode;
+  final DateTime? steadyOfferDismissedAt;
+
+  /// v9: last time the app was opened, to notice a return after a break.
+  final DateTime? lastOpenedAt;
+
+  /// v9: the day (`yyyy-MM-dd`) Today greets a returning owner; cleared once
+  /// the card is closed.
+  final String? welcomeBackDate;
   const Setting({
     required this.updatedAt,
     this.deletedAt,
@@ -726,6 +868,11 @@ class Setting extends DataClass implements Insertable<Setting> {
     required this.unlockMinutes,
     this.calendarSyncedAt,
     this.onboardedAt,
+    this.lightDayDate,
+    required this.steadyMode,
+    this.steadyOfferDismissedAt,
+    this.lastOpenedAt,
+    this.welcomeBackDate,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -765,6 +912,21 @@ class Setting extends DataClass implements Insertable<Setting> {
     }
     if (!nullToAbsent || onboardedAt != null) {
       map['onboarded_at'] = Variable<DateTime>(onboardedAt);
+    }
+    if (!nullToAbsent || lightDayDate != null) {
+      map['light_day_date'] = Variable<String>(lightDayDate);
+    }
+    map['steady_mode'] = Variable<bool>(steadyMode);
+    if (!nullToAbsent || steadyOfferDismissedAt != null) {
+      map['steady_offer_dismissed_at'] = Variable<DateTime>(
+        steadyOfferDismissedAt,
+      );
+    }
+    if (!nullToAbsent || lastOpenedAt != null) {
+      map['last_opened_at'] = Variable<DateTime>(lastOpenedAt);
+    }
+    if (!nullToAbsent || welcomeBackDate != null) {
+      map['welcome_back_date'] = Variable<String>(welcomeBackDate);
     }
     return map;
   }
@@ -807,6 +969,19 @@ class Setting extends DataClass implements Insertable<Setting> {
       onboardedAt: onboardedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(onboardedAt),
+      lightDayDate: lightDayDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lightDayDate),
+      steadyMode: Value(steadyMode),
+      steadyOfferDismissedAt: steadyOfferDismissedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(steadyOfferDismissedAt),
+      lastOpenedAt: lastOpenedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastOpenedAt),
+      welcomeBackDate: welcomeBackDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(welcomeBackDate),
     );
   }
 
@@ -858,6 +1033,13 @@ class Setting extends DataClass implements Insertable<Setting> {
         json['calendarSyncedAt'],
       ),
       onboardedAt: serializer.fromJson<DateTime?>(json['onboardedAt']),
+      lightDayDate: serializer.fromJson<String?>(json['lightDayDate']),
+      steadyMode: serializer.fromJson<bool>(json['steadyMode']),
+      steadyOfferDismissedAt: serializer.fromJson<DateTime?>(
+        json['steadyOfferDismissedAt'],
+      ),
+      lastOpenedAt: serializer.fromJson<DateTime?>(json['lastOpenedAt']),
+      welcomeBackDate: serializer.fromJson<String?>(json['welcomeBackDate']),
     );
   }
   @override
@@ -888,6 +1070,13 @@ class Setting extends DataClass implements Insertable<Setting> {
       'unlockMinutes': serializer.toJson<int>(unlockMinutes),
       'calendarSyncedAt': serializer.toJson<DateTime?>(calendarSyncedAt),
       'onboardedAt': serializer.toJson<DateTime?>(onboardedAt),
+      'lightDayDate': serializer.toJson<String?>(lightDayDate),
+      'steadyMode': serializer.toJson<bool>(steadyMode),
+      'steadyOfferDismissedAt': serializer.toJson<DateTime?>(
+        steadyOfferDismissedAt,
+      ),
+      'lastOpenedAt': serializer.toJson<DateTime?>(lastOpenedAt),
+      'welcomeBackDate': serializer.toJson<String?>(welcomeBackDate),
     };
   }
 
@@ -916,6 +1105,11 @@ class Setting extends DataClass implements Insertable<Setting> {
     int? unlockMinutes,
     Value<DateTime?> calendarSyncedAt = const Value.absent(),
     Value<DateTime?> onboardedAt = const Value.absent(),
+    Value<String?> lightDayDate = const Value.absent(),
+    bool? steadyMode,
+    Value<DateTime?> steadyOfferDismissedAt = const Value.absent(),
+    Value<DateTime?> lastOpenedAt = const Value.absent(),
+    Value<String?> welcomeBackDate = const Value.absent(),
   }) => Setting(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -950,6 +1144,15 @@ class Setting extends DataClass implements Insertable<Setting> {
         ? calendarSyncedAt.value
         : this.calendarSyncedAt,
     onboardedAt: onboardedAt.present ? onboardedAt.value : this.onboardedAt,
+    lightDayDate: lightDayDate.present ? lightDayDate.value : this.lightDayDate,
+    steadyMode: steadyMode ?? this.steadyMode,
+    steadyOfferDismissedAt: steadyOfferDismissedAt.present
+        ? steadyOfferDismissedAt.value
+        : this.steadyOfferDismissedAt,
+    lastOpenedAt: lastOpenedAt.present ? lastOpenedAt.value : this.lastOpenedAt,
+    welcomeBackDate: welcomeBackDate.present
+        ? welcomeBackDate.value
+        : this.welcomeBackDate,
   );
   Setting copyWithCompanion(SettingsCompanion data) {
     return Setting(
@@ -1019,6 +1222,21 @@ class Setting extends DataClass implements Insertable<Setting> {
       onboardedAt: data.onboardedAt.present
           ? data.onboardedAt.value
           : this.onboardedAt,
+      lightDayDate: data.lightDayDate.present
+          ? data.lightDayDate.value
+          : this.lightDayDate,
+      steadyMode: data.steadyMode.present
+          ? data.steadyMode.value
+          : this.steadyMode,
+      steadyOfferDismissedAt: data.steadyOfferDismissedAt.present
+          ? data.steadyOfferDismissedAt.value
+          : this.steadyOfferDismissedAt,
+      lastOpenedAt: data.lastOpenedAt.present
+          ? data.lastOpenedAt.value
+          : this.lastOpenedAt,
+      welcomeBackDate: data.welcomeBackDate.present
+          ? data.welcomeBackDate.value
+          : this.welcomeBackDate,
     );
   }
 
@@ -1048,7 +1266,12 @@ class Setting extends DataClass implements Insertable<Setting> {
           ..write('windDownLockEnabled: $windDownLockEnabled, ')
           ..write('unlockMinutes: $unlockMinutes, ')
           ..write('calendarSyncedAt: $calendarSyncedAt, ')
-          ..write('onboardedAt: $onboardedAt')
+          ..write('onboardedAt: $onboardedAt, ')
+          ..write('lightDayDate: $lightDayDate, ')
+          ..write('steadyMode: $steadyMode, ')
+          ..write('steadyOfferDismissedAt: $steadyOfferDismissedAt, ')
+          ..write('lastOpenedAt: $lastOpenedAt, ')
+          ..write('welcomeBackDate: $welcomeBackDate')
           ..write(')'))
         .toString();
   }
@@ -1079,6 +1302,11 @@ class Setting extends DataClass implements Insertable<Setting> {
     unlockMinutes,
     calendarSyncedAt,
     onboardedAt,
+    lightDayDate,
+    steadyMode,
+    steadyOfferDismissedAt,
+    lastOpenedAt,
+    welcomeBackDate,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1107,7 +1335,12 @@ class Setting extends DataClass implements Insertable<Setting> {
           other.windDownLockEnabled == this.windDownLockEnabled &&
           other.unlockMinutes == this.unlockMinutes &&
           other.calendarSyncedAt == this.calendarSyncedAt &&
-          other.onboardedAt == this.onboardedAt);
+          other.onboardedAt == this.onboardedAt &&
+          other.lightDayDate == this.lightDayDate &&
+          other.steadyMode == this.steadyMode &&
+          other.steadyOfferDismissedAt == this.steadyOfferDismissedAt &&
+          other.lastOpenedAt == this.lastOpenedAt &&
+          other.welcomeBackDate == this.welcomeBackDate);
 }
 
 class SettingsCompanion extends UpdateCompanion<Setting> {
@@ -1135,6 +1368,11 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
   final Value<int> unlockMinutes;
   final Value<DateTime?> calendarSyncedAt;
   final Value<DateTime?> onboardedAt;
+  final Value<String?> lightDayDate;
+  final Value<bool> steadyMode;
+  final Value<DateTime?> steadyOfferDismissedAt;
+  final Value<DateTime?> lastOpenedAt;
+  final Value<String?> welcomeBackDate;
   const SettingsCompanion({
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -1160,6 +1398,11 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     this.unlockMinutes = const Value.absent(),
     this.calendarSyncedAt = const Value.absent(),
     this.onboardedAt = const Value.absent(),
+    this.lightDayDate = const Value.absent(),
+    this.steadyMode = const Value.absent(),
+    this.steadyOfferDismissedAt = const Value.absent(),
+    this.lastOpenedAt = const Value.absent(),
+    this.welcomeBackDate = const Value.absent(),
   });
   SettingsCompanion.insert({
     required DateTime updatedAt,
@@ -1186,6 +1429,11 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     this.unlockMinutes = const Value.absent(),
     this.calendarSyncedAt = const Value.absent(),
     this.onboardedAt = const Value.absent(),
+    this.lightDayDate = const Value.absent(),
+    this.steadyMode = const Value.absent(),
+    this.steadyOfferDismissedAt = const Value.absent(),
+    this.lastOpenedAt = const Value.absent(),
+    this.welcomeBackDate = const Value.absent(),
   }) : updatedAt = Value(updatedAt);
   static Insertable<Setting> custom({
     Expression<DateTime>? updatedAt,
@@ -1212,6 +1460,11 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Expression<int>? unlockMinutes,
     Expression<DateTime>? calendarSyncedAt,
     Expression<DateTime>? onboardedAt,
+    Expression<String>? lightDayDate,
+    Expression<bool>? steadyMode,
+    Expression<DateTime>? steadyOfferDismissedAt,
+    Expression<DateTime>? lastOpenedAt,
+    Expression<String>? welcomeBackDate,
   }) {
     return RawValuesInsertable({
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -1249,6 +1502,12 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
       if (unlockMinutes != null) 'unlock_minutes': unlockMinutes,
       if (calendarSyncedAt != null) 'calendar_synced_at': calendarSyncedAt,
       if (onboardedAt != null) 'onboarded_at': onboardedAt,
+      if (lightDayDate != null) 'light_day_date': lightDayDate,
+      if (steadyMode != null) 'steady_mode': steadyMode,
+      if (steadyOfferDismissedAt != null)
+        'steady_offer_dismissed_at': steadyOfferDismissedAt,
+      if (lastOpenedAt != null) 'last_opened_at': lastOpenedAt,
+      if (welcomeBackDate != null) 'welcome_back_date': welcomeBackDate,
     });
   }
 
@@ -1277,6 +1536,11 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Value<int>? unlockMinutes,
     Value<DateTime?>? calendarSyncedAt,
     Value<DateTime?>? onboardedAt,
+    Value<String?>? lightDayDate,
+    Value<bool>? steadyMode,
+    Value<DateTime?>? steadyOfferDismissedAt,
+    Value<DateTime?>? lastOpenedAt,
+    Value<String?>? welcomeBackDate,
   }) {
     return SettingsCompanion(
       updatedAt: updatedAt ?? this.updatedAt,
@@ -1304,6 +1568,12 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
       unlockMinutes: unlockMinutes ?? this.unlockMinutes,
       calendarSyncedAt: calendarSyncedAt ?? this.calendarSyncedAt,
       onboardedAt: onboardedAt ?? this.onboardedAt,
+      lightDayDate: lightDayDate ?? this.lightDayDate,
+      steadyMode: steadyMode ?? this.steadyMode,
+      steadyOfferDismissedAt:
+          steadyOfferDismissedAt ?? this.steadyOfferDismissedAt,
+      lastOpenedAt: lastOpenedAt ?? this.lastOpenedAt,
+      welcomeBackDate: welcomeBackDate ?? this.welcomeBackDate,
     );
   }
 
@@ -1388,6 +1658,23 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     if (onboardedAt.present) {
       map['onboarded_at'] = Variable<DateTime>(onboardedAt.value);
     }
+    if (lightDayDate.present) {
+      map['light_day_date'] = Variable<String>(lightDayDate.value);
+    }
+    if (steadyMode.present) {
+      map['steady_mode'] = Variable<bool>(steadyMode.value);
+    }
+    if (steadyOfferDismissedAt.present) {
+      map['steady_offer_dismissed_at'] = Variable<DateTime>(
+        steadyOfferDismissedAt.value,
+      );
+    }
+    if (lastOpenedAt.present) {
+      map['last_opened_at'] = Variable<DateTime>(lastOpenedAt.value);
+    }
+    if (welcomeBackDate.present) {
+      map['welcome_back_date'] = Variable<String>(welcomeBackDate.value);
+    }
     return map;
   }
 
@@ -1417,7 +1704,12 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
           ..write('windDownLockEnabled: $windDownLockEnabled, ')
           ..write('unlockMinutes: $unlockMinutes, ')
           ..write('calendarSyncedAt: $calendarSyncedAt, ')
-          ..write('onboardedAt: $onboardedAt')
+          ..write('onboardedAt: $onboardedAt, ')
+          ..write('lightDayDate: $lightDayDate, ')
+          ..write('steadyMode: $steadyMode, ')
+          ..write('steadyOfferDismissedAt: $steadyOfferDismissedAt, ')
+          ..write('lastOpenedAt: $lastOpenedAt, ')
+          ..write('welcomeBackDate: $welcomeBackDate')
           ..write(')'))
         .toString();
   }
@@ -3084,6 +3376,15 @@ class $DailyLogsTable extends DailyLogs
     defaultValue: const Constant(false),
   );
   @override
+  late final GeneratedColumnWithTypeConverter<Mood?, String> mood =
+      GeneratedColumn<String>(
+        'mood',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      ).withConverter<Mood?>($DailyLogsTable.$convertermoodn);
+  @override
   List<GeneratedColumn> get $columns => [
     updatedAt,
     deletedAt,
@@ -3093,6 +3394,7 @@ class $DailyLogsTable extends DailyLogs
     wakeLoggedAt,
     eatDoneAt,
     routineDone,
+    mood,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3204,6 +3506,12 @@ class $DailyLogsTable extends DailyLogs
         DriftSqlType.bool,
         data['${effectivePrefix}routine_done'],
       )!,
+      mood: $DailyLogsTable.$convertermoodn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}mood'],
+        ),
+      ),
     );
   }
 
@@ -3214,6 +3522,10 @@ class $DailyLogsTable extends DailyLogs
 
   static TypeConverter<List<String>, String> $convertertop3TaskIds =
       const StringListConverter();
+  static JsonTypeConverter2<Mood, String, String> $convertermood =
+      const EnumNameConverter<Mood>(Mood.values);
+  static JsonTypeConverter2<Mood?, String?, String?> $convertermoodn =
+      JsonTypeConverter2.asNullable($convertermood);
 }
 
 class DailyLog extends DataClass implements Insertable<DailyLog> {
@@ -3225,6 +3537,9 @@ class DailyLog extends DataClass implements Insertable<DailyLog> {
   final DateTime? wakeLoggedAt;
   final DateTime? eatDoneAt;
   final bool routineDone;
+
+  /// v9: how the evening felt, from the check-in. Optional and never judged.
+  final Mood? mood;
   const DailyLog({
     required this.updatedAt,
     this.deletedAt,
@@ -3234,6 +3549,7 @@ class DailyLog extends DataClass implements Insertable<DailyLog> {
     this.wakeLoggedAt,
     this.eatDoneAt,
     required this.routineDone,
+    this.mood,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3258,6 +3574,11 @@ class DailyLog extends DataClass implements Insertable<DailyLog> {
       map['eat_done_at'] = Variable<DateTime>(eatDoneAt);
     }
     map['routine_done'] = Variable<bool>(routineDone);
+    if (!nullToAbsent || mood != null) {
+      map['mood'] = Variable<String>(
+        $DailyLogsTable.$convertermoodn.toSql(mood),
+      );
+    }
     return map;
   }
 
@@ -3279,6 +3600,7 @@ class DailyLog extends DataClass implements Insertable<DailyLog> {
           ? const Value.absent()
           : Value(eatDoneAt),
       routineDone: Value(routineDone),
+      mood: mood == null && nullToAbsent ? const Value.absent() : Value(mood),
     );
   }
 
@@ -3296,6 +3618,9 @@ class DailyLog extends DataClass implements Insertable<DailyLog> {
       wakeLoggedAt: serializer.fromJson<DateTime?>(json['wakeLoggedAt']),
       eatDoneAt: serializer.fromJson<DateTime?>(json['eatDoneAt']),
       routineDone: serializer.fromJson<bool>(json['routineDone']),
+      mood: $DailyLogsTable.$convertermoodn.fromJson(
+        serializer.fromJson<String?>(json['mood']),
+      ),
     );
   }
   @override
@@ -3310,6 +3635,9 @@ class DailyLog extends DataClass implements Insertable<DailyLog> {
       'wakeLoggedAt': serializer.toJson<DateTime?>(wakeLoggedAt),
       'eatDoneAt': serializer.toJson<DateTime?>(eatDoneAt),
       'routineDone': serializer.toJson<bool>(routineDone),
+      'mood': serializer.toJson<String?>(
+        $DailyLogsTable.$convertermoodn.toJson(mood),
+      ),
     };
   }
 
@@ -3322,6 +3650,7 @@ class DailyLog extends DataClass implements Insertable<DailyLog> {
     Value<DateTime?> wakeLoggedAt = const Value.absent(),
     Value<DateTime?> eatDoneAt = const Value.absent(),
     bool? routineDone,
+    Value<Mood?> mood = const Value.absent(),
   }) => DailyLog(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -3331,6 +3660,7 @@ class DailyLog extends DataClass implements Insertable<DailyLog> {
     wakeLoggedAt: wakeLoggedAt.present ? wakeLoggedAt.value : this.wakeLoggedAt,
     eatDoneAt: eatDoneAt.present ? eatDoneAt.value : this.eatDoneAt,
     routineDone: routineDone ?? this.routineDone,
+    mood: mood.present ? mood.value : this.mood,
   );
   DailyLog copyWithCompanion(DailyLogsCompanion data) {
     return DailyLog(
@@ -3350,6 +3680,7 @@ class DailyLog extends DataClass implements Insertable<DailyLog> {
       routineDone: data.routineDone.present
           ? data.routineDone.value
           : this.routineDone,
+      mood: data.mood.present ? data.mood.value : this.mood,
     );
   }
 
@@ -3363,7 +3694,8 @@ class DailyLog extends DataClass implements Insertable<DailyLog> {
           ..write('bedLoggedAt: $bedLoggedAt, ')
           ..write('wakeLoggedAt: $wakeLoggedAt, ')
           ..write('eatDoneAt: $eatDoneAt, ')
-          ..write('routineDone: $routineDone')
+          ..write('routineDone: $routineDone, ')
+          ..write('mood: $mood')
           ..write(')'))
         .toString();
   }
@@ -3378,6 +3710,7 @@ class DailyLog extends DataClass implements Insertable<DailyLog> {
     wakeLoggedAt,
     eatDoneAt,
     routineDone,
+    mood,
   );
   @override
   bool operator ==(Object other) =>
@@ -3390,7 +3723,8 @@ class DailyLog extends DataClass implements Insertable<DailyLog> {
           other.bedLoggedAt == this.bedLoggedAt &&
           other.wakeLoggedAt == this.wakeLoggedAt &&
           other.eatDoneAt == this.eatDoneAt &&
-          other.routineDone == this.routineDone);
+          other.routineDone == this.routineDone &&
+          other.mood == this.mood);
 }
 
 class DailyLogsCompanion extends UpdateCompanion<DailyLog> {
@@ -3402,6 +3736,7 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLog> {
   final Value<DateTime?> wakeLoggedAt;
   final Value<DateTime?> eatDoneAt;
   final Value<bool> routineDone;
+  final Value<Mood?> mood;
   final Value<int> rowid;
   const DailyLogsCompanion({
     this.updatedAt = const Value.absent(),
@@ -3412,6 +3747,7 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLog> {
     this.wakeLoggedAt = const Value.absent(),
     this.eatDoneAt = const Value.absent(),
     this.routineDone = const Value.absent(),
+    this.mood = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   DailyLogsCompanion.insert({
@@ -3423,6 +3759,7 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLog> {
     this.wakeLoggedAt = const Value.absent(),
     this.eatDoneAt = const Value.absent(),
     this.routineDone = const Value.absent(),
+    this.mood = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : updatedAt = Value(updatedAt),
        date = Value(date);
@@ -3435,6 +3772,7 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLog> {
     Expression<DateTime>? wakeLoggedAt,
     Expression<DateTime>? eatDoneAt,
     Expression<bool>? routineDone,
+    Expression<String>? mood,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3446,6 +3784,7 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLog> {
       if (wakeLoggedAt != null) 'wake_logged_at': wakeLoggedAt,
       if (eatDoneAt != null) 'eat_done_at': eatDoneAt,
       if (routineDone != null) 'routine_done': routineDone,
+      if (mood != null) 'mood': mood,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3459,6 +3798,7 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLog> {
     Value<DateTime?>? wakeLoggedAt,
     Value<DateTime?>? eatDoneAt,
     Value<bool>? routineDone,
+    Value<Mood?>? mood,
     Value<int>? rowid,
   }) {
     return DailyLogsCompanion(
@@ -3470,6 +3810,7 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLog> {
       wakeLoggedAt: wakeLoggedAt ?? this.wakeLoggedAt,
       eatDoneAt: eatDoneAt ?? this.eatDoneAt,
       routineDone: routineDone ?? this.routineDone,
+      mood: mood ?? this.mood,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3503,6 +3844,11 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLog> {
     if (routineDone.present) {
       map['routine_done'] = Variable<bool>(routineDone.value);
     }
+    if (mood.present) {
+      map['mood'] = Variable<String>(
+        $DailyLogsTable.$convertermoodn.toSql(mood.value),
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3520,6 +3866,7 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLog> {
           ..write('wakeLoggedAt: $wakeLoggedAt, ')
           ..write('eatDoneAt: $eatDoneAt, ')
           ..write('routineDone: $routineDone, ')
+          ..write('mood: $mood, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -9254,6 +9601,11 @@ typedef $$SettingsTableCreateCompanionBuilder =
       Value<int> unlockMinutes,
       Value<DateTime?> calendarSyncedAt,
       Value<DateTime?> onboardedAt,
+      Value<String?> lightDayDate,
+      Value<bool> steadyMode,
+      Value<DateTime?> steadyOfferDismissedAt,
+      Value<DateTime?> lastOpenedAt,
+      Value<String?> welcomeBackDate,
     });
 typedef $$SettingsTableUpdateCompanionBuilder =
     SettingsCompanion Function({
@@ -9281,6 +9633,11 @@ typedef $$SettingsTableUpdateCompanionBuilder =
       Value<int> unlockMinutes,
       Value<DateTime?> calendarSyncedAt,
       Value<DateTime?> onboardedAt,
+      Value<String?> lightDayDate,
+      Value<bool> steadyMode,
+      Value<DateTime?> steadyOfferDismissedAt,
+      Value<DateTime?> lastOpenedAt,
+      Value<String?> welcomeBackDate,
     });
 
 class $$SettingsTableFilterComposer
@@ -9409,6 +9766,31 @@ class $$SettingsTableFilterComposer
 
   ColumnFilters<DateTime> get onboardedAt => $composableBuilder(
     column: $table.onboardedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lightDayDate => $composableBuilder(
+    column: $table.lightDayDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get steadyMode => $composableBuilder(
+    column: $table.steadyMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get steadyOfferDismissedAt => $composableBuilder(
+    column: $table.steadyOfferDismissedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastOpenedAt => $composableBuilder(
+    column: $table.lastOpenedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get welcomeBackDate => $composableBuilder(
+    column: $table.welcomeBackDate,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -9541,6 +9923,31 @@ class $$SettingsTableOrderingComposer
     column: $table.onboardedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get lightDayDate => $composableBuilder(
+    column: $table.lightDayDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get steadyMode => $composableBuilder(
+    column: $table.steadyMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get steadyOfferDismissedAt => $composableBuilder(
+    column: $table.steadyOfferDismissedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastOpenedAt => $composableBuilder(
+    column: $table.lastOpenedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get welcomeBackDate => $composableBuilder(
+    column: $table.welcomeBackDate,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettingsTableAnnotationComposer
@@ -9665,6 +10072,31 @@ class $$SettingsTableAnnotationComposer
     column: $table.onboardedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get lightDayDate => $composableBuilder(
+    column: $table.lightDayDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get steadyMode => $composableBuilder(
+    column: $table.steadyMode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get steadyOfferDismissedAt => $composableBuilder(
+    column: $table.steadyOfferDismissedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastOpenedAt => $composableBuilder(
+    column: $table.lastOpenedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get welcomeBackDate => $composableBuilder(
+    column: $table.welcomeBackDate,
+    builder: (column) => column,
+  );
 }
 
 class $$SettingsTableTableManager
@@ -9719,6 +10151,11 @@ class $$SettingsTableTableManager
                 Value<int> unlockMinutes = const Value.absent(),
                 Value<DateTime?> calendarSyncedAt = const Value.absent(),
                 Value<DateTime?> onboardedAt = const Value.absent(),
+                Value<String?> lightDayDate = const Value.absent(),
+                Value<bool> steadyMode = const Value.absent(),
+                Value<DateTime?> steadyOfferDismissedAt = const Value.absent(),
+                Value<DateTime?> lastOpenedAt = const Value.absent(),
+                Value<String?> welcomeBackDate = const Value.absent(),
               }) => SettingsCompanion(
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -9744,6 +10181,11 @@ class $$SettingsTableTableManager
                 unlockMinutes: unlockMinutes,
                 calendarSyncedAt: calendarSyncedAt,
                 onboardedAt: onboardedAt,
+                lightDayDate: lightDayDate,
+                steadyMode: steadyMode,
+                steadyOfferDismissedAt: steadyOfferDismissedAt,
+                lastOpenedAt: lastOpenedAt,
+                welcomeBackDate: welcomeBackDate,
               ),
           createCompanionCallback:
               ({
@@ -9771,6 +10213,11 @@ class $$SettingsTableTableManager
                 Value<int> unlockMinutes = const Value.absent(),
                 Value<DateTime?> calendarSyncedAt = const Value.absent(),
                 Value<DateTime?> onboardedAt = const Value.absent(),
+                Value<String?> lightDayDate = const Value.absent(),
+                Value<bool> steadyMode = const Value.absent(),
+                Value<DateTime?> steadyOfferDismissedAt = const Value.absent(),
+                Value<DateTime?> lastOpenedAt = const Value.absent(),
+                Value<String?> welcomeBackDate = const Value.absent(),
               }) => SettingsCompanion.insert(
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -9796,6 +10243,11 @@ class $$SettingsTableTableManager
                 unlockMinutes: unlockMinutes,
                 calendarSyncedAt: calendarSyncedAt,
                 onboardedAt: onboardedAt,
+                lightDayDate: lightDayDate,
+                steadyMode: steadyMode,
+                steadyOfferDismissedAt: steadyOfferDismissedAt,
+                lastOpenedAt: lastOpenedAt,
+                welcomeBackDate: welcomeBackDate,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -10644,6 +11096,7 @@ typedef $$DailyLogsTableCreateCompanionBuilder =
       Value<DateTime?> wakeLoggedAt,
       Value<DateTime?> eatDoneAt,
       Value<bool> routineDone,
+      Value<Mood?> mood,
       Value<int> rowid,
     });
 typedef $$DailyLogsTableUpdateCompanionBuilder =
@@ -10656,6 +11109,7 @@ typedef $$DailyLogsTableUpdateCompanionBuilder =
       Value<DateTime?> wakeLoggedAt,
       Value<DateTime?> eatDoneAt,
       Value<bool> routineDone,
+      Value<Mood?> mood,
       Value<int> rowid,
     });
 
@@ -10708,6 +11162,12 @@ class $$DailyLogsTableFilterComposer
     column: $table.routineDone,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnWithTypeConverterFilters<Mood?, Mood, String> get mood =>
+      $composableBuilder(
+        column: $table.mood,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 }
 
 class $$DailyLogsTableOrderingComposer
@@ -10758,6 +11218,11 @@ class $$DailyLogsTableOrderingComposer
     column: $table.routineDone,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get mood => $composableBuilder(
+    column: $table.mood,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$DailyLogsTableAnnotationComposer
@@ -10801,6 +11266,9 @@ class $$DailyLogsTableAnnotationComposer
     column: $table.routineDone,
     builder: (column) => column,
   );
+
+  GeneratedColumnWithTypeConverter<Mood?, String> get mood =>
+      $composableBuilder(column: $table.mood, builder: (column) => column);
 }
 
 class $$DailyLogsTableTableManager
@@ -10839,6 +11307,7 @@ class $$DailyLogsTableTableManager
                 Value<DateTime?> wakeLoggedAt = const Value.absent(),
                 Value<DateTime?> eatDoneAt = const Value.absent(),
                 Value<bool> routineDone = const Value.absent(),
+                Value<Mood?> mood = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DailyLogsCompanion(
                 updatedAt: updatedAt,
@@ -10849,6 +11318,7 @@ class $$DailyLogsTableTableManager
                 wakeLoggedAt: wakeLoggedAt,
                 eatDoneAt: eatDoneAt,
                 routineDone: routineDone,
+                mood: mood,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -10861,6 +11331,7 @@ class $$DailyLogsTableTableManager
                 Value<DateTime?> wakeLoggedAt = const Value.absent(),
                 Value<DateTime?> eatDoneAt = const Value.absent(),
                 Value<bool> routineDone = const Value.absent(),
+                Value<Mood?> mood = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DailyLogsCompanion.insert(
                 updatedAt: updatedAt,
@@ -10871,6 +11342,7 @@ class $$DailyLogsTableTableManager
                 wakeLoggedAt: wakeLoggedAt,
                 eatDoneAt: eatDoneAt,
                 routineDone: routineDone,
+                mood: mood,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

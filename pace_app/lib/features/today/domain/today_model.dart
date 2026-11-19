@@ -56,10 +56,18 @@ class StepsRemaining extends RoutineStatus {
 /// Past the planned wake by more than the threshold and not up yet:
 /// one card, one action, an arrival time. No red, no "late".
 class RunningLate extends RoutineStatus {
-  const RunningLate({required this.plan, required this.steps});
+  const RunningLate({
+    required this.plan,
+    required this.steps,
+    this.tips = const [],
+  });
 
   final LatePlan plan;
   final List<RoutineStepItem> steps;
+
+  /// The new plan in a few short lines: what to drop or move so the
+  /// morning still works. From [recoveryTips].
+  final List<String> tips;
 
   String get title => switch (plan.action) {
     LateAction.getReady => 'Get ready, leave by ${plan.leaveAt.format24()}',
@@ -130,17 +138,58 @@ RoutineStatus routineStatus({
   final wakeDeadline = plan.wake.minutesSinceMidnight + lateThresholdMinutes;
   final classOver = plan.firstClass.minutesSinceMidnight + 60;
   if (!steps.first.done && nowM > wakeDeadline && nowM < classOver) {
+    final late = computeLatePlan(
+      now: LocalTime(nowM),
+      firstClass: plan.firstClass,
+      commuteMinutes: inputs.commuteMinutes,
+      prepMinutes: inputs.prepMinutes,
+    );
     return RunningLate(
-      plan: computeLatePlan(
-        now: LocalTime(nowM),
-        firstClass: plan.firstClass,
-        commuteMinutes: inputs.commuteMinutes,
-        prepMinutes: inputs.prepMinutes,
-      ),
+      plan: late,
       steps: steps,
+      tips: recoveryTips(
+        plan: late,
+        nowMinutes: nowM,
+        prepMinutes: inputs.prepMinutes,
+        breakfastMinutes: inputs.breakfastMinutes,
+        eatSettled: lowEnergy || eatDone || skipped.contains(RoutineStep.eat),
+      ),
     );
   }
   return StepsRemaining(steps: steps, next: remaining.first);
+}
+
+/// Pure: the recovery plan for a morning that started late. A few calm
+/// lines about what to drop or move, never about what went wrong. At most
+/// three, so it reads at a glance.
+List<String> recoveryTips({
+  required LatePlan plan,
+  required int nowMinutes,
+  required int prepMinutes,
+  required int breakfastMinutes,
+  required bool eatSettled,
+}) {
+  final tips = <String>[];
+  switch (plan.action) {
+    case LateAction.getReady:
+      final spare =
+          plan.leaveAt.minutesSinceMidnight - nowMinutes - prepMinutes;
+      if (!eatSettled) {
+        tips.add(
+          spare >= breakfastMinutes
+              ? 'There\'s still time for a quick breakfast.'
+              : 'Take breakfast with you.',
+        );
+      }
+      if (spare < 5) tips.add('Pack only what today needs.');
+    case LateAction.leaveNow:
+      if (!eatSettled) tips.add('Grab something to eat on the way.');
+      tips.add('Pack only what today needs.');
+  }
+  if (!plan.onTime) {
+    tips.add('Walking in a few minutes after the start is okay.');
+  }
+  return tips.take(3).toList();
 }
 
 /// Pure: the one-line look ahead, or null when tomorrow has no class.

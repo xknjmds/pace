@@ -110,7 +110,7 @@ class NowCard extends StatelessWidget {
             ? const [true, true, true]
             : [for (final s in steps) s.done],
       ),
-      RunningLate(:final title, :final subtitle, :final steps) => (
+      RunningLate(:final title, :final subtitle, :final steps, :final tips) => (
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -120,6 +120,36 @@ class NowCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(subtitle, style: body),
+            if (tips.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              for (final tip in tips)
+                Padding(
+                  key: ValueKey('recovery-tip-$tip'),
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Icon(
+                          Icons.subdirectory_arrow_right_rounded,
+                          size: 18,
+                          color: pastel.ink,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          tip,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: fg,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
             const SizedBox(height: 14),
             PressScale(
               child: FilledButton.icon(

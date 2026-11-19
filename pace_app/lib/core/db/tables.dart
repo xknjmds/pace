@@ -83,6 +83,22 @@ class Settings extends Table with SyncColumns {
   /// v8: when the first-run setup was finished or skipped; null shows it.
   DateTimeColumn get onboardedAt => dateTime().nullable()();
 
+  /// v9: a one-day low-energy mode (`yyyy-MM-dd`), offered after a drained
+  /// evening or a return after time away. Past dates mean nothing.
+  TextColumn get lightDayDate => text().nullable()();
+
+  /// v9: fewer routine reminders (wake and leave only) once mornings are
+  /// steady. [steadyOfferDismissedAt] remembers a "no thanks".
+  BoolColumn get steadyMode => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get steadyOfferDismissedAt => dateTime().nullable()();
+
+  /// v9: last time the app was opened, to notice a return after a break.
+  DateTimeColumn get lastOpenedAt => dateTime().nullable()();
+
+  /// v9: the day (`yyyy-MM-dd`) Today greets a returning owner; cleared once
+  /// the card is closed.
+  TextColumn get welcomeBackDate => text().nullable()();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
@@ -104,6 +120,9 @@ class WeekdaySchedules extends Table with UuidKey, SyncColumns {
 /// v7 adds [letGo]: closed without submitting ("couldn't submit"). Neutral,
 /// never shown as a failure.
 enum TaskStatus { pending, submitted, letGo }
+
+/// v9: the evening check-in's one optional question. All three are fine.
+enum Mood { good, okay, drained }
 
 enum TaskSource { manual, classroom }
 
@@ -143,6 +162,9 @@ class DailyLogs extends Table with SyncColumns {
   DateTimeColumn get wakeLoggedAt => dateTime().nullable()();
   DateTimeColumn get eatDoneAt => dateTime().nullable()();
   BoolColumn get routineDone => boolean().withDefault(const Constant(false))();
+
+  /// v9: how the evening felt, from the check-in. Optional and never judged.
+  TextColumn get mood => textEnum<Mood>().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {date};

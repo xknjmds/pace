@@ -1,3 +1,4 @@
+import '../../../core/energy/low_energy.dart';
 import 'package:drift/drift.dart' show Value;
 
 import '../../../core/db/app_database.dart';
@@ -60,7 +61,7 @@ class RoutineReminders {
     );
     final setUp = inputs.isNotEmpty;
     var verses = const <Verse>[];
-    if (settings.verseEnabled && !settings.lowEnergyEnabled) {
+    if (settings.verseEnabled && !settings.lowEnergyAt(t)) {
       // The verse is a nicety: if it cannot load, reminders go out without it.
       try {
         verses = await loadVerses?.call() ?? const [];
@@ -79,7 +80,8 @@ class RoutineReminders {
               leadMinutes: settings.windDownLeadMinutes,
             )
           : null,
-      lowEnergy: settings.lowEnergyEnabled,
+      // Steady mode keeps the same short set: wake and leave only.
+      lowEnergy: settings.lowEnergyAt(t) || settings.steadyMode,
       wakeLine: verses.isEmpty
           ? null
           : (date) {

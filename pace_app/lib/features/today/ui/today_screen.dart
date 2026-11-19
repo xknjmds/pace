@@ -41,6 +41,8 @@ import 'step_check_in.dart';
 import 'today_bits.dart';
 import 'top3_picker_sheet.dart';
 import 'week_strip.dart';
+import '../../wellbeing/application/wellbeing_providers.dart';
+import '../../wellbeing/ui/wellbeing_cards.dart';
 
 /// Answers "what do I do right now?" in one screen: the next routine step
 /// (or the one thing to do when the morning is late), today's top three,
@@ -98,6 +100,8 @@ class TodayScreen extends ConsumerWidget {
         const <ReminderKind, CheckIn>{};
     final pending = ref.watch(pendingTasksProvider).value ?? const <Task>[];
     final lowEnergy = ref.watch(lowEnergyProvider);
+    final welcomeBack = ref.watch(showWelcomeBackProvider);
+    final lightDay = ref.watch(lightDayTodayProvider);
     final inboxCount = ref.watch(inboxCountProvider);
     final focus = ref.watch(activeFocusProvider).value;
     final startup = ref.watch(startupReportProvider);
@@ -338,6 +342,8 @@ class TodayScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+            if (welcomeBack) enter(const WelcomeBackCard()),
+            if (lightDay && !welcomeBack) enter(const LightDayLine()),
             if (!empty)
               enter(
                 Padding(
@@ -348,8 +354,7 @@ class TodayScreen extends ConsumerWidget {
             if (empty)
               enter(
                 EmptyWelcome(
-                  onSetUp: () =>
-                      Navigator.of(context).pushNamed(Routes.settings),
+                  onSetUp: () => Navigator.of(context).pushNamed(Routes.setup),
                 ),
               )
             else ...[

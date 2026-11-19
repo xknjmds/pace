@@ -22,6 +22,7 @@ import '../../routine/domain/wake_schedule.dart';
 import '../../routine/ui/routine_settings_screen.dart';
 import '../../today/application/today_providers.dart';
 import '../../today/ui/top3_picker_sheet.dart';
+import '../../wellbeing/application/wellbeing_providers.dart';
 
 /// The evening check-in: look at tomorrow, pick its top three, confirm the
 /// wake reminder, then go to bed. Every step can be skipped.
@@ -35,7 +36,7 @@ class CheckInScreen extends ConsumerStatefulWidget {
   ConsumerState<CheckInScreen> createState() => _CheckInScreenState();
 }
 
-enum _Step { tomorrow, top3, alarm, finish }
+enum _Step { tomorrow, top3, alarm, mood, finish }
 
 class _CheckInScreenState extends ConsumerState<CheckInScreen> {
   int _index = 0;
@@ -53,6 +54,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
     _Step.tomorrow,
     if (!lowEnergy) _Step.top3,
     _Step.alarm,
+    _Step.mood,
     _Step.finish,
   ];
 
@@ -105,6 +107,8 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
         .toList();
     final tomorrowLog = ref.watch(dailyLogProvider(dateKey(tomorrow))).value;
     final top3Ids = tomorrowLog?.top3TaskIds ?? const <String>[];
+    final mood = ref.watch(dailyLogProvider(dateKey(night))).value?.mood;
+    final lightTomorrow = settings.lightDayDate == dateKey(tomorrow);
 
     final steps = _steps(lowEnergy);
     final index = _index.clamp(0, steps.length - 1);
@@ -233,6 +237,71 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
             ),
           ],
         ),
+      ],
+      _Step.mood => [
+        _StepTitle(
+          Icons.favorite_outline_rounded,
+          'How are you feeling tonight?',
+          PastelKind.evening,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Optional. Every answer is fine.',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final (m, label) in const [
+              (Mood.good, 'Good'),
+              (Mood.okay, 'Okay'),
+              (Mood.drained, 'Drained'),
+            ])
+              ChoiceChip(
+                key: ValueKey('mood-${m.name}'),
+                label: Text(label),
+                selected: mood == m,
+                onSelected: (on) => ref
+                    .read(wellbeingServiceProvider)
+                    .setMood(night, on ? m : null),
+              ),
+          ],
+        ),
+        if (mood == Mood.drained) ...[
+          const SizedBox(height: 20),
+          Text(
+            lightTomorrow
+                ? 'Tomorrow is a light day: only the main steps.'
+                : 'That\'s okay. Want tomorrow to be a light day, with only '
+                      'the main steps?',
+            key: const ValueKey('light-day-offer'),
+            style: theme.textTheme.bodyLarge,
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              if (!lightTomorrow)
+                OutlinedButton(
+                  key: const ValueKey('plan-light-day'),
+                  onPressed: () =>
+                      ref.read(wellbeingServiceProvider).planLightDay(tomorrow),
+                  child: const Text('Make tomorrow light'),
+                ),
+              TextButton(
+                key: const ValueKey('open-support'),
+                onPressed: () =>
+                    Navigator.of(context).pushNamed(Routes.support),
+                child: const Text('If you\'re struggling'),
+              ),
+            ],
+          ),
+        ],
       ],
       _Step.finish => [
         if (_done) ...[

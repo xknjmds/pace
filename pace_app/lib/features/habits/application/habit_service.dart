@@ -1,3 +1,4 @@
+import '../../../core/energy/low_energy.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/notifications/reminder_actions.dart';
 import '../../../core/notifications/reminder_scheduler.dart';
@@ -39,7 +40,7 @@ class HabitService {
         for (final m in mutes)
           if (m.kind == ReminderKind.habit && m.ownerId == habit.id) m.date,
       },
-      lowEnergy: settings.lowEnergyEnabled,
+      lowEnergy: settings.lowEnergyAt(t),
     );
     await scheduler.replaceOwner(ReminderKind.habit, habit.id, drafts);
   }

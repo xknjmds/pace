@@ -128,7 +128,7 @@ void main() {
       await db.tasksDao.add(title: 'Far off', dueAt: DateTime(2026, 11, 30));
       await pump(tester, const CheckInScreen());
 
-      expect(find.text('Check-in 1 of 4'), findsOneWidget);
+      expect(find.text('Check-in 1 of 5'), findsOneWidget);
       expect(
         find.text('Up at 06:30, leave by 08:00 for class at 08:30.'),
         findsOneWidget,
@@ -156,6 +156,26 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey('check-in-next')));
       await tester.pumpAndSettle();
+      expect(find.text('How are you feeling tonight?'), findsOneWidget);
+      expect(find.byKey(const ValueKey('light-day-offer')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('mood-drained')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('light-day-offer')), findsOneWidget);
+      expect(find.byKey(const ValueKey('open-support')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('plan-light-day')));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Tomorrow is a light day: only the main steps.'),
+        findsOneWidget,
+      );
+      expect(
+        (await db.dailyLogsDao.get(DateTime(2026, 11, 16)))?.mood,
+        Mood.drained,
+      );
+      expect((await db.settingsDao.get()).lightDayDate, '2026-11-17');
+
+      await tester.tap(find.byKey(const ValueKey('check-in-next')));
+      await tester.pumpAndSettle();
       expect(find.text('Bed around 22:30 gives you 8 hours.'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('going-to-bed')));
       await tester.pumpAndSettle();
@@ -171,7 +191,7 @@ void main() {
       await setUpWeek();
       await db.settingsDao.setLowEnergy(true);
       await pump(tester, const CheckInScreen());
-      expect(find.text('Check-in 1 of 3'), findsOneWidget);
+      expect(find.text('Check-in 1 of 4'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('check-in-next')));
       await tester.pumpAndSettle();
       expect(find.text('Wake reminder'), findsOneWidget);

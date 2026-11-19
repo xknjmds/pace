@@ -101,6 +101,62 @@ void main() {
     expect(s.title, 'Get ready, leave by 08:00');
   });
 
+  group('recovery tips', () {
+    test('leave now: eat on the way, pack light', () {
+      final s = status(now: DateTime(2026, 11, 16, 7, 50)) as RunningLate;
+      expect(s.tips, [
+        'Grab something to eat on the way.',
+        'Pack only what today needs.',
+      ]);
+    });
+
+    test('arriving after the start adds a calm line', () {
+      final s = status(now: DateTime(2026, 11, 16, 8, 15)) as RunningLate;
+      expect(s.tips.last, 'Walking in a few minutes after the start is okay.');
+      for (final tip in s.tips) {
+        expect(tip.toLowerCase(), isNot(contains('late')));
+      }
+    });
+
+    test('time to get ready with room for breakfast', () {
+      // 06:51 is just past the threshold: leave 08:00, prep 30, so 39 spare.
+      final s = status(now: DateTime(2026, 11, 16, 6, 51)) as RunningLate;
+      expect(s.tips, ["There's still time for a quick breakfast."]);
+    });
+
+    test('tight: breakfast to go', () {
+      final s = status(now: DateTime(2026, 11, 16, 7, 20)) as RunningLate;
+      expect(s.tips, ['Take breakfast with you.']);
+    });
+
+    test('nothing about breakfast when it is settled or in low energy', () {
+      final low =
+          status(now: DateTime(2026, 11, 16, 7, 50), lowEnergy: true)
+              as RunningLate;
+      expect(low.tips, ['Pack only what today needs.']);
+      final skipped =
+          status(now: DateTime(2026, 11, 16, 7, 20), skipped: {RoutineStep.eat})
+              as RunningLate;
+      expect(skipped.tips, isEmpty);
+    });
+
+    test('never more than three', () {
+      final tips = recoveryTips(
+        plan: const LatePlan(
+          action: LateAction.leaveNow,
+          leaveAt: LocalTime(8 * 60),
+          arriveAt: LocalTime(9 * 60),
+          minutesLate: 30,
+        ),
+        nowMinutes: 8 * 60,
+        prepMinutes: 30,
+        breakfastMinutes: 15,
+        eatSettled: false,
+      );
+      expect(tips.length, lessThanOrEqualTo(3));
+    });
+  });
+
   test('up on time, late for nothing: eat is next', () {
     final s =
         status(now: DateTime(2026, 11, 16, 7, 50), wake: true)

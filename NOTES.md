@@ -329,3 +329,34 @@ a real phone**, so A2 and B1 are not done in the PLAN.md sense.
 - **Not verified:** everything on a device. That covers the habit and wake/verse
   notifications, the widget, the gate, OCR on a real photo, Google sign-in (no client id
   here), and the web build of the new screens.
+
+## Phase D (2026-11-19, built overnight while the owner was away)
+
+### D1. First-run setup
+- A fresh install opens on `/setup` over Today (decided in `main.dart`, so widget and
+  notification launches still win). Back without finishing shows it again next launch;
+  "Skip for now" and "Looks good" both set `onboarded_at`. The v7 to v8 migration marks
+  existing installs as set up, so the owner's phone never sees it.
+- One first-class time for all chosen days. Per-day times stay in Settings, as before.
+- A usual wake within 30 min of the workable goal is applied at once; a bigger gap starts
+  the existing gradual shift (15 min every 3 days, night people 10 min every 4).
+- **Not verified on a device.**
+
+### D2. Recovery, mood, welcome back, steady mode
+- **Light day** is `settings.light_day_date`. Every planner and `lowEnergyProvider` now read
+  `Setting.lowEnergyAt(now)` (`core/energy/low_energy.dart`). Known limit: planners take one
+  low-energy flag for their whole 7-day window, so if reminders are re-planned *during* a
+  light day, the following days stay light until the next re-plan (any app open). Planning
+  tonight for a light day tomorrow does not lighten tomorrow's reminders; Today does.
+- **Welcome back** after 5+ calendar days without opening: light day plus a card, set in
+  `noteOpened()` at the start of `bootstrap` and on resume. The gap is never shown.
+- **Steady mode** passes the low-energy short set to the routine reminder planner only (wake
+  and leave). Habit, deadlines and the gate are unchanged. Offered on Review after 12
+  routine-done days in 21, hidden in low-energy mode; "Not now" waits 60 days.
+- **Help page numbers must be checked before every release**
+  (`features/wellbeing/domain/support_contacts.dart`): 911, NCMH 1553 and mobiles, Hopeline
+  PH. They came from memory, not from a live source. There is no tap-to-call, because that
+  needs `url_launcher` (a new dependency); the numbers are selectable text.
+- The local `test/zz_shots` goldens for the late card (`late0748`, `late0804`) now differ,
+  because the card shows recovery tips. Regenerate them with `--update-goldens` if the new
+  look is right.

@@ -21,7 +21,9 @@ import 'features/focus/application/focus_providers.dart';
 import 'features/inbox/application/inbox_providers.dart';
 import 'features/routine/application/routine_providers.dart';
 import 'features/shell/shell_tabs.dart';
+import 'features/today/application/reminder_resync.dart';
 import 'features/verse/application/verse_providers.dart';
+import 'features/wellbeing/application/wellbeing_providers.dart';
 import 'routes.dart';
 
 /// Brings reminders, the capture shortcut and the home-screen widget in
@@ -37,6 +39,11 @@ Future<String?> bootstrap(
   // Each step is guarded on its own: a failing plugin must never stop the
   // app from opening, nor stop the steps that do not depend on it.
   final report = container.read(startupReportProvider);
+  // First, so a return after time away plans today as a light day.
+  await report.guard(
+    'welcome back',
+    () => container.read(wellbeingServiceProvider).noteOpened(),
+  );
   await report.guard(
     'rebuild reminders',
     () => container.read(reminderSchedulerProvider).rebuildAll(),
@@ -107,6 +114,12 @@ Future<String?> bootstrap(
   // Registers itself with the binding and lives as long as the app.
   AppLifecycleListener(
     onResume: () {
+      report.guard('welcome back', () async {
+        final back = await container
+            .read(wellbeingServiceProvider)
+            .noteOpened();
+        if (back) await container.read(reminderResyncProvider)();
+      });
       report.guard(
         'app gate',
         () => container.read(gateServiceProvider).sync(),

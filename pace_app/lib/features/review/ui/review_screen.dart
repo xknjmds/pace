@@ -10,6 +10,7 @@ import '../../../core/widgets/section_header.dart';
 import '../../../routes.dart';
 import '../application/review_providers.dart';
 import '../domain/weekly_summary.dart';
+import '../../wellbeing/ui/review_extras.dart';
 import 'trends_section.dart';
 import '../../../core/widgets/pace_page.dart';
 
@@ -172,6 +173,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                   '${summary.sleep.length == 1 ? 'night' : 'nights'} logged.',
                 ),
         ),
+        const WellbeingReviewSection(),
         const TrendsSection(),
       ],
     );

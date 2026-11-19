@@ -1,3 +1,4 @@
+import '../../../core/energy/low_energy.dart';
 import '../../../core/db/app_database.dart';
 import '../../routine/application/day_times.dart';
 import '../domain/lock_windows.dart';
@@ -43,7 +44,7 @@ class GateService {
               c.outcome == CheckInOutcome.didntHappen)
             c.day,
       },
-      lowEnergy: s.lowEnergyEnabled,
+      lowEnergy: s.lowEnergyAt(t),
     );
     return GateConfig(
       enabled: true,

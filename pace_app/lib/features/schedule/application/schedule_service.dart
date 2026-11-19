@@ -1,3 +1,4 @@
+import '../../../core/energy/low_energy.dart';
 import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
@@ -103,7 +104,7 @@ class ScheduleService {
       scheduleWidgetJson(
         blocks: blocks,
         events: events,
-        lowEnergy: settings.lowEnergyEnabled,
+        lowEnergy: settings.lowEnergyAt(t),
       ),
     );
   }
