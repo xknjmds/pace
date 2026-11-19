@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Time-block timeline: blocks drawn by ScheduleWidgetRenderer, sized by duration. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/schedule_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/pace_widget_background"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <include layout="@layout/pace_schedule_widget_header" />
+
+    <TextView
+        android:id="@+id/schedule_empty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:paddingStart="4dp"
+        android:textColor="@color/pace_widget_text"
+        android:textSize="14sp"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/schedule_canvas"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="6dp"
+        android:layout_weight="1"
+        android:scaleType="fitXY" />
+</LinearLayout>

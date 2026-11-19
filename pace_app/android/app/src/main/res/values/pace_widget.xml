@@ -6,6 +6,7 @@
     <color name="pace_widget_accent">#2B2D31</color>
     <color name="pace_widget_on_accent">#FAF8F5</color>
     <color name="pace_widget_now">#DCEAE3</color>
+    <color name="pace_widget_option">#EFECE6</color>
     <color name="pace_widget_text">#26282C</color>
 
     <string name="widget_title">PACE</string>

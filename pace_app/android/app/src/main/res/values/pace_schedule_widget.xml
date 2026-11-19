@@ -4,4 +4,26 @@
     <string name="schedule_widget_none">No classes today. The day is yours.</string>
     <string name="schedule_widget_done">That\'s everything for today.</string>
     <string name="schedule_widget_description">Today\'s classes, with the current one highlighted</string>
+
+    <!-- Now & next and the progress strip. %1$s is a time like 10:30. -->
+    <string name="schedule_widget_until">until %1$s</string>
+    <string name="schedule_widget_until_room">until %1$s · %2$s</string>
+    <string name="schedule_widget_free">Free time</string>
+    <string name="schedule_widget_free_until">free until %1$s</string>
+    <string name="schedule_widget_next">Next · %1$s %2$s</string>
+    <string name="schedule_widget_nothing_next">Nothing after this.</string>
+    <string name="schedule_widget_rest">Rest of the day is yours</string>
+    <string name="schedule_widget_timeline_description">Today\'s timeline: %1$s</string>
+
+    <!-- Layout picker, shown when a schedule widget is placed or reconfigured. -->
+    <string name="schedule_widget_pick_title">How should this widget look?</string>
+    <string name="schedule_widget_pick_hint">You can change it later: press and hold the widget.</string>
+    <string name="schedule_widget_layout_list">List</string>
+    <string name="schedule_widget_layout_list_hint">Times and classes, one per row</string>
+    <string name="schedule_widget_layout_timeline">Time blocks</string>
+    <string name="schedule_widget_layout_timeline_hint">Blocks sized by how long they last, with a now line</string>
+    <string name="schedule_widget_layout_now_next">Now and next</string>
+    <string name="schedule_widget_layout_now_next_hint">What is on now, large, and what comes after</string>
+    <string name="schedule_widget_layout_strip">Day strip</string>
+    <string name="schedule_widget_layout_strip_hint">The whole day as one bar, with a marker at now</string>
 </resources>

@@ -4,5 +4,6 @@
     <color name="pace_widget_accent">#F1EEE8</color>
     <color name="pace_widget_on_accent">#1A1B1E</color>
     <color name="pace_widget_now">#2C3A35</color>
+    <color name="pace_widget_option">#26282C</color>
     <color name="pace_widget_text">#EEEBE6</color>
 </resources>

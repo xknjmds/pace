@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Day progress strip: the current block in words, the day as one bar. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/schedule_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/pace_widget_background"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <include layout="@layout/pace_schedule_widget_header" />
+
+    <TextView
+        android:id="@+id/schedule_headline"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:paddingStart="4dp"
+        android:textColor="@color/pace_widget_text"
+        android:textSize="17sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/schedule_detail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:paddingStart="4dp"
+        android:textColor="@color/pace_widget_accent"
+        android:textSize="13sp" />
+
+    <ImageView
+        android:id="@+id/schedule_canvas"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginTop="4dp"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:scaleType="fitXY" />
+</LinearLayout>

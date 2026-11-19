@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Layout picker row: soft neutral, mint when chosen, a ripple on press. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#1F808080">
+    <item>
+        <selector>
+            <item android:state_selected="true">
+                <shape>
+                    <solid android:color="@color/pace_widget_now" />
+                    <corners android:radius="16dp" />
+                </shape>
+            </item>
+            <item>
+                <shape>
+                    <solid android:color="@color/pace_widget_option" />
+                    <corners android:radius="16dp" />
+                </shape>
+            </item>
+        </selector>
+    </item>
+</ripple>

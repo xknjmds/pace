@@ -6,4 +6,11 @@
         <item name="android:statusBarColor">@color/pace_widget_surface</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
+
+    <!-- Schedule widget layout picker: a small dialog on the brand surface. -->
+    <style name="PaceWidgetConfigTheme" parent="@android:style/Theme.Material.Light.Dialog.NoActionBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowMinWidthMajor">88%</item>
+        <item name="android:windowMinWidthMinor">92%</item>
+    </style>
 </resources>
