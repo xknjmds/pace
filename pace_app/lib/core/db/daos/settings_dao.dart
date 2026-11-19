@@ -37,4 +37,16 @@ class SettingsDao extends DatabaseAccessor<AppDatabase>
 
   Future<void> setCaptureShortcut(bool enabled) =>
       updateSettings((s) => s.copyWith(captureShortcutEnabled: enabled));
+
+  /// Closes a one-time hint for good. Saving an id twice is harmless.
+  Future<void> markHintSeen(String id) => updateSettings(
+    (s) => s.seenHints.contains(id)
+        ? s
+        : s.copyWith(seenHints: [...s.seenHints, id]),
+  );
+
+  /// Hides (or with [closed] false, brings back) Today's Getting started.
+  Future<void> setGettingStartedClosed(bool closed) => updateSettings(
+    (s) => s.copyWith(gettingStartedClosedAt: Value(closed ? db.now() : null)),
+  );
 }

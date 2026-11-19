@@ -121,7 +121,7 @@ class AppDatabase extends _$AppDatabase {
   static DateTime _utcNow() => DateTime.now().toUtc();
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   /// Schema history. Never edit a released step (CLAUDE.md rule 8); add one,
   /// then regenerate: `drift_dev schema dump`, then `schema steps` into
@@ -141,6 +141,7 @@ class AppDatabase extends _$AppDatabase {
   ///   and welcome back
   /// - v10 (D6): `rewards`
   /// - v11 (D7): settings for dismissed suggestions and the school year
+  /// - v12 (D11): settings for seen hints and the Getting started card
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
@@ -248,6 +249,13 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(
           schema.settings,
           schema.settings.schoolYearStartMonth,
+        );
+      },
+      from11To12: (m, schema) async {
+        await m.addColumn(schema.settings, schema.settings.seenHints);
+        await m.addColumn(
+          schema.settings,
+          schema.settings.gettingStartedClosedAt,
         );
       },
     ),

@@ -435,6 +435,22 @@ Done when
 
 **D10. Calendar sync returns** after Google verification.
 
+**D11. First-week guidance and splash hand-off** (from owner testing, 2026-11-19: "fine for the
+developer, but a fresh install?").
+- Today: a self-ticking **Getting started** card (classes, first deadline, Inbox, Focus, reminders
+  on Android). Pure `gettingStartedSteps` and `showGettingStarted`. Hidden in low-energy mode,
+  after 14 days, once all done, or when closed; More brings it back.
+- One-time "what this tab is for" hints on Today, Deadlines, Inbox, Focus and More (`seen_hints`).
+- Today hides empty Top 3 and Coming up. More is grouped (Your week, Keep track, Keep going) with
+  empty states that say what each tile does. Deadlines and Inbox subtitles draw the line between them.
+- Splash: wordmark on the native splash (Android 12+ branding image), then a ~1.2 s Flutter
+  hand-off on a plain cold start. Reduced motion: fades only. Low-energy: skipped.
+- Schema v12: `settings.seen_hints`, `settings.getting_started_closed_at`.
+
+Done when
+- Pure functions, the card, hints, More and the splash are tested; migration v11 to v12 passes
+- On the phone, the hand-off frame lines up with the native splash (no jump), see `NOTES.md`
+
 Not planned for now: an AI chatbot (needs a network), and partner vouchers (need a backend, M11 at the earliest).
 
 **Status (2026-11-19, overnight run).**

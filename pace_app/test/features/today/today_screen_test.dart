@@ -215,7 +215,6 @@ void main() {
   ) async {
     await mondayClass();
     await pumpApp(tester, DateTime(2026, 11, 16, 6)); // Tuesday has no row
-    await scrollTo(tester, find.text('Nothing due in the next two days.'));
     await scrollToEnd(tester);
     expect(find.byKey(const ValueKey('tomorrow-preview')), findsNothing);
     await unmountApp(tester);
@@ -255,6 +254,7 @@ void main() {
 
   testWidgets('low-energy mode: only up, leave and coming up', (tester) async {
     await mondayClass();
+    await db.tasksDao.add(title: 'Essay', dueAt: DateTime(2026, 11, 17, 9));
     await db.settingsDao.setLowEnergy(true);
     await pumpApp(tester, DateTime(2026, 11, 16, 6));
     expect(find.byKey(const ValueKey('step-eat')), findsNothing);
@@ -264,6 +264,17 @@ void main() {
     await scrollToEnd(tester);
     expect(find.text('Top 3'), findsNothing);
     expect(find.byKey(const ValueKey('tomorrow-preview')), findsNothing);
+    await unmountApp(tester);
+  });
+
+  testWidgets('with no open deadlines, Top 3 and Coming up stay out', (
+    tester,
+  ) async {
+    await mondayClass();
+    await pumpApp(tester, DateTime(2026, 11, 16, 6));
+    await scrollToEnd(tester);
+    expect(find.text('Top 3'), findsNothing);
+    expect(find.text('Coming up'), findsNothing);
     await unmountApp(tester);
   });
 

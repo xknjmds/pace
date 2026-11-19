@@ -4,9 +4,9 @@ Run from the repo root:  python3 branding/mascot/build_mascot.py
 Needs: Python 3 with Pillow and numpy, ImageMagick (`magick`).
 
 Output:
-  pace_app/assets/mascot/          in-app poses at 1x / 2.0x / 3.0x
+  pace_app/assets/mascot/          in-app poses and the splash Tuck at 1x / 2.0x / 3.0x
   pace_app/android/app/src/main/res launcher icon (adaptive + legacy), notification
-                                    icon, splash icon, home-widget icon
+                                    icon, splash icon and wordmark, home-widget icon
   pace_app/web/                     favicon, PWA icons, splash image
   pace_app/windows/runner/resources/app_icon.ico
   branding/mascot/export/           1024 px cutouts and the Play Store icon
@@ -209,7 +209,38 @@ def main():
     ico = os.path.join(APP, "windows/runner/resources/app_icon.ico")
     fit(icon, 256, 0.96).save(ico, sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
 
+    splash_extras(icon)
     preview(cut, icon, frame)
+
+
+# The PACE wordmark, light ink on the off-white page and mint on charcoal.
+WORDMARK_SVG = os.path.join(ROOT, "branding/archive/cairn/final/pace-wordmark.svg")
+WORDMARK_INK = {"": "#35665A", "night-": "#9CC3B4"}
+
+
+def splash_extras(icon):
+    """The splash hand-off (D11): Tuck exactly as on the native splash, for
+    Flutter to animate, and the wordmark as the native branding image."""
+    assets = os.path.join(APP, "assets/mascot")
+    for folder, k in (("", 1), ("2.0x", 2), ("3.0x", 3)):
+        save(fit(icon, round(240 * k), 0.56), os.path.join(assets, folder, "splash_tuck.png"))
+
+    # Android 12+ branding image: 200 x 80 dp, wordmark 120 dp wide in it.
+    svg = open(WORDMARK_SVG).read()
+    with tempfile.TemporaryDirectory() as tmp:
+        for night, colour in WORDMARK_INK.items():
+            src = os.path.join(tmp, f"wordmark-{night}.svg")
+            open(src, "w").write(svg.replace("#35665A", colour))
+            big = os.path.join(tmp, f"wordmark-{night}.png")
+            subprocess.run(["magick", "-background", "none", "-density", "600", src, "-trim", big], check=True)
+            mark = Image.open(big).convert("RGBA")
+            for d, k in DENSITIES.items():
+                w, h = round(200 * k), round(80 * k)
+                mw = round(120 * k)
+                m = mark.resize((mw, round(mark.height * mw / mark.width)), Image.LANCZOS)
+                out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+                out.alpha_composite(m, ((w - m.width) // 2, (h - m.height) // 2))
+                save(out, f"{RES}/drawable-{night}{d}/splash_wordmark.png")
 
 
 def preview(cut, icon, frame):

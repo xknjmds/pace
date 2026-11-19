@@ -24,6 +24,14 @@ class InboxDao extends DatabaseAccessor<AppDatabase> with _$InboxDaoMixin {
 
   Stream<List<InboxItem>> watchUnprocessed() => _unprocessed.watch();
 
+  /// Whether anything was ever captured, sorted items included.
+  Stream<bool> watchAny() =>
+      (select(inboxItems)
+            ..where((t) => t.deletedAt.isNull())
+            ..limit(1))
+          .watch()
+          .map((rows) => rows.isNotEmpty);
+
   Stream<int> watchUnprocessedCount() =>
       watchUnprocessed().map((items) => items.length);
 

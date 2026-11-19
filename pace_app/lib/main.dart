@@ -63,15 +63,20 @@ Future<void> main() async {
       launchedWith = await HomeWidget.initiallyLaunchedFromHomeWidget();
     });
   }
+  final widgetRoute = routeForWidgetUri(launchedWith);
+  final initialRoute =
+      fromNotification ??
+      widgetRoute ??
+      (needsSetup ? Routes.setup : Routes.today);
   // Always reached: whatever failed above, the app opens.
   runApp(
     UncontrolledProviderScope(
       container: container,
       child: PaceApp(
-        initialRoute:
-            fromNotification ??
-            routeForWidgetUri(launchedWith) ??
-            (needsSetup ? Routes.setup : Routes.today),
+        initialRoute: initialRoute,
+        // Only a plain cold start gets the splash hand-off; a tap on a
+        // reminder or the widget goes straight where it points.
+        showIntro: fromNotification == null && widgetRoute == null,
       ),
     ),
   );

@@ -72,6 +72,8 @@ void main() {
     expect(find.textContaining('120.00'), findsOneWidget);
     expect(find.text('Add your timetable'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Notes'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Notes'));
     await tester.pumpAndSettle();
     expect(find.text('Ideas'), findsOneWidget);

@@ -36,6 +36,10 @@ class TasksDao extends DatabaseAccessor<AppDatabase> with _$TasksDaoMixin {
 
   Future<List<Task>> getAll() => _live.get();
 
+  /// Whether any deadline exists, finished ones included.
+  Stream<bool> watchAny() =>
+      (_live..limit(1)).watch().map((rows) => rows.isNotEmpty);
+
   Stream<List<Task>> watchPending() =>
       (_live..where((t) => t.status.equalsValue(TaskStatus.pending))).watch();
 

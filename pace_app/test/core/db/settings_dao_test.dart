@@ -60,4 +60,16 @@ void main() {
     expect(s.breakfastMinutes, 20);
     expect(s.windDownLeadMinutes, 45);
   });
+
+  test('hints are saved once and Getting started can be hidden', () async {
+    await db.settingsDao.markHintSeen('inbox');
+    await db.settingsDao.markHintSeen('inbox');
+    await db.settingsDao.markHintSeen('focus');
+    expect((await db.settingsDao.get()).seenHints, ['inbox', 'focus']);
+
+    await db.settingsDao.setGettingStartedClosed(true);
+    expect((await db.settingsDao.get()).gettingStartedClosedAt, isNotNull);
+    await db.settingsDao.setGettingStartedClosed(false);
+    expect((await db.settingsDao.get()).gettingStartedClosedAt, isNull);
+  });
 }

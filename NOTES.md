@@ -449,3 +449,24 @@ class, boxes got one row's time, and the summary table under the grid was read a
   "Copy scan data" button copies the real lines as JSON, to add as a second fixture.
 - **Not verified on a phone:** a real ML Kit read of this screenshot, and a tilted photo of
   the printed schedule (it should fall back to the text layer).
+
+## D11. First-week guidance and splash hand-off (2026-11-19)
+
+- Built: Getting started card on Today, one-time tab hints, quieter Today for new users, grouped
+  More tab, splash wordmark and Flutter hand-off. Schema v12.
+- Tests turn hints off suite-wide (`FirstVisitHint.debugEnabled`, like `Tuck.debugLifeMotion`);
+  the D11 tests turn them back on.
+- Splash geometry: the Flutter hand-off assumes the native icon draws at 240 dp, centred, and
+  the wordmark 88 dp above the bottom (pre-12 layer-list). Android 12+ draws its own splash
+  and may scale the icon (288 dp frame without an icon background), so the first Flutter frame
+  can jump a little there. `SplashIntro.peekSize` is the one value to tune.
+
+### Still to check on the phone
+
+| Check | Result | Notes |
+|---|---|---|
+| Android 12+: native splash to hand-off with no jump in size or place | not checked | tune `SplashIntro.peekSize` if Tuck jumps |
+| Android 12+: wordmark shows as the branding image, light and dark | not checked | |
+| Notification or widget tap opens straight to its screen, no intro | not checked | |
+| Fresh install: Getting started ticks as steps are done | not checked | |
+

@@ -22,6 +22,7 @@ class Tuck extends StatefulWidget {
     this.pose = TuckPose.idle,
     this.size = 120,
     this.random,
+    this.greet = false,
   });
 
   final TuckPose pose;
@@ -31,6 +32,10 @@ class Tuck extends StatefulWidget {
 
   /// For deterministic blink timing in tests.
   final math.Random? random;
+
+  /// Says hello once it has settled in: the tap squash and a blink, with no
+  /// haptic. Used by the splash hand-off.
+  final bool greet;
 
   /// Turned off for the whole test suite in `test/flutter_test_config.dart`,
   /// because a living loop would keep `pumpAndSettle` from ever settling.
@@ -61,6 +66,11 @@ class _TuckState extends State<Tuck> with SingleTickerProviderStateMixin {
     super.initState();
     _rng = widget.random ?? math.Random();
     _nextBlink = 2 + _rng.nextDouble() * 3;
+    if (widget.greet) {
+      // Lands just as the entrance settles (it ends at .42 s).
+      _tapAt = .36;
+      _blinkAt = .44;
+    }
   }
 
   @override

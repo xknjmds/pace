@@ -109,6 +109,14 @@ class Settings extends Table with SyncColumns {
   IntColumn get schoolYearStartMonth =>
       integer().withDefault(const Constant(6))();
 
+  /// v12: one-time "what this tab is for" hints the owner closed.
+  TextColumn get seenHints => text()
+      .map(const StringListConverter())
+      .withDefault(const Constant('[]'))();
+
+  /// v12: when the Today "Getting started" card was hidden; null shows it.
+  DateTimeColumn get gettingStartedClosedAt => dateTime().nullable()();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }

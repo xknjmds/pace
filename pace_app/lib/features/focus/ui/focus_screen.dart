@@ -9,6 +9,7 @@ import '../../../core/theme/pace_pastels.dart';
 import '../../../core/theme/pace_tokens.dart';
 import '../../../core/widgets/press_scale.dart';
 import '../../../core/widgets/tuck.dart';
+import '../../../core/widgets/first_visit_hint.dart';
 import '../../deadlines/application/deadline_providers.dart';
 import '../../shell/shell_tabs.dart';
 import '../application/focus_providers.dart';
@@ -127,6 +128,12 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
         key: const ValueKey('idle'),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const FirstVisitHint(
+            id: HintIds.focus,
+            text:
+                'Stuck? Pick one thing and start a short timer. Starting is '
+                'the hard part.',
+          ),
           const SizedBox(height: 8),
           Center(
             child: FocusRing(

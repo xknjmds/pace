@@ -4,13 +4,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/db/settings_provider.dart';
 import 'core/theme/pace_theme.dart';
 import 'core/theme/pace_tokens.dart';
+import 'core/widgets/splash_intro.dart';
 import 'routes.dart';
 
 class PaceApp extends ConsumerWidget {
-  const PaceApp({super.key, this.initialRoute = Routes.today});
+  const PaceApp({
+    super.key,
+    this.initialRoute = Routes.today,
+    this.showIntro = false,
+  });
 
   /// Where the app opens; the home-screen widget can ask for the Inbox.
   final String initialRoute;
+
+  /// Plays the splash hand-off over the first screen (a plain cold start,
+  /// not a notification or widget tap).
+  final bool showIntro;
 
   /// Lets startup code navigate (widget taps while the app is running).
   static final navigatorKey = GlobalKey<NavigatorState>();
@@ -28,8 +37,15 @@ class PaceApp extends ConsumerWidget {
       routes: Routes.table,
       onGenerateInitialRoutes: Routes.initialStack,
       debugShowCheckedModeBanner: false,
-      builder: (context, child) =>
-          PaceMotionScope(calm: calm, child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => PaceMotionScope(
+        calm: calm,
+        child: Stack(
+          children: [
+            ?child,
+            if (showIntro) const Positioned.fill(child: SplashIntro()),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -8,6 +8,12 @@ PACE's brand is **Tuck**, a calm turtle with three stacked stones (a small cairn
 
 Tuck is the app icon, the splash, the notification icon, and a quiet companion inside the app.
 
+**Splash.** The native splash shows Tuck peeking from the shell with the wordmark near the bottom.
+On a plain cold start a short hand-off follows (about 1.2 s, tap to skip): Tuck comes out of the
+shell and says hello with a small squash and a blink, the wordmark rises under Tuck, and the tagline
+fades in. Reduced motion keeps only fades; low-energy mode skips it. A reminder or widget tap goes
+straight to its screen.
+
 ## 2. Personality
 Calm, patient, kind, a little sleepy. Tuck never rushes and never judges.
 

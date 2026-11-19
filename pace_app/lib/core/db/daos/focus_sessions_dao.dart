@@ -42,6 +42,10 @@ class FocusSessionsDao extends DatabaseAccessor<AppDatabase>
 
   Stream<FocusSession?> watchActive() => _active.watchSingleOrNull();
 
+  /// Whether a focus session was ever started.
+  Stream<bool> watchAny() =>
+      (_live..limit(1)).watch().map((rows) => rows.isNotEmpty);
+
   /// Ends the session with the minutes actually spent.
   Future<void> finish(
     String id, {

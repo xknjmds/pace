@@ -9,6 +9,7 @@ import '../../../core/time/local_time.dart';
 import '../../../core/theme/pace_pastels.dart';
 import '../../../core/theme/pace_tokens.dart';
 import '../../../core/widgets/fade_slide_in.dart';
+import '../../../core/widgets/first_visit_hint.dart';
 import '../../../core/widgets/pace_section_card.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/tuck.dart';
@@ -35,6 +36,7 @@ import '../../schedule/application/schedule_providers.dart';
 import '../../verse/ui/verse_card.dart';
 import 'day_timeline_view.dart';
 import 'evening_card.dart';
+import 'getting_started_card.dart';
 import '../../deadlines/ui/task_check_in.dart';
 import 'now_card.dart';
 import 'step_check_in.dart';
@@ -44,6 +46,8 @@ import 'week_strip.dart';
 import '../../wellbeing/application/wellbeing_providers.dart';
 import '../../wellbeing/ui/wellbeing_cards.dart';
 import '../../journey/application/journey_providers.dart';
+import '../../onboarding/application/getting_started_providers.dart';
+import '../../onboarding/domain/getting_started.dart';
 
 /// Answers "what do I do right now?" in one screen: the next routine step
 /// (or the one thing to do when the morning is late), today's top three,
@@ -57,6 +61,23 @@ class TodayScreen extends ConsumerWidget {
   /// Screens that sit on top of the tabs.
   /// Shows a tab in the home shell, or pushes the screen when Today runs
   /// on its own.
+  static void _openStep(BuildContext context, GettingStartedStepId step) =>
+      switch (step) {
+        GettingStartedStepId.classes => Navigator.of(
+          context,
+        ).pushNamed(Routes.schedule),
+        GettingStartedStepId.deadline => _go(context, ShellTab.deadlines),
+        GettingStartedStepId.inbox => _go(
+          context,
+          ShellTab.inbox,
+          capture: true,
+        ),
+        GettingStartedStepId.focus => _go(context, ShellTab.focus),
+        GettingStartedStepId.reminders => Navigator.of(
+          context,
+        ).pushNamed(Routes.notifications),
+      };
+
   static void _go(BuildContext context, ShellTab tab, {bool capture = false}) {
     if (!HomeShell.open(context, tab, capture: capture)) {
       Navigator.of(
@@ -109,6 +130,7 @@ class TodayScreen extends ConsumerWidget {
     final inboxCount = ref.watch(inboxCountProvider);
     final focus = ref.watch(activeFocusProvider).value;
     final startup = ref.watch(startupReportProvider);
+    final gettingStarted = ref.watch(showGettingStartedProvider);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
@@ -360,8 +382,10 @@ class TodayScreen extends ConsumerWidget {
                 EmptyWelcome(
                   onSetUp: () => Navigator.of(context).pushNamed(Routes.setup),
                 ),
-              )
-            else ...[
+              ),
+            if (empty && gettingStarted)
+              enter(GettingStartedCard(onOpen: (s) => _openStep(context, s))),
+            if (!empty) ...[
               if (evening)
                 enter(
                   EveningCard(
@@ -451,6 +475,16 @@ class TodayScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+              enter(
+                const FirstVisitHint(
+                  id: HintIds.today,
+                  text:
+                      'This is your day at a glance. On a hard day, tap the '
+                      'leaf at the top and PACE shows only what matters.',
+                ),
+              ),
+              if (gettingStarted)
+                enter(GettingStartedCard(onOpen: (s) => _openStep(context, s))),
               if (timeline.isNotEmpty)
                 enter(
                   Padding(
@@ -470,7 +504,8 @@ class TodayScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-              if (!lowEnergy)
+              // With no open deadlines these would only be empty boxes.
+              if (!lowEnergy && pending.isNotEmpty)
                 enter(
                   PaceSectionCard(
                     title: 'Top 3',
@@ -482,10 +517,8 @@ class TodayScreen extends ConsumerWidget {
                       child: Text(top3.isEmpty ? 'Pick' : 'Change'),
                     ),
                     child: top3.isEmpty
-                        ? TodayHint(
-                            pending.isEmpty
-                                ? 'No open deadlines. Add some, or enjoy the room.'
-                                : 'Pick up to three things to move today.',
+                        ? const TodayHint(
+                            'Pick up to three things to move today.',
                           )
                         : Column(
                             children: [
@@ -500,45 +533,51 @@ class TodayScreen extends ConsumerWidget {
                           ),
                   ),
                 ),
-              enter(
-                PaceSectionCard(
-                  title: 'Coming up',
-                  icon: Icons.event_note_rounded,
-                  pastel: PastelKind.deadline,
-                  action: TextButton(
-                    onPressed: () => _go(context, ShellTab.deadlines),
-                    child: const Text('All'),
-                  ),
-                  child: comingUp.isEmpty
-                      ? TodayHint(
-                          dueToday > 0
-                              ? 'Nothing else due in the next two days.'
-                              : 'Nothing due in the next two days.',
-                        )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            for (final t in comingUp.take(maxDeadlinesShown))
-                              TodayTaskRow(
-                                key: ValueKey('soon-${t.id}'),
-                                task: t,
-                                now: now,
-                                onSubmitted: () => markSubmitted(t),
-                              ),
-                            if (comingUp.length > maxDeadlinesShown)
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(8, 4, 0, 0),
-                                child: Text(
-                                  'and ${comingUp.length - maxDeadlinesShown} more',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: scheme.onSurfaceVariant,
+              if (pending.isNotEmpty)
+                enter(
+                  PaceSectionCard(
+                    title: 'Coming up',
+                    icon: Icons.event_note_rounded,
+                    pastel: PastelKind.deadline,
+                    action: TextButton(
+                      onPressed: () => _go(context, ShellTab.deadlines),
+                      child: const Text('All'),
+                    ),
+                    child: comingUp.isEmpty
+                        ? TodayHint(
+                            dueToday > 0
+                                ? 'Nothing else due in the next two days.'
+                                : 'Nothing due in the next two days.',
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (final t in comingUp.take(maxDeadlinesShown))
+                                TodayTaskRow(
+                                  key: ValueKey('soon-${t.id}'),
+                                  task: t,
+                                  now: now,
+                                  onSubmitted: () => markSubmitted(t),
+                                ),
+                              if (comingUp.length > maxDeadlinesShown)
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    8,
+                                    4,
+                                    0,
+                                    0,
+                                  ),
+                                  child: Text(
+                                    'and ${comingUp.length - maxDeadlinesShown} more',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                    ),
                                   ),
                                 ),
-                              ),
-                          ],
-                        ),
+                            ],
+                          ),
+                  ),
                 ),
-              ),
               if (!lowEnergy) enter(VerseCard(day: now)),
               if (!lowEnergy && tomorrow != null)
                 enter(

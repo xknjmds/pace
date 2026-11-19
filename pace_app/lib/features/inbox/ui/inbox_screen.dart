@@ -17,6 +17,7 @@ import '../../shell/shell_tabs.dart';
 import '../application/inbox_providers.dart';
 import '../../notes/ui/notes_screen.dart' show noteFromInbox;
 import '../../../core/widgets/pace_page.dart';
+import '../../../core/widgets/first_visit_hint.dart';
 
 /// Quick capture and a short queue to sort later: each item becomes a
 /// deadline or goes away. Nothing here nags.
@@ -103,7 +104,14 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
 
     return PacePage(
       title: 'Inbox',
+      subtitle: 'For thoughts without a due date yet.',
       children: [
+        const FirstVisitHint(
+          id: HintIds.inbox,
+          text:
+              'Write down any thought fast, no sorting needed. Later, make '
+              'it a deadline or a note, or let it go.',
+        ),
         Card(
           color: PacePastels.of(context).leave.fill,
           child: Padding(

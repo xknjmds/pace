@@ -8,4 +8,11 @@
             android:gravity="center"
             android:src="@drawable/splash_tuck" />
     </item>
+    <!-- The wordmark near the bottom, where Android 12+ puts its branding
+         image; the Flutter intro lifts it up under Tuck. -->
+    <item android:bottom="48dp">
+        <bitmap
+            android:gravity="bottom|center_horizontal"
+            android:src="@drawable/splash_wordmark" />
+    </item>
 </layer-list>

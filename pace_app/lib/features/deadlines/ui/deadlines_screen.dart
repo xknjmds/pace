@@ -13,6 +13,7 @@ import '../../../core/widgets/tuck.dart';
 import '../../../core/widgets/fade_slide_in.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/undo_snack.dart';
+import '../../../core/widgets/first_visit_hint.dart';
 import '../../../routes.dart';
 import '../../shell/home_shell.dart';
 import '../../shell/shell_tabs.dart';
@@ -121,13 +122,19 @@ class DeadlinesScreen extends ConsumerWidget {
 
     return PacePage(
       title: 'Deadlines',
-      subtitle: 'Everything with a date, gently in order.',
+      subtitle: 'Things with a due date, gently in order.',
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _addOrEdit(context, ref),
         icon: const Icon(Icons.add_rounded),
         label: const Text('Add'),
       ),
       children: [
+        const FirstVisitHint(
+          id: HintIds.deadlines,
+          text:
+              'Anything with a due date: homework, projects, forms. '
+              'PACE reminds you more often as each one gets close.',
+        ),
         if (shown.isEmpty && submitted.isEmpty)
           lowEnergy
               ? const EmptyState(
