@@ -14,13 +14,27 @@ class PlatformFeatures {
     this.calendarSync = false,
   });
 
-  /// Features of the device the app is running on right now.
+  /// Features of the device the app is running on right now. Calendar
+  /// sync also needs a Google client id at build time; release builds
+  /// without one (the Play launch, until Google verifies the app) hide it.
   factory PlatformFeatures.current() {
-    if (kIsWeb) return web;
-    return defaultTargetPlatform == TargetPlatform.android
+    final base = kIsWeb
+        ? web
+        : defaultTargetPlatform == TargetPlatform.android
         ? android
         : elsewhere;
+    if (calendarConfigured || !base.calendarSync) return base;
+    return PlatformFeatures(
+      reminders: base.reminders,
+      homeWidget: base.homeWidget,
+      scheduleImport: base.scheduleImport,
+      appBlocking: base.appBlocking,
+    );
   }
+
+  /// Built with `--dart-define=PACE_GOOGLE_CLIENT_ID=...`.
+  static const calendarConfigured =
+      String.fromEnvironment('PACE_GOOGLE_CLIENT_ID') != '';
 
   static const android = PlatformFeatures(
     reminders: true,
