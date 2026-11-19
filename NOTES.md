@@ -424,3 +424,28 @@ a real phone**, so A2 and B1 are not done in the PLAN.md sense.
   **D9 (suggestions) waits for that result** (CLAUDE.md: stop after a spike to report).
 - **Verified here:** `assembleDebug` compiles. A stale Gradle daemon broke the plugin loader
   once; `./gradlew --stop` fixed it.
+
+## Schedule photo: time-block grids (2026-11-20)
+
+The owner's real schedule (`pace_app/test/fixtures/schedule_time_block.jpg`) is a
+spreadsheet-style time-block grid, and the old parser read it poorly: every text line became a
+class, boxes got one row's time, and the summary table under the grid was read as more classes.
+
+- **Text layer** (`schedule_grid.dart`): grid bounds come from the day header and the time
+  labels; anything under the last time row is cut. Range labels ("8:00 - 8:30") and single
+  hour labels ("7:00") both work. When the schedule prints course codes, each code opens a
+  class and the title, room and teacher lines join it. The room comes from "BH101 - PROF. …"
+  style lines (also LAB/ROOM/AVR/ONLINE); teacher names are dropped. Breaks are skipped.
+- **Pixel layer** (`schedule_boxes.dart`): the reader also decodes the photo with `dart:ui`
+  (no new package). The time column is split at its border lines into true rows, each day
+  column into coloured runs, using the per-channel median of pixels outside the text boxes.
+  Each box's top and bottom map to row times, which gives the full span (Friday ITAS3123
+  8:00 to 11:00). It falls back to the text layer if the pixels don't match the text's size,
+  the rows don't match the labels, or it finds under half the text layer's classes.
+- **Fixture test:** all 24 classes on the real schedule come out right with pixels. Text alone
+  gets every day, subject and room, but only approximate times for centred text.
+- The OCR fixture was transcribed by hand with positions measured from the image (no OCR tool
+  here). Real ML Kit output may split lines differently. In debug builds, the review screen's
+  "Copy scan data" button copies the real lines as JSON, to add as a second fixture.
+- **Not verified on a phone:** a real ML Kit read of this screenshot, and a tilted photo of
+  the printed schedule (it should fall back to the text layer).

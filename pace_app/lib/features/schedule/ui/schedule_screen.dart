@@ -12,6 +12,7 @@ import '../../../core/widgets/time_button.dart';
 import '../../../core/widgets/undo_snack.dart';
 import '../../routine/ui/routine_settings_screen.dart' show weekdayNames;
 import '../application/schedule_providers.dart';
+import '../application/schedule_reader.dart';
 import '../domain/schedule_parser.dart';
 import 'class_block_sheet.dart';
 import 'import_review_screen.dart';
@@ -76,11 +77,9 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
 
   Future<void> _import({required bool camera}) async {
     setState(() => _reading = true);
-    List<OcrLine>? lines;
+    ScheduleScan? scan;
     try {
-      lines = await ref
-          .read(scheduleReaderProvider)
-          .pickAndRead(camera: camera);
+      scan = await ref.read(scheduleReaderProvider).pickAndRead(camera: camera);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -94,10 +93,14 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     } finally {
       if (mounted) setState(() => _reading = false);
     }
-    if (lines == null || !mounted) return;
+    final read = scan;
+    if (read == null || !mounted) return;
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => ImportReviewScreen(candidates: parseSchedule(lines!)),
+        builder: (_) => ImportReviewScreen(
+          candidates: parseSchedule(read.lines, image: read.image),
+          scanned: read.lines,
+        ),
       ),
     );
   }

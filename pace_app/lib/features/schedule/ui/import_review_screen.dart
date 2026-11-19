@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,9 +18,17 @@ import '../../../core/widgets/pace_page.dart';
 /// Everything the photo seemed to say, for the owner to fix, remove or add
 /// to. Nothing is saved until "Save schedule" (CLAUDE.md rule 10).
 class ImportReviewScreen extends ConsumerStatefulWidget {
-  const ImportReviewScreen({super.key, required this.candidates});
+  const ImportReviewScreen({
+    super.key,
+    required this.candidates,
+    this.scanned = const [],
+  });
 
   final List<CandidateBlock> candidates;
+
+  /// The recognized lines behind [candidates]. Debug builds can copy them
+  /// as JSON, to turn a real photo into a parser test fixture.
+  final List<OcrLine> scanned;
 
   @override
   ConsumerState<ImportReviewScreen> createState() => _ImportReviewState();
@@ -76,6 +88,27 @@ class _ImportReviewState extends ConsumerState<ImportReviewScreen> {
 
     return PacePage(
       title: 'Check your schedule',
+      actions: [
+        if (kDebugMode && widget.scanned.isNotEmpty)
+          IconButton(
+            tooltip: 'Copy scan data',
+            icon: const Icon(Icons.data_object_rounded),
+            onPressed: () => Clipboard.setData(
+              ClipboardData(
+                text: jsonEncode([
+                  for (final l in widget.scanned)
+                    {
+                      'text': l.text,
+                      'left': l.left,
+                      'top': l.top,
+                      'right': l.right,
+                      'bottom': l.bottom,
+                    },
+                ]),
+              ),
+            ),
+          ),
+      ],
       children: [
         Text(
           _blocks.isEmpty

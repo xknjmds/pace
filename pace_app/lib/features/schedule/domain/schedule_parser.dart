@@ -3,6 +3,11 @@
 /// (CLAUDE.md rule 10); the review screen decides what is saved.
 library;
 
+import 'dart:typed_data';
+
+part 'schedule_grid.dart';
+part 'schedule_boxes.dart';
+
 /// One line of recognized text and where it sat in the image.
 class OcrLine {
   const OcrLine(
@@ -127,13 +132,24 @@ final _room = RegExp(
 /// Pure: candidate blocks from [lines]. Uses the grid reading when the
 /// photo has day names across the top, and a line-by-line reading
 /// otherwise.
-List<CandidateBlock> parseSchedule(List<OcrLine> lines) {
+///
+/// With the photo's pixels ([image], same coordinates as [lines]), a
+/// time-block grid is read from its coloured boxes, which gives each class
+/// its full time span. Without them, or when the boxes cannot be found
+/// (a tilted photo), the text alone is used.
+List<CandidateBlock> parseSchedule(List<OcrLine> lines, {RgbaImage? image}) {
   final clean = [
     for (final l in lines)
       if (l.text.trim().isNotEmpty) l,
   ];
-  final grid = _parseGrid(clean);
-  return grid ?? _parseList(clean);
+  final grid = _detectGrid(clean);
+  if (grid == null) return _parseList(clean);
+  final fromText = _parseGrid(clean, grid);
+  if (image != null) {
+    final fromBoxes = _parseBoxes(clean, grid, image, fromText.length);
+    if (fromBoxes != null) return fromBoxes;
+  }
+  return fromText;
 }
 
 /// Pairs of indexes into [blocks] that share a day and overlap in time.
@@ -340,129 +356,6 @@ List<CandidateBlock> _parseList(List<OcrLine> lines) {
         ),
       );
     }
-  }
-  return out;
-}
-
-// -- grid --------------------------------------------------------------------
-
-class _Column {
-  _Column(this.weekday, this.x);
-  final int weekday;
-  final double x;
-}
-
-List<CandidateBlock>? _parseGrid(List<OcrLine> lines) {
-  // Day headings, splitting a line that holds several ("Mon Tue Wed").
-  final columns = <_Column>[];
-  final headerLines = <OcrLine>{};
-  // Day headings only make a grid when they share one row across the top.
-  final dayLines = lines.where((l) => _onlyDays(l.text)).toList();
-  if (dayLines.isEmpty) return null;
-  final rowTop = dayLines.map((l) => l.top).reduce((a, b) => a < b ? a : b);
-  final tolerance = dayLines
-      .map((l) => l.height)
-      .reduce((a, b) => a > b ? a : b);
-  for (final l in dayLines) {
-    if ((l.top - rowTop).abs() > tolerance) continue;
-    final matches = _dayPattern.allMatches(l.text).toList();
-    if (matches.isEmpty) continue;
-    headerLines.add(l);
-    final width = l.right - l.left;
-    final len = l.text.length;
-    for (final m in matches) {
-      final mid = (m.start + m.end) / 2 / len;
-      columns.add(
-        _Column(_dayWords[m[1]!.toLowerCase()]!, l.left + width * mid),
-      );
-    }
-  }
-  final distinct = {for (final c in columns) c.weekday};
-  if (distinct.length < 2) return null;
-  columns.sort((a, b) => a.x.compareTo(b.x));
-  final headerBottom = headerLines
-      .map((l) => l.bottom)
-      .reduce((a, b) => a > b ? a : b);
-
-  // Time labels down the side: a line that is only a time range, left of
-  // the first column.
-  final firstX = columns.first.x;
-  final rows = <({double y, int start, int end})>[];
-  final cells = <OcrLine>[];
-  for (final l in lines) {
-    if (headerLines.contains(l) || l.centerY <= headerBottom) continue;
-    final r = _takeRange(l.text);
-    if (r != null && _tidy(r.rest).isEmpty && l.centerX < firstX) {
-      rows.add((y: l.centerY, start: r.start, end: r.end));
-    } else {
-      cells.add(l);
-    }
-  }
-  rows.sort((a, b) => a.y.compareTo(b.y));
-
-  // Gather each cell's lines by (column, row).
-  final grouped = <(int, int), List<OcrLine>>{};
-  for (final l in cells) {
-    var col = 0;
-    for (var i = 1; i < columns.length; i++) {
-      if ((columns[i].x - l.centerX).abs() <
-          (columns[col].x - l.centerX).abs()) {
-        col = i;
-      }
-    }
-    var row = -1;
-    if (rows.isNotEmpty) {
-      row = 0;
-      for (var i = 1; i < rows.length; i++) {
-        if ((rows[i].y - l.centerY).abs() < (rows[row].y - l.centerY).abs()) {
-          row = i;
-        }
-      }
-    }
-    // Lines with their own time stand alone.
-    final ownTime = _takeRange(l.text) != null;
-    final key = (col, ownTime ? -1000 - cells.indexOf(l) : row);
-    (grouped[key] ??= []).add(l);
-  }
-
-  final out = <CandidateBlock>[];
-  final keys = grouped.keys.toList()
-    ..sort((a, b) {
-      final c = a.$1.compareTo(b.$1);
-      return c != 0 ? c : a.$2.compareTo(b.$2);
-    });
-  for (final key in keys) {
-    final group = grouped[key]!..sort((a, b) => a.top.compareTo(b.top));
-    int? start;
-    int? end;
-    String? room;
-    final words = <String>[];
-    for (final l in group) {
-      final r = _takeRange(l.text);
-      var rest = r?.rest ?? l.text;
-      if (r != null) {
-        start = r.start;
-        end = r.end;
-      }
-      final rm = _takeRoom(rest);
-      room ??= rm.room;
-      rest = _tidy(rm.rest);
-      if (rest.isNotEmpty) words.add(rest);
-    }
-    if (words.isEmpty) continue;
-    if (start == null && key.$2 >= 0 && rows.isNotEmpty) {
-      start = rows[key.$2].start;
-      end = rows[key.$2].end;
-    }
-    out.add(
-      CandidateBlock(
-        weekday: columns[key.$1].weekday,
-        subject: words.first,
-        start: start,
-        end: end,
-        room: room,
-      ),
-    );
   }
   return out;
 }

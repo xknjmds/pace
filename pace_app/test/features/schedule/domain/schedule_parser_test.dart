@@ -142,6 +142,71 @@ void main() {
     });
   });
 
+  group('time-block grid rules', () {
+    test('single hour labels down the side give each row its hour', () {
+      final blocks = parseSchedule([
+        line('Mon', 100, 0, 40),
+        line('Tue', 200, 0, 40),
+        line('7:00', 0, 40, 40),
+        line('8:00', 0, 80, 40),
+        line('9:00', 0, 120, 40),
+        line('Math', 100, 45, 40),
+        line('Art', 200, 85, 40),
+      ]);
+      expect(blocks.map((b) => (b.weekday, b.subject, b.start, b.end)), [
+        (1, 'Math', hm(7, 0), hm(8, 0)),
+        (2, 'Art', hm(8, 0), hm(9, 0)),
+      ]);
+    });
+
+    test('a course code opens a class; room and teacher lines join it', () {
+      final blocks = parseSchedule([
+        line('MONDAY', 100, 0, 60),
+        line('TUESDAY', 300, 0, 60),
+        line('8:00 - 9:00', 0, 40),
+        line('9:00 - 10:00', 0, 80),
+        line('CS 101 - INTRO TO', 90, 40, 150),
+        line('PROGRAMMING', 100, 55, 100),
+        line('LAB 4 - PROF. M. REYES', 90, 70, 150),
+        line('MATH 202 - ALGEBRA', 90, 85, 150),
+        line('RM 12', 100, 100, 50),
+      ]);
+      expect(blocks, hasLength(2));
+      expect(blocks.first.subject, 'CS 101 - INTRO TO PROGRAMMING');
+      expect(blocks.first.room, 'LAB 4');
+      expect(blocks.last.subject, 'MATH 202 - ALGEBRA');
+      expect(blocks.last.room, '12');
+    });
+
+    test('a room code that looks like a course code stays a room', () {
+      final blocks = parseSchedule([
+        line('MONDAY', 100, 0, 60),
+        line('TUESDAY', 300, 0, 60),
+        line('8:00 - 9:00', 0, 40),
+        line('IT 3119 - DATABASES', 90, 40, 150),
+        line('BH101 -PROF. A. CRUZ', 90, 55, 150),
+      ]);
+      expect(blocks.single.room, 'BH101');
+      expect(blocks.single.subject, 'IT 3119 - DATABASES');
+    });
+
+    test('lunch is not a class and a table under the grid is ignored', () {
+      final blocks = parseSchedule([
+        line('MONDAY', 100, 0, 60),
+        line('TUESDAY', 300, 0, 60),
+        line('12:00 - 1:00', 0, 40),
+        line('1:00 - 2:00', 0, 80),
+        line('LUNCHBREAK', 150, 40, 80),
+        line('IT 3121 - APPS', 90, 80, 150),
+        line('Course No.', 0, 200),
+        line('IT 3121 - APPS', 90, 220, 150),
+      ]);
+      expect(blocks.map((b) => (b.subject, b.start)), [
+        ('IT 3121 - APPS', hm(13, 0)),
+      ]);
+    });
+  });
+
   group('overlaps', () {
     test('same day and overlapping times are flagged', () {
       final blocks = [
