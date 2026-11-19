@@ -6,6 +6,7 @@ import 'features/blocking/ui/gate_screen.dart';
 import 'features/calendar/ui/calendar_screen.dart';
 import 'features/finance/ui/money_screen.dart';
 import 'features/notes/ui/notes_screen.dart';
+import 'features/journey/ui/journey_screen.dart';
 import 'features/onboarding/ui/setup_screen.dart';
 import 'features/wellbeing/ui/support_screen.dart';
 import 'features/review/ui/check_in_screen.dart';
@@ -44,6 +45,9 @@ abstract final class Routes {
   /// "If you're struggling": kind words and crisis lines, offline.
   static const support = '/support';
 
+  /// Tuck's journey: days done, stops and personal firsts.
+  static const journey = '/journey';
+
   /// The hub tab with every other screen.
   static const more = '/more';
 
@@ -66,6 +70,7 @@ abstract final class Routes {
     calendar: (_) => const ReadableWidth(child: CalendarScreen()),
     setup: (_) => const ReadableWidth(child: SetupScreen()),
     support: (_) => const ReadableWidth(child: SupportScreen()),
+    journey: (_) => const ReadableWidth(child: JourneyScreen()),
   };
 
   static Route<void> _route(String name) => MaterialPageRoute(

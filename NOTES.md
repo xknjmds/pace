@@ -374,3 +374,14 @@ a real phone**, so A2 and B1 are not done in the PLAN.md sense.
 - **Not verified:** that any auto-start page actually opens, and that the test reminder fires
   with the screen locked on the owner's phone **and on a budget Xiaomi or OPPO phone**. This
   is the D3 "done when" and it is still open.
+
+### D5. Tuck's journey
+- Derived from logs, with no table: distinct days with the routine done, movement done or a
+  deadline handed in. Stops run to day 365, then "Open sea" every 100 days. Firsts are
+  personal only (no ranking).
+- Entry points: a pill on Today (hidden in low-energy mode and before the first day) and a
+  tile on Review. The screen shows only the top card in low-energy mode.
+- Because it is derived, un-marking a routine day or deleting a habit log takes that step
+  back out. That only undoes the owner's own correction, never a missed day.
+- No new mascot art: it uses the existing poses. The path is a plain list for now; a drawn
+  path is a nice later polish.

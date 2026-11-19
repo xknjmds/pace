@@ -43,6 +43,7 @@ import 'top3_picker_sheet.dart';
 import 'week_strip.dart';
 import '../../wellbeing/application/wellbeing_providers.dart';
 import '../../wellbeing/ui/wellbeing_cards.dart';
+import '../../journey/application/journey_providers.dart';
 
 /// Answers "what do I do right now?" in one screen: the next routine step
 /// (or the one thing to do when the morning is late), today's top three,
@@ -102,6 +103,9 @@ class TodayScreen extends ConsumerWidget {
     final lowEnergy = ref.watch(lowEnergyProvider);
     final welcomeBack = ref.watch(showWelcomeBackProvider);
     final lightDay = ref.watch(lightDayTodayProvider);
+    // A small line about Tuck's journey; low-energy mode leaves it out.
+    final journey = lowEnergy ? null : ref.watch(journeyProvider).value;
+    final showJourney = journey != null && journey.daysDone > 0;
     final inboxCount = ref.watch(inboxCountProvider);
     final focus = ref.watch(activeFocusProvider).value;
     final startup = ref.watch(startupReportProvider);
@@ -393,7 +397,10 @@ class TodayScreen extends ConsumerWidget {
                     onOutTheDoor: () => _outTheDoor(ref, now),
                   ),
                 ),
-              if (showHabit || focusText != null || inboxCount > 0)
+              if (showHabit ||
+                  focusText != null ||
+                  inboxCount > 0 ||
+                  showJourney)
                 enter(
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6),
@@ -429,6 +436,16 @@ class TodayScreen extends ConsumerWidget {
                             icon: Icons.inbox_outlined,
                             text: 'Inbox: $inboxCount waiting',
                             onTap: () => _go(context, ShellTab.inbox),
+                          ),
+                        if (showJourney)
+                          StatusPill(
+                            key: const ValueKey('journey-line'),
+                            icon: Icons.route_rounded,
+                            text:
+                                'Tuck: ${journey.daysDone} '
+                                '${journey.daysDone == 1 ? 'day' : 'days'} along',
+                            onTap: () =>
+                                Navigator.of(context).pushNamed(Routes.journey),
                           ),
                       ],
                     ),

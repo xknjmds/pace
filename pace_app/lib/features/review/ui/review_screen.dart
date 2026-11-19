@@ -174,6 +174,16 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 ),
         ),
         const WellbeingReviewSection(),
+        Card(
+          child: ListTile(
+            key: const ValueKey('open-journey'),
+            leading: const Icon(Icons.route_rounded),
+            title: const Text('Tuck\'s journey'),
+            subtitle: const Text('Every day done is a step forward'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => Navigator.of(context).pushNamed(Routes.journey),
+          ),
+        ),
         const TrendsSection(),
       ],
     );
