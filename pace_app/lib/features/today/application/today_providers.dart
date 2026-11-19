@@ -46,3 +46,12 @@ final weekRoutineDoneProvider = StreamProvider.family<Set<int>, String>((
         },
       );
 });
+
+/// The day's routine check-ins (keyed `yyyy-MM-dd`), by step.
+final checkInsProvider =
+    StreamProvider.family<Map<ReminderKind, CheckIn>, String>(
+      (ref, key) => ref
+          .watch(appDatabaseProvider)
+          .checkInsDao
+          .watchDay(DateTime.parse(key)),
+    );

@@ -1,10 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/pace_tokens.dart';
 
 /// A round check: tap it and it fills, then [onDone] runs. The short fill
-/// confirms the tap before the item moves away.
+/// confirms the tap before the item moves away. When [onDone] returns
+/// false (a check-in sheet was dismissed, say) the check empties again.
 class DoneCheck extends StatefulWidget {
   const DoneCheck({
     super.key,
@@ -13,7 +16,7 @@ class DoneCheck extends StatefulWidget {
     this.size = 24,
   });
 
-  final VoidCallback onDone;
+  final FutureOr<bool> Function() onDone;
   final String tooltip;
   final double size;
 
@@ -39,7 +42,9 @@ class _DoneCheckState extends State<DoneCheck>
     if (_c.isAnimating || _c.isCompleted) return;
     HapticFeedback.lightImpact();
     await _c.forward();
-    if (mounted) widget.onDone();
+    if (!mounted) return;
+    final done = await widget.onDone();
+    if (!done && mounted) await _c.reverse();
   }
 
   @override

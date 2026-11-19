@@ -156,6 +156,94 @@ void main() {
     expect(log?.routineDone, isTrue);
   });
 
+  group('check-in', () {
+    final monday = DateTime(2026, 11, 16);
+
+    test('a bit later logs the picked time and the outcome', () async {
+      t.now = DateTime(2026, 11, 16, 7, 20).toUtc();
+      final woke = DateTime(2026, 11, 16, 7, 5);
+      await routine.checkIn(
+        ReminderKind.wake,
+        DateTime.monday,
+        CheckInOutcome.later,
+        at: woke,
+        reason: 'Overslept',
+      );
+      final log = await t.db.dailyLogsDao.get(monday);
+      expect(log!.wakeLoggedAt, woke.toUtc());
+      final row = (await t.db.checkInsDao.get(monday, ReminderKind.wake))!;
+      expect(row.outcome, CheckInOutcome.later);
+      expect(row.reason, 'Overslept');
+    });
+
+    test("didn't happen clears the log and quiets today's reminder", () async {
+      t.now = DateTime(2026, 11, 16, 6, 31).toUtc();
+      await routine.resync();
+      await routine.checkIn(
+        ReminderKind.eat,
+        DateTime.monday,
+        CheckInOutcome.onTime,
+      );
+      expect((await t.db.dailyLogsDao.get(monday))!.eatDoneAt, isNotNull);
+
+      await routine.checkIn(
+        ReminderKind.eat,
+        DateTime.monday,
+        CheckInOutcome.didntHappen,
+      );
+      expect((await t.db.dailyLogsDao.get(monday))!.eatDoneAt, isNull);
+      expect(
+        await t.db.reminderMutesDao.isMuted(ReminderKind.eat, '1', monday),
+        isTrue,
+      );
+      expect(firesFor('eat:1'), isEmpty);
+      expect(
+        (await t.db.checkInsDao.get(monday, ReminderKind.eat))!.outcome,
+        CheckInOutcome.didntHappen,
+      );
+    });
+
+    test('leave counts the routine, and clearing undoes it all', () async {
+      t.now = DateTime(2026, 11, 16, 6, 31).toUtc();
+      await routine.resync();
+      await routine.checkIn(
+        ReminderKind.leave,
+        DateTime.monday,
+        CheckInOutcome.didntHappen,
+      );
+      await routine.checkIn(
+        ReminderKind.leave,
+        DateTime.monday,
+        CheckInOutcome.onTime,
+      );
+      expect((await t.db.dailyLogsDao.get(monday))!.routineDone, isTrue);
+
+      await routine.clearCheckIn(ReminderKind.leave, DateTime.monday);
+      expect((await t.db.dailyLogsDao.get(monday))!.routineDone, isFalse);
+      expect(await t.db.checkInsDao.get(monday, ReminderKind.leave), isNull);
+      // Clearing starts the step over, reminder included.
+      expect(
+        await t.db.reminderMutesDao.isMuted(ReminderKind.leave, '1', monday),
+        isFalse,
+      );
+      expect(firesFor('leave:1'), [DateTime(2026, 11, 16, 8, 0)]);
+    });
+
+    test('the notification Done button checks in on time', () async {
+      t.now = DateTime(2026, 11, 16, 8, 2).toUtc();
+      await routine.handle(
+        const ReminderResponse(
+          payload: 'leave:1',
+          actionId: ReminderActionIds.done,
+        ),
+      );
+      expect(
+        (await t.db.checkInsDao.get(monday, ReminderKind.leave))!.outcome,
+        CheckInOutcome.onTime,
+      );
+    });
+  });
+
   test('responses for other kinds or plain taps are left alone', () async {
     expect(
       await routine.handle(const ReminderResponse(payload: 'deadline:abc')),

@@ -14,12 +14,14 @@ class NowCard extends StatelessWidget {
   const NowCard({
     super.key,
     required this.status,
-    required this.onStepDone,
+    required this.onStepTap,
     required this.onOutTheDoor,
   });
 
   final RoutineStatus status;
-  final void Function(RoutineStep step) onStepDone;
+
+  /// A step was tapped: open its check-in (new, or to change it).
+  final void Function(RoutineStep step) onStepTap;
   final VoidCallback onOutTheDoor;
 
   @override
@@ -58,11 +60,14 @@ class NowCard extends StatelessWidget {
               _StepPill(
                 stepKey: const ValueKey('step-wake'),
                 icon: Icons.wb_sunny_outlined,
-                label: wake.done
+                label: wake.skipped
+                    ? 'Up · not today'
+                    : wake.done
                     ? 'Up ${wake.at.format24()}'
                     : 'I\'m up · ${wake.at.format24()}',
                 done: wake.done,
-                onTap: () => onStepDone(RoutineStep.wake),
+                skipped: wake.skipped,
+                onTap: () => onStepTap(RoutineStep.wake),
               ),
             ],
           ],
@@ -77,15 +82,33 @@ class NowCard extends StatelessWidget {
         ),
         null,
       ),
-      RoutineAllDone() => (
-        Row(
+      RoutineAllDone(:final steps) => (
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.check_circle_rounded, color: scheme.secondary),
-            const SizedBox(width: 12),
-            Expanded(child: Text('Routine done for today.', style: body)),
+            Row(
+              children: [
+                Icon(Icons.check_circle_rounded, color: scheme.secondary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    steps.any((s) => s.skipped)
+                        ? 'Morning wrapped up.'
+                        : 'Routine done for today.',
+                    style: body,
+                  ),
+                ),
+              ],
+            ),
+            if (steps.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _stepRow(steps, null),
+            ],
           ],
         ),
-        const [true, true, true],
+        steps.isEmpty
+            ? const [true, true, true]
+            : [for (final s in steps) s.done],
       ),
       RunningLate(:final title, :final subtitle, :final steps) => (
         Column(
@@ -122,23 +145,7 @@ class NowCard extends StatelessWidget {
               style: title,
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                for (final (i, s) in steps.indexed) ...[
-                  if (i > 0) const SizedBox(width: 8),
-                  Expanded(
-                    child: _StepTile(
-                      stepKey: ValueKey('step-${s.step.name}'),
-                      label: s.label,
-                      time: s.at.format24(),
-                      done: s.done,
-                      isNext: s == next,
-                      onTap: () => onStepDone(s.step),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+            _stepRow(steps, next),
           ],
         ),
         [for (final s in steps) s.done],
@@ -204,13 +211,34 @@ class NowCard extends StatelessWidget {
     );
   }
 
+  Widget _stepRow(List<RoutineStepItem> steps, RoutineStepItem? next) => Row(
+    children: [
+      for (final (i, s) in steps.indexed) ...[
+        if (i > 0) const SizedBox(width: 8),
+        Expanded(
+          child: _StepTile(
+            stepKey: ValueKey('step-${s.step.name}'),
+            label: s.label,
+            time: s.at.format24(),
+            done: s.done,
+            skipped: s.skipped,
+            isNext: s == next,
+            onTap: () => onStepTap(s.step),
+          ),
+        ),
+      ],
+    ],
+  );
+
   static String _stateKey(RoutineStatus s) => switch (s) {
     StepsRemaining(:final next) => 'steps-${next.step.name}',
     _ => s.runtimeType.toString(),
   };
 }
 
-/// One routine step. Tap to log it; done steps show a check and stay calm.
+/// One routine step. Tap to check in; done steps show a check and stay
+/// calm, and can be tapped again to change. A step that didn't happen
+/// shows a cloud, never red.
 class _StepPill extends StatelessWidget {
   const _StepPill({
     required this.stepKey,
@@ -218,25 +246,36 @@ class _StepPill extends StatelessWidget {
     required this.label,
     required this.done,
     required this.onTap,
+    this.skipped = false,
   });
 
   final Key stepKey;
   final IconData icon;
   final String label;
   final bool done;
+  final bool skipped;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final fg = done ? scheme.onSecondary : scheme.onSurface;
+    final filled = done && !skipped;
+    final fg = filled
+        ? scheme.onSecondary
+        : skipped
+        ? scheme.onSurfaceVariant
+        : scheme.onSurface;
     final pill = AnimatedContainer(
       duration: PaceMotion.standard,
       curve: PaceMotion.easeOut,
       padding: const EdgeInsets.fromLTRB(12, 9, 14, 9),
       decoration: ShapeDecoration(
-        color: done ? scheme.secondary : scheme.surfaceContainerLowest,
+        color: filled
+            ? scheme.secondary
+            : skipped
+            ? scheme.surfaceContainerHighest
+            : scheme.surfaceContainerLowest,
         shape: const StadiumBorder(),
       ),
       child: Row(
@@ -245,8 +284,12 @@ class _StepPill extends StatelessWidget {
           AnimatedSwitcher(
             duration: PaceMotion.quick,
             child: Icon(
-              done ? Icons.check_rounded : icon,
-              key: ValueKey(done),
+              skipped
+                  ? Icons.cloud_outlined
+                  : done
+                  ? Icons.check_rounded
+                  : icon,
+              key: ValueKey((done, skipped)),
               size: 18,
               color: done ? fg : scheme.secondary,
             ),
@@ -256,26 +299,31 @@ class _StepPill extends StatelessWidget {
         ],
       ),
     );
-    if (done) return Semantics(label: '$label, done', child: pill);
     return PressScale(
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          key: stepKey,
-          customBorder: const StadiumBorder(),
-          onTap: () {
-            HapticFeedback.lightImpact();
-            onTap();
-          },
-          child: pill,
+      child: Semantics(
+        button: true,
+        label: done ? '$label. Change check-in' : null,
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            key: stepKey,
+            customBorder: const StadiumBorder(),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              onTap();
+            },
+            child: pill,
+          ),
         ),
       ),
     );
   }
 }
 
-/// One routine step in the hero strip: label over time. Tap to log it.
-/// The next step is lifted; done steps fill with a check.
+/// One routine step in the hero strip: label over time. Tap to check in.
+/// The next step is lifted; done steps fill with a check and can be tapped
+/// again to change. A step that didn't happen reads "Not today" with a
+/// cloud, in a neutral tone.
 class _StepTile extends StatelessWidget {
   const _StepTile({
     required this.stepKey,
@@ -284,12 +332,14 @@ class _StepTile extends StatelessWidget {
     required this.done,
     required this.isNext,
     required this.onTap,
+    this.skipped = false,
   });
 
   final Key stepKey;
   final String label;
   final String time;
   final bool done;
+  final bool skipped;
   final bool isNext;
   final VoidCallback onTap;
 
@@ -297,14 +347,21 @@ class _StepTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final fg = done ? scheme.onSecondary : scheme.onSurface;
+    final filled = done && !skipped;
+    final fg = filled
+        ? scheme.onSecondary
+        : skipped
+        ? scheme.onSurfaceVariant
+        : scheme.onSurface;
     final tile = AnimatedContainer(
       duration: PaceMotion.standard,
       curve: PaceMotion.easeOut,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: done
+        color: filled
             ? scheme.secondary
+            : skipped
+            ? scheme.surfaceContainerHighest
             : isNext
             ? scheme.surfaceContainerLowest
             : scheme.surfaceContainerLowest.withValues(alpha: .55),
@@ -328,7 +385,7 @@ class _StepTile extends StatelessWidget {
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    time,
+                    skipped ? 'Not today' : time,
                     maxLines: 1,
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: fg,
@@ -341,18 +398,33 @@ class _StepTile extends StatelessWidget {
           ),
           AnimatedSwitcher(
             duration: PaceMotion.quick,
-            child: done
-                ? Icon(Icons.check_rounded, size: 18, color: fg)
-                : const SizedBox(width: 18),
+            child: skipped
+                ? Icon(
+                    Icons.cloud_outlined,
+                    key: const ValueKey('skipped'),
+                    size: 18,
+                    color: fg,
+                  )
+                : done
+                ? Icon(
+                    Icons.check_rounded,
+                    key: const ValueKey('done'),
+                    size: 18,
+                    color: fg,
+                  )
+                : const SizedBox(key: ValueKey('open'), width: 18),
           ),
         ],
       ),
     );
-    if (done) return Semantics(label: '$label $time, done', child: tile);
     return PressScale(
       child: Semantics(
         button: true,
-        label: 'Mark $label done',
+        label: skipped
+            ? '$label, not today. Change check-in'
+            : done
+            ? '$label $time, done. Change check-in'
+            : 'Check in $label',
         child: Material(
           type: MaterialType.transparency,
           child: InkWell(

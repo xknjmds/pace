@@ -2,8 +2,10 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 
+import '../check_in/check_in_outcome.dart';
 import 'uuid.dart';
 
+export '../check_in/check_in_outcome.dart';
 export '../notifications/reminder_draft.dart';
 export '../time/date_key.dart';
 
@@ -96,7 +98,9 @@ class WeekdaySchedules extends Table with UuidKey, SyncColumns {
   ];
 }
 
-enum TaskStatus { pending, submitted }
+/// v7 adds [letGo]: closed without submitting ("couldn't submit"). Neutral,
+/// never shown as a failure.
+enum TaskStatus { pending, submitted, letGo }
 
 enum TaskSource { manual, classroom }
 
@@ -110,8 +114,12 @@ class Tasks extends Table with UuidKey, SyncColumns {
       textEnum<TaskSource>().withDefault(const Constant('manual'))();
   DateTimeColumn get createdAt => dateTime()();
 
-  /// v6: when it was marked submitted, for the weekly counts.
+  /// v6: when it was marked submitted, for the weekly counts. From v7 the
+  /// owner can pick it (submitted late), and it is also set on [TaskStatus.letGo].
   DateTimeColumn get submittedAt => dateTime().nullable()();
+
+  /// v7: optional short note from the check-in sheet ("printer broke").
+  TextColumn get submitNote => text().nullable()();
 }
 
 /// Quick captures waiting to become a task or be discarded.
@@ -135,6 +143,22 @@ class DailyLogs extends Table with SyncColumns {
 
   @override
   Set<Column<Object>> get primaryKey => {date};
+}
+
+/// v7: how a routine step went on a day, from the check-in sheet. One live
+/// row per [day] (`yyyy-MM-dd`; the night's date for wind-down) and [kind].
+/// `daily_logs` still holds the times the rest of the app reads.
+class CheckIns extends Table with UuidKey, SyncColumns {
+  TextColumn get day => text()();
+  TextColumn get kind => textEnum<ReminderKind>()();
+  TextColumn get outcome => textEnum<CheckInOutcome>()();
+  DateTimeColumn get actualAt => dateTime().nullable()();
+  TextColumn get reason => text().nullable()();
+
+  @override
+  List<Set<Column<Object>>> get uniqueKeys => [
+    {day, kind},
+  ];
 }
 
 /// A "just start" session. While [endedAt] is null the session is live:

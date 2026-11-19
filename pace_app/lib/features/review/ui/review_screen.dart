@@ -99,6 +99,10 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                   ? 'No routine days logged yet'
                   : 'Routine done on ${summary.routineDays} '
                         '${summary.routineDays == 1 ? 'day' : 'days'}',
+              subtitle: summary.laterDays == 0
+                  ? null
+                  : '${summary.laterDays} of them a bit later. '
+                        'Still counts.',
             ),
             PaceTile(
               key: const ValueKey('average-wake'),

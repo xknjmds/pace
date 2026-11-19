@@ -16,6 +16,23 @@ void main() {
     expect(s.to, DateTime(2026, 11, 18));
   });
 
+  test('later days count only among routine days', () {
+    final s = weeklySummary(
+      today: today,
+      records: [
+        DayRecord(date: DateTime(2026, 11, 16), routineDone: true),
+        DayRecord(
+          date: DateTime(2026, 11, 17),
+          routineDone: true,
+          anyLater: true,
+        ),
+        DayRecord(date: DateTime(2026, 11, 18), anyLater: true),
+      ],
+    );
+    expect(s.routineDays, 2);
+    expect(s.laterDays, 1);
+  });
+
   test('partial data: counts what is there, averages what is known', () {
     final s = weeklySummary(
       today: today,

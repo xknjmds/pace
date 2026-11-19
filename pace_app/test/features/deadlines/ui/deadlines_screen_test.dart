@@ -101,6 +101,10 @@ void main() {
 
     await tester.tap(find.byTooltip('Submitted').first);
     await tester.pumpAndSettle();
+    // Past due, so "after the due time" is preselected; one tap saves.
+    expect(find.text('Submitted after the due time'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('check-in-save')));
+    await tester.pumpAndSettle();
     expect(find.text('Still open'), findsNothing);
     expect(find.text('Submitted'), findsOneWidget);
     expect(find.text('Reopen'), findsOneWidget);

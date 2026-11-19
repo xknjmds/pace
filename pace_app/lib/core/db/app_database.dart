@@ -3,6 +3,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'daos/check_ins_dao.dart';
 import 'daos/class_blocks_dao.dart';
 import 'daos/habits_dao.dart';
 import 'daos/blocked_apps_dao.dart';
@@ -21,6 +22,7 @@ import 'schema_versions.dart';
 import 'tables.dart';
 import 'uuid.dart';
 
+export 'daos/check_ins_dao.dart';
 export 'daos/class_blocks_dao.dart';
 export 'daos/habits_dao.dart';
 export 'daos/blocked_apps_dao.dart';
@@ -57,6 +59,7 @@ part 'app_database.g.dart';
     Expenses,
     Budgets,
     CalendarEvents,
+    CheckIns,
   ],
   daos: [
     SettingsDao,
@@ -73,6 +76,7 @@ part 'app_database.g.dart';
     NotesDao,
     FinanceDao,
     CalendarEventsDao,
+    CheckInsDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -113,7 +117,7 @@ class AppDatabase extends _$AppDatabase {
   static DateTime _utcNow() => DateTime.now().toUtc();
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   /// Schema history. Never edit a released step (CLAUDE.md rule 8); add one,
   /// then regenerate: `drift_dev schema dump`, then `schema steps` into
@@ -127,6 +131,7 @@ class AppDatabase extends _$AppDatabase {
   /// - v6 (v2): class blocks, habits, blocked apps, notes, finance and
   ///   calendar tables; settings for the verse, currency, gate and calendar;
   ///   `tasks.submitted_at`
+  /// - v7 (v2.1): `check_ins`; `tasks.submit_note`
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
@@ -200,6 +205,10 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(s, column);
         }
         await m.addColumn(schema.tasks, schema.tasks.submittedAt);
+      },
+      from6To7: (m, schema) async {
+        await m.createTable(schema.checkIns);
+        await m.addColumn(schema.tasks, schema.tasks.submitNote);
       },
     ),
     beforeOpen: (_) => settingsDao.ensureRow(),

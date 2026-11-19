@@ -67,7 +67,8 @@ class _WeekCard extends StatelessWidget {
       if (w.routineDays > 0)
         (
           Icons.check_circle_outline_rounded,
-          'Routine: ${plural(w.routineDays, 'day', 'days')}',
+          'Routine: ${plural(w.routineDays, 'day', 'days')}'
+              '${w.routineLaterDays > 0 ? ' · ${w.routineLaterDays} a bit later' : ''}',
         ),
       if (w.averageActualWake case final actual?)
         (
@@ -82,7 +83,8 @@ class _WeekCard extends StatelessWidget {
       if (w.deadlinesSubmitted > 0)
         (
           Icons.event_available_outlined,
-          '${plural(w.deadlinesSubmitted, 'deadline', 'deadlines')} submitted',
+          '${plural(w.deadlinesSubmitted, 'deadline', 'deadlines')} submitted'
+              '${w.deadlinesSubmittedLate > 0 ? ' · ${w.deadlinesSubmittedLate} after the due time' : ''}',
         ),
       if (w.focusSessions > 0)
         (

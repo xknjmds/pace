@@ -8,6 +8,7 @@ class DayRecord {
     this.bedAt,
     this.wakeAt,
     this.routineDone = false,
+    this.anyLater = false,
   });
 
   /// Local calendar day.
@@ -19,6 +20,10 @@ class DayRecord {
   /// "I'm up" on the morning of [date].
   final DateTime? wakeAt;
   final bool routineDone;
+
+  /// A step that day was checked in as "a bit later". Only ever shown as a
+  /// neutral count next to the routine days.
+  final bool anyLater;
 }
 
 /// One night: bed on [night], up the next morning. Either may be missing.
@@ -44,6 +49,7 @@ class WeeklySummary {
     required this.from,
     required this.to,
     required this.routineDays,
+    this.laterDays = 0,
     required this.averageWake,
     required this.wakeDays,
     required this.sleep,
@@ -54,6 +60,10 @@ class WeeklySummary {
 
   /// Days in the window with the routine marked done. Only ever counts up.
   final int routineDays;
+
+  /// Of [routineDays], the ones with a step done a bit later. A neutral
+  /// detail, never a miss.
+  final int laterDays;
 
   /// Mean of the logged wake times; null when none were logged.
   final LocalTime? averageWake;
@@ -117,6 +127,7 @@ WeeklySummary weeklySummary({
     from: from,
     to: to,
     routineDays: inWindow.where((r) => r.routineDone).length,
+    laterDays: inWindow.where((r) => r.routineDone && r.anyLater).length,
     averageWake: averageWake,
     wakeDays: wakes.length,
     sleep: sleep,

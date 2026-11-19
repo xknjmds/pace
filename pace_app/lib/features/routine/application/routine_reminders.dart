@@ -181,23 +181,71 @@ class RoutineReminders {
     ]);
   }
 
-  /// Marks the step done for today in `daily_logs` and drops any snooze.
-  Future<void> done(ReminderKind kind, int weekday) async {
+  /// Marks the step done now, on time. The notification "Done" button;
+  /// the check-in sheet can change it afterwards.
+  Future<void> done(ReminderKind kind, int weekday) =>
+      checkIn(kind, weekday, CheckInOutcome.onTime);
+
+  /// The day a check-in for [kind] belongs to: wind-down counts for the
+  /// night it started on, everything else for today.
+  DateTime _dayFor(ReminderKind kind, DateTime t) =>
+      kind == ReminderKind.windDown ? nightOf(t) : t;
+
+  /// Records how [kind] went today, as the owner tells it in the check-in
+  /// sheet. Done (on time or later) logs [at] (default now) in
+  /// `daily_logs`, which the rest of the app reads. "Didn't happen" clears
+  /// that log and quiets the step's reminders for the rest of the day.
+  Future<void> checkIn(
+    ReminderKind kind,
+    int weekday,
+    CheckInOutcome outcome, {
+    DateTime? at,
+    String? reason,
+  }) async {
+    if (!_steps.containsValue(kind)) return;
     final t = now();
-    final logs = db.dailyLogsDao;
-    switch (kind) {
-      case ReminderKind.wake:
-        await logs.logWake(t, t);
-      case ReminderKind.eat:
-        await logs.logEat(t, t);
-      case ReminderKind.leave:
-        await logs.setRoutineDone(t, true);
-      case ReminderKind.windDown:
-        await logs.logBed(nightOf(t), t);
-      default:
-        return;
-    }
+    final day = _dayFor(kind, t);
+    final happened = outcome != CheckInOutcome.didntHappen;
+    final when = at ?? t;
+    await db.checkInsDao.record(
+      day,
+      kind,
+      outcome,
+      actualAt: happened ? when : null,
+      reason: reason,
+    );
+    await _log(kind, day, happened ? when : null);
     await scheduler.cancelOwner(kind, '$weekday$snoozeOwnerSuffix');
+    if (!happened) {
+      await db.reminderMutesDao.mute(kind, '$weekday', day);
+      await resync();
+    }
+  }
+
+  /// Starts the step over: no check-in, no log, reminders back as planned.
+  Future<void> clearCheckIn(ReminderKind kind, int weekday) async {
+    if (!_steps.containsValue(kind)) return;
+    final day = _dayFor(kind, now());
+    await db.checkInsDao.clear(day, kind);
+    await _log(kind, day, null);
+    await db.reminderMutesDao.unmute(kind, '$weekday', day);
+    await resync();
+  }
+
+  /// Writes (or with null, clears) the step's entry in `daily_logs`.
+  Future<void> _log(ReminderKind kind, DateTime day, DateTime? at) {
+    final utc = Value(at?.toUtc());
+    return db.dailyLogsDao.change(
+      day,
+      (_) => switch (kind) {
+        ReminderKind.wake => DailyLogsCompanion(wakeLoggedAt: utc),
+        ReminderKind.eat => DailyLogsCompanion(eatDoneAt: utc),
+        ReminderKind.leave => DailyLogsCompanion(
+          routineDone: Value(at != null),
+        ),
+        _ => DailyLogsCompanion(bedLoggedAt: utc),
+      },
+    );
   }
 
   /// Routes a notification response to the method above. Returns false for

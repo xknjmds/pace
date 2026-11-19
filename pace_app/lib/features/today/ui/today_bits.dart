@@ -131,7 +131,9 @@ class TodayTaskRow extends StatelessWidget {
 
   final Task task;
   final DateTime now;
-  final VoidCallback onSubmitted;
+
+  /// Opens the check-in; false when nothing changed.
+  final Future<bool> Function() onSubmitted;
 
   @override
   Widget build(BuildContext context) {

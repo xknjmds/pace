@@ -40,6 +40,31 @@ void main() {
     expect(w.averageSleep, isNull);
   });
 
+  test('a bit later and after-due counts are neutral subsets', () {
+    final weeks = weeklyTrends(
+      today: today,
+      toLocal: plus8,
+      records: [
+        DayRecord(date: DateTime(2026, 11, 16), routineDone: true),
+        DayRecord(
+          date: DateTime(2026, 11, 17),
+          routineDone: true,
+          anyLater: true,
+        ),
+        // Later but routine not done: not a routine day at all.
+        DayRecord(date: DateTime(2026, 11, 18), anyLater: true),
+      ],
+      submittedAt: [utc(16, 2), utc(17, 2)],
+      lateSubmittedAt: [utc(17, 2)],
+    );
+    final w = weeks.last;
+    expect(w.routineDays, 2);
+    expect(w.routineLaterDays, 1);
+    expect(w.deadlinesSubmitted, 2);
+    expect(w.deadlinesSubmittedLate, 1);
+    expect(weeks.first.routineLaterDays, 0);
+  });
+
   test('a Sunday-night instant lands in the right week (week boundary)', () {
     // 2026-11-15 15:30 UTC is Sunday 23:30 at +08:00 but Monday 00:30 at +09:00.
     final submitted = [utc(15, 15, 30)];

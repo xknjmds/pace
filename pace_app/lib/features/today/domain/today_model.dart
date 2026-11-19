@@ -9,11 +9,17 @@ class RoutineStepItem {
     required this.step,
     required this.at,
     required this.done,
+    this.skipped = false,
   });
 
   final RoutineStep step;
   final LocalTime at;
+
+  /// Settled for today: logged, or [skipped].
   final bool done;
+
+  /// The owner said it didn't happen today. Settled, shown as "Not today".
+  final bool skipped;
 
   String get label => switch (step) {
     RoutineStep.wake => 'Up',
@@ -65,14 +71,21 @@ class RunningLate extends RoutineStatus {
       : 'You arrive about ${plan.arriveAt.format24()}.';
 }
 
+/// Every step settled. [steps] stay on the card so a check-in can still
+/// be changed.
 class RoutineAllDone extends RoutineStatus {
-  const RoutineAllDone();
+  const RoutineAllDone({this.steps = const []});
+
+  final List<RoutineStepItem> steps;
 }
 
 /// Pure: what Today says about the morning routine right now.
 ///
 /// After the first class has been under way for an hour the late card
 /// stops making sense, so the plain step list returns.
+///
+/// Steps in [skipped] ("didn't happen today") count as settled, so the
+/// card moves on to the next one.
 RoutineStatus routineStatus({
   required DateTime now,
   required MorningInputs inputs,
@@ -82,17 +95,21 @@ RoutineStatus routineStatus({
   required int lateThresholdMinutes,
   required bool lowEnergy,
   bool wakeAnchor = false,
+  Set<RoutineStep> skipped = const {},
 }) {
+  RoutineStepItem item(RoutineStep step, LocalTime at, bool logged) =>
+      RoutineStepItem(
+        step: step,
+        at: at,
+        done: logged || skipped.contains(step),
+        skipped: !logged && skipped.contains(step),
+      );
   final plan = computeLeaveByPlan(inputs);
   switch (plan) {
     case NoClassMorning():
       return NoClassToday(
         wake: wakeAnchor
-            ? RoutineStepItem(
-                step: RoutineStep.wake,
-                at: inputs.targetWake,
-                done: wakeDone,
-              )
+            ? item(RoutineStep.wake, inputs.targetWake, wakeDone)
             : null,
       );
     case ImpossibleMorning():
@@ -102,18 +119,17 @@ RoutineStatus routineStatus({
   }
 
   final steps = [
-    RoutineStepItem(step: RoutineStep.wake, at: plan.wake, done: wakeDone),
-    if (!lowEnergy)
-      RoutineStepItem(step: RoutineStep.eat, at: plan.eatStart, done: eatDone),
-    RoutineStepItem(step: RoutineStep.leave, at: plan.leave, done: leaveDone),
+    item(RoutineStep.wake, plan.wake, wakeDone),
+    if (!lowEnergy) item(RoutineStep.eat, plan.eatStart, eatDone),
+    item(RoutineStep.leave, plan.leave, leaveDone),
   ];
   final remaining = steps.where((s) => !s.done);
-  if (remaining.isEmpty) return const RoutineAllDone();
+  if (remaining.isEmpty) return RoutineAllDone(steps: steps);
 
   final nowM = now.hour * 60 + now.minute;
   final wakeDeadline = plan.wake.minutesSinceMidnight + lateThresholdMinutes;
   final classOver = plan.firstClass.minutesSinceMidnight + 60;
-  if (!wakeDone && nowM > wakeDeadline && nowM < classOver) {
+  if (!steps.first.done && nowM > wakeDeadline && nowM < classOver) {
     return RunningLate(
       plan: computeLatePlan(
         now: LocalTime(nowM),

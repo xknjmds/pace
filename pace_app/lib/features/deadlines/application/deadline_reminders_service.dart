@@ -87,9 +87,25 @@ class DeadlineReminders {
     await resyncTask(task.id);
   }
 
-  /// Submitted: the remaining reminders go away.
-  Future<void> markSubmitted(String taskId) async {
-    await db.tasksDao.markSubmitted(taskId);
+  /// Submitted now: the remaining reminders go away.
+  Future<void> markSubmitted(String taskId) => submit(taskId);
+
+  /// Submitted at [at] (default now), with an optional [note], from the
+  /// check-in sheet. The remaining reminders go away.
+  Future<void> submit(String taskId, {DateTime? at, String? note}) async {
+    await db.tasksDao.setStatus(
+      taskId,
+      TaskStatus.submitted,
+      at: at,
+      note: note,
+    );
+    await scheduler.cancelOwner(ReminderKind.deadline, taskId);
+  }
+
+  /// Couldn't submit: the task closes quietly, reminders go away. It can
+  /// be reopened from Deadlines.
+  Future<void> letGo(String taskId, {String? note}) async {
+    await db.tasksDao.setStatus(taskId, TaskStatus.letGo, note: note);
     await scheduler.cancelOwner(ReminderKind.deadline, taskId);
   }
 

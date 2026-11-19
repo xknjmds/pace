@@ -21,3 +21,8 @@ final pendingTasksProvider = StreamProvider<List<Task>>(
 final submittedTasksProvider = StreamProvider<List<Task>>(
   (ref) => ref.watch(appDatabaseProvider).tasksDao.watchSubmitted(),
 );
+
+/// Tasks closed without submitting ("let it go"), most recently due first.
+final letGoTasksProvider = StreamProvider<List<Task>>(
+  (ref) => ref.watch(appDatabaseProvider).tasksDao.watchLetGo(),
+);

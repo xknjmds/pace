@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pace/core/db/app_database.dart';
 import 'package:pace/features/blocking/application/app_gate.dart';
 import 'package:pace/features/blocking/application/gate_service.dart';
 import 'package:pace/features/blocking/domain/lock_windows.dart';
@@ -67,6 +68,17 @@ void main() {
   test('finishing the routine opens the gate at once', () async {
     await service.setEnabled(true);
     await t.db.dailyLogsDao.setRoutineDone(start, true);
+    await service.sync();
+    expect(activeWindow(gate.last.windows, start), isNull);
+  });
+
+  test("leaving that didn't happen also settles the morning", () async {
+    await service.setEnabled(true);
+    await t.db.checkInsDao.record(
+      start,
+      ReminderKind.leave,
+      CheckInOutcome.didntHappen,
+    );
     await service.sync();
     expect(activeWindow(gate.last.windows, start), isNull);
   });

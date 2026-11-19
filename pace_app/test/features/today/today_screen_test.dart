@@ -153,8 +153,38 @@ void main() {
     await pumpApp(tester, now);
     await tester.tap(find.byKey(const ValueKey('step-wake')));
     await tester.pumpAndSettle();
+    // The check-in sheet: on time is preselected; one tap saves.
+    await tester.tap(find.byKey(const ValueKey('check-in-save')));
+    await tester.pumpAndSettle();
     expect(find.text('Next: eat at 07:15'), findsOneWidget);
     expect((await db.dailyLogsDao.get(now))?.wakeLoggedAt, now.toUtc());
+    await unmountApp(tester);
+  });
+
+  testWidgets("a step that didn't happen reads Not today and can start over", (
+    tester,
+  ) async {
+    await mondayClass();
+    final now = DateTime(2026, 11, 16, 7, 20);
+    await db.dailyLogsDao.logWake(now, DateTime(2026, 11, 16, 6, 30));
+    await pumpApp(tester, now);
+    await tester.tap(find.byKey(const ValueKey('step-eat')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('check-in-didntHappen')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('check-in-save')));
+    await tester.pumpAndSettle();
+    expect(find.text('Not today'), findsOneWidget);
+    expect(find.text('Next: leave at 08:00'), findsOneWidget);
+    expect(find.text("Noted. Tomorrow's a fresh start."), findsOneWidget);
+
+    // Tapping it again offers to start the step over.
+    await tester.tap(find.byKey(const ValueKey('step-eat')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('check-in-clear')));
+    await tester.pumpAndSettle();
+    expect(find.text('Not today'), findsNothing);
+    expect(find.text('Next: eat at 07:15'), findsOneWidget);
     await unmountApp(tester);
   });
 
@@ -339,6 +369,8 @@ void main() {
     await pumpApp(tester, now);
     expect(find.text('No class today. The day is yours.'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('step-wake')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('check-in-save')));
     await tester.pumpAndSettle();
     expect((await db.dailyLogsDao.get(now))?.wakeLoggedAt, now.toUtc());
     expect(find.text('Up 07:30'), findsOneWidget);

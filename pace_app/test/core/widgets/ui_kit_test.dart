@@ -28,7 +28,16 @@ void main() {
     tester,
   ) async {
     var done = 0;
-    await tester.pumpWidget(_app(DoneCheck(onDone: () => done++)));
+    await tester.pumpWidget(
+      _app(
+        DoneCheck(
+          onDone: () {
+            done++;
+            return true;
+          },
+        ),
+      ),
+    );
     await tester.tap(find.byTooltip('Submitted'));
     await tester.pump();
     expect(done, 0, reason: 'the fill plays first');
@@ -63,10 +72,25 @@ void main() {
     expect(motion.decorative, isFalse);
   });
 
+  testWidgets('done check empties again when the check-in is dismissed', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(DoneCheck(onDone: () => false)));
+    await tester.tap(find.byTooltip('Submitted'));
+    await tester.pumpAndSettle();
+    final icon = tester.widget<Opacity>(
+      find.ancestor(
+        of: find.byIcon(Icons.check_rounded),
+        matching: find.byType(Opacity),
+      ),
+    );
+    expect(icon.opacity, 0);
+  });
+
   testWidgets('done check: with reduced motion the check fades, never grows', (
     tester,
   ) async {
-    await tester.pumpWidget(_app(DoneCheck(onDone: () {}), reduced: true));
+    await tester.pumpWidget(_app(DoneCheck(onDone: () => true), reduced: true));
     await tester.tap(find.byTooltip('Submitted'));
     await tester.pump(const Duration(milliseconds: 80)); // mid-fill
     // The check's box keeps the circle's full 24 px the whole time; the

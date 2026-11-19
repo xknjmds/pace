@@ -8,11 +8,13 @@ class WeekStats {
   const WeekStats({
     required this.monday,
     required this.routineDays,
+    this.routineLaterDays = 0,
     required this.wakeDays,
     required this.averagePlannedWake,
     required this.averageActualWake,
     required this.averageSleep,
     required this.deadlinesSubmitted,
+    this.deadlinesSubmittedLate = 0,
     required this.focusSessions,
     required this.focusMinutes,
     required this.movementDays,
@@ -20,6 +22,9 @@ class WeekStats {
 
   final DateTime monday;
   final int routineDays;
+
+  /// Of [routineDays], those with a step done a bit later. Neutral detail.
+  final int routineLaterDays;
   final int wakeDays;
 
   /// Planned wake on the same mornings a wake was logged, so the two
@@ -28,6 +33,9 @@ class WeekStats {
   final LocalTime? averageActualWake;
   final Duration? averageSleep;
   final int deadlinesSubmitted;
+
+  /// Of [deadlinesSubmitted], those submitted after the due time.
+  final int deadlinesSubmittedLate;
   final int focusSessions;
   final int focusMinutes;
   final int movementDays;
@@ -62,6 +70,7 @@ List<WeekStats> weeklyTrends({
   List<DayRecord> records = const [],
   LocalTime? Function(DateTime date)? plannedWakeFor,
   List<DateTime> submittedAt = const [],
+  List<DateTime> lateSubmittedAt = const [],
   List<FocusRecord> focus = const [],
   Set<String> movementDays = const {},
   DateTime Function(DateTime instant)? toLocal,
@@ -90,6 +99,7 @@ List<WeekStats> weeklyTrends({
     ];
 
     var routine = 0;
+    var routineLater = 0;
     final actual = <int>[];
     final planned = <int>[];
     final slept = <Duration>[];
@@ -97,7 +107,10 @@ List<WeekStats> weeklyTrends({
     for (final date in dates) {
       final key = dateKey(date);
       final r = byDay[key];
-      if (r != null && r.routineDone) routine++;
+      if (r != null && r.routineDone) {
+        routine++;
+        if (r.anyLater) routineLater++;
+      }
       if (movementDays.contains(key)) movement++;
       final wake = r?.wakeAt;
       if (wake != null) {
@@ -125,6 +138,7 @@ List<WeekStats> weeklyTrends({
       WeekStats(
         monday: monday,
         routineDays: routine,
+        routineLaterDays: routineLater,
         wakeDays: actual.length,
         averagePlannedWake: _mean(planned),
         averageActualWake: _mean(actual),
@@ -135,6 +149,9 @@ List<WeekStats> weeklyTrends({
                     slept.fold(0, (a, b) => a + b.inMinutes) ~/ slept.length,
               ),
         deadlinesSubmitted: submittedAt.where((t) => inWeek(day(t))).length,
+        deadlinesSubmittedLate: lateSubmittedAt
+            .where((t) => inWeek(day(t)))
+            .length,
         focusSessions: sessions.length,
         focusMinutes: sessions.fold(0, (a, b) => a + b.minutes),
         movementDays: movement,

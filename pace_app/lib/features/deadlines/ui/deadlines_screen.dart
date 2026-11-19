@@ -18,6 +18,7 @@ import '../../shell/home_shell.dart';
 import '../../shell/shell_tabs.dart';
 import '../application/deadline_providers.dart';
 import '../domain/deadline_reminders.dart';
+import 'task_check_in.dart';
 import 'task_edit_sheet.dart';
 
 /// Pending deadlines, past-due ones first, then what has been submitted.
@@ -79,6 +80,7 @@ class DeadlinesScreen extends ConsumerWidget {
     final lowEnergy = ref.watch(lowEnergyProvider);
     final pending = ref.watch(pendingTasksProvider).value ?? const <Task>[];
     final submitted = ref.watch(submittedTasksProvider).value ?? const <Task>[];
+    final letGo = ref.watch(letGoTasksProvider).value ?? const <Task>[];
     final service = ref.read(deadlineRemindersProvider);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
@@ -102,7 +104,7 @@ class DeadlinesScreen extends ConsumerWidget {
         now: now,
         pastDue: pastDue,
         onTap: () => _addOrEdit(context, ref, task: t),
-        onSubmitted: () => service.markSubmitted(t.id),
+        onSubmitted: () => checkInTask(context, ref, t),
         onNotToday: () => service.notToday(t.id, now),
         onDelete: () async {
           await service.remove(t.id);
@@ -168,30 +170,22 @@ class DeadlinesScreen extends ConsumerWidget {
           ],
           if (submitted.isNotEmpty && !lowEnergy) ...[
             const SectionHeader('Submitted'),
-            Card(
-              child: Column(
-                children: [
-                  for (final (n, t) in submitted.indexed) ...[
-                    if (n > 0) const Divider(indent: 56),
-                    ListTile(
-                      key: ValueKey('done-${t.id}'),
-                      leading: Icon(
-                        Icons.check_circle_rounded,
-                        color: scheme.secondary,
-                      ),
-                      title: Text(
-                        t.title,
-                        style: TextStyle(color: scheme.onSurfaceVariant),
-                      ),
-                      subtitle: Text(describeDue(t.dueAt, now)),
-                      trailing: TextButton(
-                        onPressed: () => service.markPending(t.id),
-                        child: const Text('Reopen'),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+            _ClosedList(
+              tasks: submitted,
+              now: now,
+              icon: Icons.check_circle_rounded,
+              onTap: (t) => checkInTask(context, ref, t),
+              onReopen: (t) => service.markPending(t.id),
+            ),
+          ],
+          if (letGo.isNotEmpty && !lowEnergy) ...[
+            const SectionHeader('Let go'),
+            _ClosedList(
+              tasks: letGo,
+              now: now,
+              icon: Icons.cloud_outlined,
+              onTap: (t) => checkInTask(context, ref, t),
+              onReopen: (t) => service.markPending(t.id),
             ),
           ],
         ],
@@ -216,7 +210,7 @@ class _TaskTile extends StatelessWidget {
   final DateTime now;
   final bool pastDue;
   final VoidCallback onTap;
-  final VoidCallback onSubmitted;
+  final Future<bool> Function() onSubmitted;
   final VoidCallback onNotToday;
   final VoidCallback onDelete;
   final VoidCallback onJustStart;
@@ -322,6 +316,59 @@ class _TaskTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Closed tasks (submitted or let go), quiet and neutral. Tap one to change
+/// its check-in; Reopen puts it back on the list.
+class _ClosedList extends StatelessWidget {
+  const _ClosedList({
+    required this.tasks,
+    required this.now,
+    required this.icon,
+    required this.onTap,
+    required this.onReopen,
+  });
+
+  final List<Task> tasks;
+  final DateTime now;
+  final IconData icon;
+  final ValueChanged<Task> onTap;
+  final ValueChanged<Task> onReopen;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      child: Column(
+        children: [
+          for (final (n, t) in tasks.indexed) ...[
+            if (n > 0) const Divider(indent: 56),
+            ListTile(
+              key: ValueKey('done-${t.id}'),
+              leading: Icon(icon, color: scheme.secondary),
+              onTap: () => onTap(t),
+              title: Text(
+                t.title,
+                style: TextStyle(color: scheme.onSurfaceVariant),
+              ),
+              subtitle: Text(
+                [
+                  describeDue(t.dueAt, now),
+                  if (t.submitNote != null) t.submitNote!,
+                ].join(' · '),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: TextButton(
+                onPressed: () => onReopen(t),
+                child: const Text('Reopen'),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

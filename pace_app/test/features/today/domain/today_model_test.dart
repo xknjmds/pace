@@ -28,6 +28,7 @@ void main() {
     bool eat = false,
     bool leave = false,
     bool lowEnergy = false,
+    Set<RoutineStep> skipped = const {},
   }) => routineStatus(
     now: now,
     inputs: inputs ?? classDay,
@@ -36,7 +37,40 @@ void main() {
     leaveDone: leave,
     lateThresholdMinutes: 20,
     lowEnergy: lowEnergy,
+    skipped: skipped,
   );
+
+  test("a step that didn't happen is settled and the card moves on", () {
+    final s =
+        status(
+              now: DateTime(2026, 11, 16, 7, 20),
+              wake: true,
+              skipped: {RoutineStep.eat},
+            )
+            as StepsRemaining;
+    expect(s.next.step, RoutineStep.leave);
+    final eat = s.steps[1];
+    expect(eat.done, isTrue);
+    expect(eat.skipped, isTrue);
+    expect(s.steps.first.skipped, isFalse);
+  });
+
+  test('all settled keeps the steps so a check-in can change', () {
+    final s =
+        status(
+              now: DateTime(2026, 11, 16, 8, 5),
+              wake: true,
+              eat: true,
+              skipped: {RoutineStep.leave},
+            )
+            as RoutineAllDone;
+    expect(s.steps.map((x) => x.step), [
+      RoutineStep.wake,
+      RoutineStep.eat,
+      RoutineStep.leave,
+    ]);
+    expect(s.steps.last.skipped, isTrue);
+  });
 
   test('before wake: next step is up, all three listed', () {
     final s = status(now: DateTime(2026, 11, 16, 6)) as StepsRemaining;

@@ -78,6 +78,33 @@ void main() {
     },
   );
 
+  test('submit at a picked time keeps the note and drops nudges', () async {
+    final task = await deadlines.add(
+      title: 'Essay',
+      dueAt: DateTime(2026, 11, 20, 23, 59),
+    );
+    final at = DateTime(2026, 11, 21, 8);
+    await deadlines.submit(task.id, at: at, note: 'Portal was down');
+    final row = (await t.db.tasksDao.getById(task.id))!;
+    expect(row.status, TaskStatus.submitted);
+    expect(row.submittedAt, at.toUtc());
+    expect(row.submitNote, 'Portal was down');
+    expect(firesFor(task.id), isEmpty);
+  });
+
+  test('let go closes the task; reopening plans its nudges again', () async {
+    final task = await deadlines.add(
+      title: 'Lab',
+      dueAt: DateTime(2026, 11, 20, 23, 59),
+    );
+    await deadlines.letGo(task.id, note: 'Sick');
+    expect((await t.db.tasksDao.getById(task.id))!.status, TaskStatus.letGo);
+    expect(firesFor(task.id), isEmpty);
+
+    await deadlines.markPending(task.id);
+    expect(firesFor(task.id), hasLength(4));
+  });
+
   test('"Not today" mutes only today\'s nudges for that task', () async {
     final task = await deadlines.add(
       title: 'Lab',

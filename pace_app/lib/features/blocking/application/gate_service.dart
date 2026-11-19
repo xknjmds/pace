@@ -24,6 +24,12 @@ class GateService {
       t.subtract(const Duration(days: 1)),
       t.add(const Duration(days: 7)),
     );
+    // "Didn't happen" on leave settles the morning too: a sick day should
+    // not keep the morning lock on.
+    final skippedLeave = await db.checkInsDao.between(
+      t.subtract(const Duration(days: 1)),
+      t.add(const Duration(days: 7)),
+    );
     final windows = lockWindows(
       now: t,
       timesFor: await loadRoutineTimes(db),
@@ -32,6 +38,10 @@ class GateService {
       routineDoneDays: {
         for (final l in logs)
           if (l.routineDone) l.date,
+        for (final c in skippedLeave)
+          if (c.kind == ReminderKind.leave &&
+              c.outcome == CheckInOutcome.didntHappen)
+            c.day,
       },
       lowEnergy: s.lowEnergyEnabled,
     );

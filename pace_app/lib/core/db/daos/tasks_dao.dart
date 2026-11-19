@@ -64,15 +64,38 @@ class TasksDao extends DatabaseAccessor<AppDatabase> with _$TasksDaoMixin {
     tasks,
   ).replace(task.copyWith(dueAt: task.dueAt.toUtc(), updatedAt: db.now()));
 
-  Future<void> setStatus(String id, TaskStatus status) =>
-      (update(tasks)..where((t) => t.id.equals(id))).write(
-        TasksCompanion(
-          status: Value(status),
-          // Kept only while submitted; reopening clears it.
-          submittedAt: Value(status == TaskStatus.submitted ? db.now() : null),
-          updatedAt: Value(db.now()),
+  /// Moves the task to [status]. Closing it (submitted or let go) stamps
+  /// `submitted_at` with [at] (default now) and keeps [note]; reopening
+  /// clears both.
+  Future<void> setStatus(
+    String id,
+    TaskStatus status, {
+    DateTime? at,
+    String? note,
+  }) {
+    final closed = status != TaskStatus.pending;
+    final trimmed = note?.trim();
+    return (update(tasks)..where((t) => t.id.equals(id))).write(
+      TasksCompanion(
+        status: Value(status),
+        submittedAt: Value(closed ? (at?.toUtc() ?? db.now()) : null),
+        submitNote: Value(
+          closed && trimmed != null && trimmed.isNotEmpty ? trimmed : null,
         ),
-      );
+        updatedAt: Value(db.now()),
+      ),
+    );
+  }
+
+  /// Tasks closed without submitting, most recently due first.
+  Stream<List<Task>> watchLetGo() =>
+      (select(tasks)
+            ..where(
+              (t) =>
+                  t.deletedAt.isNull() & t.status.equalsValue(TaskStatus.letGo),
+            )
+            ..orderBy([(t) => OrderingTerm.desc(t.dueAt)]))
+          .watch();
 
   /// Tasks submitted at or after [from] and before [to].
   Future<List<Task>> submittedBetween(DateTime from, DateTime to) =>

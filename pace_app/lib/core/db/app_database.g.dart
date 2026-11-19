@@ -1956,6 +1956,17 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _submitNoteMeta = const VerificationMeta(
+    'submitNote',
+  );
+  @override
+  late final GeneratedColumn<String> submitNote = GeneratedColumn<String>(
+    'submit_note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1968,6 +1979,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
     source,
     createdAt,
     submittedAt,
+    submitNote,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2037,6 +2049,12 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
         ),
       );
     }
+    if (data.containsKey('submit_note')) {
+      context.handle(
+        _submitNoteMeta,
+        submitNote.isAcceptableOrUnknown(data['submit_note']!, _submitNoteMeta),
+      );
+    }
     return context;
   }
 
@@ -2090,6 +2108,10 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}submitted_at'],
       ),
+      submitNote: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}submit_note'],
+      ),
     );
   }
 
@@ -2115,8 +2137,12 @@ class Task extends DataClass implements Insertable<Task> {
   final TaskSource source;
   final DateTime createdAt;
 
-  /// v6: when it was marked submitted, for the weekly counts.
+  /// v6: when it was marked submitted, for the weekly counts. From v7 the
+  /// owner can pick it (submitted late), and it is also set on [TaskStatus.letGo].
   final DateTime? submittedAt;
+
+  /// v7: optional short note from the check-in sheet ("printer broke").
+  final String? submitNote;
   const Task({
     required this.id,
     required this.updatedAt,
@@ -2128,6 +2154,7 @@ class Task extends DataClass implements Insertable<Task> {
     required this.source,
     required this.createdAt,
     this.submittedAt,
+    this.submitNote,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2156,6 +2183,9 @@ class Task extends DataClass implements Insertable<Task> {
     if (!nullToAbsent || submittedAt != null) {
       map['submitted_at'] = Variable<DateTime>(submittedAt);
     }
+    if (!nullToAbsent || submitNote != null) {
+      map['submit_note'] = Variable<String>(submitNote);
+    }
     return map;
   }
 
@@ -2177,6 +2207,9 @@ class Task extends DataClass implements Insertable<Task> {
       submittedAt: submittedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(submittedAt),
+      submitNote: submitNote == null && nullToAbsent
+          ? const Value.absent()
+          : Value(submitNote),
     );
   }
 
@@ -2200,6 +2233,7 @@ class Task extends DataClass implements Insertable<Task> {
       ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       submittedAt: serializer.fromJson<DateTime?>(json['submittedAt']),
+      submitNote: serializer.fromJson<String?>(json['submitNote']),
     );
   }
   @override
@@ -2220,6 +2254,7 @@ class Task extends DataClass implements Insertable<Task> {
       ),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'submittedAt': serializer.toJson<DateTime?>(submittedAt),
+      'submitNote': serializer.toJson<String?>(submitNote),
     };
   }
 
@@ -2234,6 +2269,7 @@ class Task extends DataClass implements Insertable<Task> {
     TaskSource? source,
     DateTime? createdAt,
     Value<DateTime?> submittedAt = const Value.absent(),
+    Value<String?> submitNote = const Value.absent(),
   }) => Task(
     id: id ?? this.id,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -2245,6 +2281,7 @@ class Task extends DataClass implements Insertable<Task> {
     source: source ?? this.source,
     createdAt: createdAt ?? this.createdAt,
     submittedAt: submittedAt.present ? submittedAt.value : this.submittedAt,
+    submitNote: submitNote.present ? submitNote.value : this.submitNote,
   );
   Task copyWithCompanion(TasksCompanion data) {
     return Task(
@@ -2260,6 +2297,9 @@ class Task extends DataClass implements Insertable<Task> {
       submittedAt: data.submittedAt.present
           ? data.submittedAt.value
           : this.submittedAt,
+      submitNote: data.submitNote.present
+          ? data.submitNote.value
+          : this.submitNote,
     );
   }
 
@@ -2275,7 +2315,8 @@ class Task extends DataClass implements Insertable<Task> {
           ..write('status: $status, ')
           ..write('source: $source, ')
           ..write('createdAt: $createdAt, ')
-          ..write('submittedAt: $submittedAt')
+          ..write('submittedAt: $submittedAt, ')
+          ..write('submitNote: $submitNote')
           ..write(')'))
         .toString();
   }
@@ -2292,6 +2333,7 @@ class Task extends DataClass implements Insertable<Task> {
     source,
     createdAt,
     submittedAt,
+    submitNote,
   );
   @override
   bool operator ==(Object other) =>
@@ -2306,7 +2348,8 @@ class Task extends DataClass implements Insertable<Task> {
           other.status == this.status &&
           other.source == this.source &&
           other.createdAt == this.createdAt &&
-          other.submittedAt == this.submittedAt);
+          other.submittedAt == this.submittedAt &&
+          other.submitNote == this.submitNote);
 }
 
 class TasksCompanion extends UpdateCompanion<Task> {
@@ -2320,6 +2363,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
   final Value<TaskSource> source;
   final Value<DateTime> createdAt;
   final Value<DateTime?> submittedAt;
+  final Value<String?> submitNote;
   final Value<int> rowid;
   const TasksCompanion({
     this.id = const Value.absent(),
@@ -2332,6 +2376,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     this.source = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.submittedAt = const Value.absent(),
+    this.submitNote = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TasksCompanion.insert({
@@ -2345,6 +2390,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     this.source = const Value.absent(),
     required DateTime createdAt,
     this.submittedAt = const Value.absent(),
+    this.submitNote = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : updatedAt = Value(updatedAt),
        title = Value(title),
@@ -2361,6 +2407,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     Expression<String>? source,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? submittedAt,
+    Expression<String>? submitNote,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2374,6 +2421,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
       if (source != null) 'source': source,
       if (createdAt != null) 'created_at': createdAt,
       if (submittedAt != null) 'submitted_at': submittedAt,
+      if (submitNote != null) 'submit_note': submitNote,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2389,6 +2437,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
     Value<TaskSource>? source,
     Value<DateTime>? createdAt,
     Value<DateTime?>? submittedAt,
+    Value<String?>? submitNote,
     Value<int>? rowid,
   }) {
     return TasksCompanion(
@@ -2402,6 +2451,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
       source: source ?? this.source,
       createdAt: createdAt ?? this.createdAt,
       submittedAt: submittedAt ?? this.submittedAt,
+      submitNote: submitNote ?? this.submitNote,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2443,6 +2493,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
     if (submittedAt.present) {
       map['submitted_at'] = Variable<DateTime>(submittedAt.value);
     }
+    if (submitNote.present) {
+      map['submit_note'] = Variable<String>(submitNote.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2462,6 +2515,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
           ..write('source: $source, ')
           ..write('createdAt: $createdAt, ')
           ..write('submittedAt: $submittedAt, ')
+          ..write('submitNote: $submitNote, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -8520,6 +8574,525 @@ class CalendarEventsCompanion extends UpdateCompanion<CalendarEvent> {
   }
 }
 
+class $CheckInsTable extends CheckIns with TableInfo<$CheckInsTable, CheckIn> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CheckInsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: uuidV4,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dayMeta = const VerificationMeta('day');
+  @override
+  late final GeneratedColumn<String> day = GeneratedColumn<String>(
+    'day',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<ReminderKind, String> kind =
+      GeneratedColumn<String>(
+        'kind',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<ReminderKind>($CheckInsTable.$converterkind);
+  @override
+  late final GeneratedColumnWithTypeConverter<CheckInOutcome, String> outcome =
+      GeneratedColumn<String>(
+        'outcome',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<CheckInOutcome>($CheckInsTable.$converteroutcome);
+  static const VerificationMeta _actualAtMeta = const VerificationMeta(
+    'actualAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> actualAt = GeneratedColumn<DateTime>(
+    'actual_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _reasonMeta = const VerificationMeta('reason');
+  @override
+  late final GeneratedColumn<String> reason = GeneratedColumn<String>(
+    'reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    updatedAt,
+    deletedAt,
+    day,
+    kind,
+    outcome,
+    actualAt,
+    reason,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'check_ins';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CheckIn> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('day')) {
+      context.handle(
+        _dayMeta,
+        day.isAcceptableOrUnknown(data['day']!, _dayMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dayMeta);
+    }
+    if (data.containsKey('actual_at')) {
+      context.handle(
+        _actualAtMeta,
+        actualAt.isAcceptableOrUnknown(data['actual_at']!, _actualAtMeta),
+      );
+    }
+    if (data.containsKey('reason')) {
+      context.handle(
+        _reasonMeta,
+        reason.isAcceptableOrUnknown(data['reason']!, _reasonMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {day, kind},
+  ];
+  @override
+  CheckIn map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CheckIn(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      day: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}day'],
+      )!,
+      kind: $CheckInsTable.$converterkind.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}kind'],
+        )!,
+      ),
+      outcome: $CheckInsTable.$converteroutcome.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}outcome'],
+        )!,
+      ),
+      actualAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}actual_at'],
+      ),
+      reason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reason'],
+      ),
+    );
+  }
+
+  @override
+  $CheckInsTable createAlias(String alias) {
+    return $CheckInsTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<ReminderKind, String, String> $converterkind =
+      const EnumNameConverter<ReminderKind>(ReminderKind.values);
+  static JsonTypeConverter2<CheckInOutcome, String, String> $converteroutcome =
+      const EnumNameConverter<CheckInOutcome>(CheckInOutcome.values);
+}
+
+class CheckIn extends DataClass implements Insertable<CheckIn> {
+  final String id;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String day;
+  final ReminderKind kind;
+  final CheckInOutcome outcome;
+  final DateTime? actualAt;
+  final String? reason;
+  const CheckIn({
+    required this.id,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.day,
+    required this.kind,
+    required this.outcome,
+    this.actualAt,
+    this.reason,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['day'] = Variable<String>(day);
+    {
+      map['kind'] = Variable<String>($CheckInsTable.$converterkind.toSql(kind));
+    }
+    {
+      map['outcome'] = Variable<String>(
+        $CheckInsTable.$converteroutcome.toSql(outcome),
+      );
+    }
+    if (!nullToAbsent || actualAt != null) {
+      map['actual_at'] = Variable<DateTime>(actualAt);
+    }
+    if (!nullToAbsent || reason != null) {
+      map['reason'] = Variable<String>(reason);
+    }
+    return map;
+  }
+
+  CheckInsCompanion toCompanion(bool nullToAbsent) {
+    return CheckInsCompanion(
+      id: Value(id),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      day: Value(day),
+      kind: Value(kind),
+      outcome: Value(outcome),
+      actualAt: actualAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(actualAt),
+      reason: reason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reason),
+    );
+  }
+
+  factory CheckIn.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CheckIn(
+      id: serializer.fromJson<String>(json['id']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      day: serializer.fromJson<String>(json['day']),
+      kind: $CheckInsTable.$converterkind.fromJson(
+        serializer.fromJson<String>(json['kind']),
+      ),
+      outcome: $CheckInsTable.$converteroutcome.fromJson(
+        serializer.fromJson<String>(json['outcome']),
+      ),
+      actualAt: serializer.fromJson<DateTime?>(json['actualAt']),
+      reason: serializer.fromJson<String?>(json['reason']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'day': serializer.toJson<String>(day),
+      'kind': serializer.toJson<String>(
+        $CheckInsTable.$converterkind.toJson(kind),
+      ),
+      'outcome': serializer.toJson<String>(
+        $CheckInsTable.$converteroutcome.toJson(outcome),
+      ),
+      'actualAt': serializer.toJson<DateTime?>(actualAt),
+      'reason': serializer.toJson<String?>(reason),
+    };
+  }
+
+  CheckIn copyWith({
+    String? id,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    String? day,
+    ReminderKind? kind,
+    CheckInOutcome? outcome,
+    Value<DateTime?> actualAt = const Value.absent(),
+    Value<String?> reason = const Value.absent(),
+  }) => CheckIn(
+    id: id ?? this.id,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    day: day ?? this.day,
+    kind: kind ?? this.kind,
+    outcome: outcome ?? this.outcome,
+    actualAt: actualAt.present ? actualAt.value : this.actualAt,
+    reason: reason.present ? reason.value : this.reason,
+  );
+  CheckIn copyWithCompanion(CheckInsCompanion data) {
+    return CheckIn(
+      id: data.id.present ? data.id.value : this.id,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      day: data.day.present ? data.day.value : this.day,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      outcome: data.outcome.present ? data.outcome.value : this.outcome,
+      actualAt: data.actualAt.present ? data.actualAt.value : this.actualAt,
+      reason: data.reason.present ? data.reason.value : this.reason,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CheckIn(')
+          ..write('id: $id, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('day: $day, ')
+          ..write('kind: $kind, ')
+          ..write('outcome: $outcome, ')
+          ..write('actualAt: $actualAt, ')
+          ..write('reason: $reason')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    updatedAt,
+    deletedAt,
+    day,
+    kind,
+    outcome,
+    actualAt,
+    reason,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CheckIn &&
+          other.id == this.id &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.day == this.day &&
+          other.kind == this.kind &&
+          other.outcome == this.outcome &&
+          other.actualAt == this.actualAt &&
+          other.reason == this.reason);
+}
+
+class CheckInsCompanion extends UpdateCompanion<CheckIn> {
+  final Value<String> id;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String> day;
+  final Value<ReminderKind> kind;
+  final Value<CheckInOutcome> outcome;
+  final Value<DateTime?> actualAt;
+  final Value<String?> reason;
+  final Value<int> rowid;
+  const CheckInsCompanion({
+    this.id = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.day = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.outcome = const Value.absent(),
+    this.actualAt = const Value.absent(),
+    this.reason = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CheckInsCompanion.insert({
+    this.id = const Value.absent(),
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    required String day,
+    required ReminderKind kind,
+    required CheckInOutcome outcome,
+    this.actualAt = const Value.absent(),
+    this.reason = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : updatedAt = Value(updatedAt),
+       day = Value(day),
+       kind = Value(kind),
+       outcome = Value(outcome);
+  static Insertable<CheckIn> custom({
+    Expression<String>? id,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? day,
+    Expression<String>? kind,
+    Expression<String>? outcome,
+    Expression<DateTime>? actualAt,
+    Expression<String>? reason,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (day != null) 'day': day,
+      if (kind != null) 'kind': kind,
+      if (outcome != null) 'outcome': outcome,
+      if (actualAt != null) 'actual_at': actualAt,
+      if (reason != null) 'reason': reason,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CheckInsCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String>? day,
+    Value<ReminderKind>? kind,
+    Value<CheckInOutcome>? outcome,
+    Value<DateTime?>? actualAt,
+    Value<String?>? reason,
+    Value<int>? rowid,
+  }) {
+    return CheckInsCompanion(
+      id: id ?? this.id,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      day: day ?? this.day,
+      kind: kind ?? this.kind,
+      outcome: outcome ?? this.outcome,
+      actualAt: actualAt ?? this.actualAt,
+      reason: reason ?? this.reason,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (day.present) {
+      map['day'] = Variable<String>(day.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(
+        $CheckInsTable.$converterkind.toSql(kind.value),
+      );
+    }
+    if (outcome.present) {
+      map['outcome'] = Variable<String>(
+        $CheckInsTable.$converteroutcome.toSql(outcome.value),
+      );
+    }
+    if (actualAt.present) {
+      map['actual_at'] = Variable<DateTime>(actualAt.value);
+    }
+    if (reason.present) {
+      map['reason'] = Variable<String>(reason.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CheckInsCompanion(')
+          ..write('id: $id, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('day: $day, ')
+          ..write('kind: $kind, ')
+          ..write('outcome: $outcome, ')
+          ..write('actualAt: $actualAt, ')
+          ..write('reason: $reason, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -8542,6 +9115,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ExpensesTable expenses = $ExpensesTable(this);
   late final $BudgetsTable budgets = $BudgetsTable(this);
   late final $CalendarEventsTable calendarEvents = $CalendarEventsTable(this);
+  late final $CheckInsTable checkIns = $CheckInsTable(this);
   late final SettingsDao settingsDao = SettingsDao(this as AppDatabase);
   late final WeekdayScheduleDao weekdayScheduleDao = WeekdayScheduleDao(
     this as AppDatabase,
@@ -8569,6 +9143,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final CalendarEventsDao calendarEventsDao = CalendarEventsDao(
     this as AppDatabase,
   );
+  late final CheckInsDao checkInsDao = CheckInsDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -8590,6 +9165,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     expenses,
     budgets,
     calendarEvents,
+    checkIns,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -9446,6 +10022,7 @@ typedef $$TasksTableCreateCompanionBuilder =
       Value<TaskSource> source,
       required DateTime createdAt,
       Value<DateTime?> submittedAt,
+      Value<String?> submitNote,
       Value<int> rowid,
     });
 typedef $$TasksTableUpdateCompanionBuilder =
@@ -9460,6 +10037,7 @@ typedef $$TasksTableUpdateCompanionBuilder =
       Value<TaskSource> source,
       Value<DateTime> createdAt,
       Value<DateTime?> submittedAt,
+      Value<String?> submitNote,
       Value<int> rowid,
     });
 
@@ -9522,6 +10100,11 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
     column: $table.submittedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<String> get submitNote => $composableBuilder(
+    column: $table.submitNote,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$TasksTableOrderingComposer
@@ -9582,6 +10165,11 @@ class $$TasksTableOrderingComposer
     column: $table.submittedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get submitNote => $composableBuilder(
+    column: $table.submitNote,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TasksTableAnnotationComposer
@@ -9624,6 +10212,11 @@ class $$TasksTableAnnotationComposer
     column: $table.submittedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get submitNote => $composableBuilder(
+    column: $table.submitNote,
+    builder: (column) => column,
+  );
 }
 
 class $$TasksTableTableManager
@@ -9664,6 +10257,7 @@ class $$TasksTableTableManager
                 Value<TaskSource> source = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> submittedAt = const Value.absent(),
+                Value<String?> submitNote = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TasksCompanion(
                 id: id,
@@ -9676,6 +10270,7 @@ class $$TasksTableTableManager
                 source: source,
                 createdAt: createdAt,
                 submittedAt: submittedAt,
+                submitNote: submitNote,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -9690,6 +10285,7 @@ class $$TasksTableTableManager
                 Value<TaskSource> source = const Value.absent(),
                 required DateTime createdAt,
                 Value<DateTime?> submittedAt = const Value.absent(),
+                Value<String?> submitNote = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TasksCompanion.insert(
                 id: id,
@@ -9702,6 +10298,7 @@ class $$TasksTableTableManager
                 source: source,
                 createdAt: createdAt,
                 submittedAt: submittedAt,
+                submitNote: submitNote,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -12963,6 +13560,268 @@ typedef $$CalendarEventsTableProcessedTableManager =
       CalendarEvent,
       PrefetchHooks Function()
     >;
+typedef $$CheckInsTableCreateCompanionBuilder =
+    CheckInsCompanion Function({
+      Value<String> id,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      required String day,
+      required ReminderKind kind,
+      required CheckInOutcome outcome,
+      Value<DateTime?> actualAt,
+      Value<String?> reason,
+      Value<int> rowid,
+    });
+typedef $$CheckInsTableUpdateCompanionBuilder =
+    CheckInsCompanion Function({
+      Value<String> id,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String> day,
+      Value<ReminderKind> kind,
+      Value<CheckInOutcome> outcome,
+      Value<DateTime?> actualAt,
+      Value<String?> reason,
+      Value<int> rowid,
+    });
+
+class $$CheckInsTableFilterComposer
+    extends Composer<_$AppDatabase, $CheckInsTable> {
+  $$CheckInsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<ReminderKind, ReminderKind, String> get kind =>
+      $composableBuilder(
+        column: $table.kind,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<CheckInOutcome, CheckInOutcome, String>
+  get outcome => $composableBuilder(
+    column: $table.outcome,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<DateTime> get actualAt => $composableBuilder(
+    column: $table.actualAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CheckInsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CheckInsTable> {
+  $$CheckInsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get outcome => $composableBuilder(
+    column: $table.outcome,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get actualAt => $composableBuilder(
+    column: $table.actualAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CheckInsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CheckInsTable> {
+  $$CheckInsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get day =>
+      $composableBuilder(column: $table.day, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<ReminderKind, String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<CheckInOutcome, String> get outcome =>
+      $composableBuilder(column: $table.outcome, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get actualAt =>
+      $composableBuilder(column: $table.actualAt, builder: (column) => column);
+
+  GeneratedColumn<String> get reason =>
+      $composableBuilder(column: $table.reason, builder: (column) => column);
+}
+
+class $$CheckInsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CheckInsTable,
+          CheckIn,
+          $$CheckInsTableFilterComposer,
+          $$CheckInsTableOrderingComposer,
+          $$CheckInsTableAnnotationComposer,
+          $$CheckInsTableCreateCompanionBuilder,
+          $$CheckInsTableUpdateCompanionBuilder,
+          (CheckIn, BaseReferences<_$AppDatabase, $CheckInsTable, CheckIn>),
+          CheckIn,
+          PrefetchHooks Function()
+        > {
+  $$CheckInsTableTableManager(_$AppDatabase db, $CheckInsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CheckInsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CheckInsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CheckInsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String> day = const Value.absent(),
+                Value<ReminderKind> kind = const Value.absent(),
+                Value<CheckInOutcome> outcome = const Value.absent(),
+                Value<DateTime?> actualAt = const Value.absent(),
+                Value<String?> reason = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CheckInsCompanion(
+                id: id,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                day: day,
+                kind: kind,
+                outcome: outcome,
+                actualAt: actualAt,
+                reason: reason,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                required String day,
+                required ReminderKind kind,
+                required CheckInOutcome outcome,
+                Value<DateTime?> actualAt = const Value.absent(),
+                Value<String?> reason = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CheckInsCompanion.insert(
+                id: id,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                day: day,
+                kind: kind,
+                outcome: outcome,
+                actualAt: actualAt,
+                reason: reason,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$CheckInsTable, CheckIn>(table),
+                  BaseReferences<_$AppDatabase, $CheckInsTable, CheckIn>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CheckInsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CheckInsTable,
+      CheckIn,
+      $$CheckInsTableFilterComposer,
+      $$CheckInsTableOrderingComposer,
+      $$CheckInsTableAnnotationComposer,
+      $$CheckInsTableCreateCompanionBuilder,
+      $$CheckInsTableUpdateCompanionBuilder,
+      (CheckIn, BaseReferences<_$AppDatabase, $CheckInsTable, CheckIn>),
+      CheckIn,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -13002,4 +13861,6 @@ class $AppDatabaseManager {
       $$BudgetsTableTableManager(_db, _db.budgets);
   $$CalendarEventsTableTableManager get calendarEvents =>
       $$CalendarEventsTableTableManager(_db, _db.calendarEvents);
+  $$CheckInsTableTableManager get checkIns =>
+      $$CheckInsTableTableManager(_db, _db.checkIns);
 }

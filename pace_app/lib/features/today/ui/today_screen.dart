@@ -35,7 +35,9 @@ import '../../schedule/application/schedule_providers.dart';
 import '../../verse/ui/verse_card.dart';
 import 'day_timeline_view.dart';
 import 'evening_card.dart';
+import '../../deadlines/ui/task_check_in.dart';
 import 'now_card.dart';
+import 'step_check_in.dart';
 import 'today_bits.dart';
 import 'top3_picker_sheet.dart';
 import 'week_strip.dart';
@@ -60,19 +62,11 @@ class TodayScreen extends ConsumerWidget {
     }
   }
 
-  static const _kinds = {
-    RoutineStep.wake: ReminderKind.wake,
-    RoutineStep.eat: ReminderKind.eat,
-    RoutineStep.leave: ReminderKind.leave,
-  };
-
-  Future<void> _markStep(WidgetRef ref, RoutineStep step, DateTime now) =>
-      ref.read(routineRemindersProvider).done(_kinds[step]!, now.weekday);
-
   /// The late card's one button: out the door, routine counted as done.
+  /// Up is logged as now, a bit later than planned, which is just true.
   Future<void> _outTheDoor(WidgetRef ref, DateTime now) async {
     final routine = ref.read(routineRemindersProvider);
-    await routine.done(ReminderKind.wake, now.weekday);
+    await routine.checkIn(ReminderKind.wake, now.weekday, CheckInOutcome.later);
     await routine.done(ReminderKind.leave, now.weekday);
   }
 
@@ -99,6 +93,9 @@ class TodayScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider).value;
     final schedules = ref.watch(scheduleByWeekdayProvider);
     final log = ref.watch(dailyLogProvider(dateKey(now))).value;
+    final checkIns =
+        ref.watch(checkInsProvider(dateKey(now))).value ??
+        const <ReminderKind, CheckIn>{};
     final pending = ref.watch(pendingTasksProvider).value ?? const <Task>[];
     final lowEnergy = ref.watch(lowEnergyProvider);
     final inboxCount = ref.watch(inboxCountProvider);
@@ -123,6 +120,7 @@ class TodayScreen extends ConsumerWidget {
             lateThresholdMinutes: settings.lateThresholdMinutes,
             lowEnergy: lowEnergy,
             wakeAnchor: hasSchedule,
+            skipped: skippedSteps(checkIns),
           );
     final night = settings == null
         ? null
@@ -245,8 +243,7 @@ class TodayScreen extends ConsumerWidget {
     Widget enter(Widget child) =>
         FadeSlideIn(index: order++, enabled: stagger, child: child);
 
-    void markSubmitted(Task t) =>
-        ref.read(deadlineRemindersProvider).markSubmitted(t.id);
+    Future<bool> markSubmitted(Task t) => checkInTask(context, ref, t);
 
     final focusText = focus == null
         ? null
@@ -374,7 +371,20 @@ class TodayScreen extends ConsumerWidget {
                 enter(
                   NowCard(
                     status: status,
-                    onStepDone: (step) => _markStep(ref, step, now),
+                    onStepTap: (step) => checkInStep(
+                      context,
+                      ref,
+                      step: step,
+                      item: stepItem(status, step),
+                      now: now,
+                      graceMinutes: settings!.lateThresholdMinutes,
+                      checkIn: checkIns[stepKinds[step]],
+                      loggedAt: switch (step) {
+                        RoutineStep.wake => log?.wakeLoggedAt,
+                        RoutineStep.eat => log?.eatDoneAt,
+                        _ => null,
+                      },
+                    ),
                     onOutTheDoor: () => _outTheDoor(ref, now),
                   ),
                 ),
