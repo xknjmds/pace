@@ -299,7 +299,10 @@ void main() {
       scrollable: find.byType(Scrollable).last,
     );
     expect(find.text('Settings'), findsOneWidget);
-    await tester.tap(find.text('Settings'));
+    // Scroll to the very end so the tile clears the navigation bar.
+    await tester.drag(find.byType(Scrollable).last, const Offset(0, -400));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('more-settings')));
     await tester.pumpAndSettle();
     expect(find.text('Week'), findsOneWidget);
     await tester.pageBack();

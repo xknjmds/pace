@@ -8,6 +8,7 @@ import 'features/finance/ui/money_screen.dart';
 import 'features/notes/ui/notes_screen.dart';
 import 'features/journey/ui/journey_screen.dart';
 import 'features/onboarding/ui/setup_screen.dart';
+import 'features/rewards/ui/rewards_screen.dart';
 import 'features/wellbeing/ui/support_screen.dart';
 import 'features/review/ui/check_in_screen.dart';
 import 'features/schedule/ui/schedule_screen.dart';
@@ -48,6 +49,9 @@ abstract final class Routes {
   /// Tuck's journey: days done, stops and personal firsts.
   static const journey = '/journey';
 
+  /// Rewards the owner sets for themselves.
+  static const rewards = '/rewards';
+
   /// The hub tab with every other screen.
   static const more = '/more';
 
@@ -71,6 +75,7 @@ abstract final class Routes {
     setup: (_) => const ReadableWidth(child: SetupScreen()),
     support: (_) => const ReadableWidth(child: SupportScreen()),
     journey: (_) => const ReadableWidth(child: JourneyScreen()),
+    rewards: (_) => const ReadableWidth(child: RewardsScreen()),
   };
 
   static Route<void> _route(String name) => MaterialPageRoute(

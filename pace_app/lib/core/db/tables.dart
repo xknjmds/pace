@@ -284,6 +284,15 @@ class BlockedApps extends Table with UuidKey, SyncColumns {
 }
 
 /// v6: a note. Separate from the quick-capture inbox.
+/// v10: a reward the owner sets for themselves ("5 days done: milk tea").
+/// Days count from [createdAt]; an unclaimed reward never expires.
+class Rewards extends Table with UuidKey, SyncColumns {
+  TextColumn get title => text()();
+  IntColumn get daysNeeded => integer()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get claimedAt => dateTime().nullable()();
+}
+
 class Notes extends Table with UuidKey, SyncColumns {
   TextColumn get title => text().withDefault(const Constant(''))();
   TextColumn get body => text().withDefault(const Constant(''))();

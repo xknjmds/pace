@@ -13,6 +13,8 @@ import '../../../routes.dart';
 import '../../blocking/application/gate_providers.dart';
 import '../../finance/application/finance_providers.dart';
 import '../../finance/domain/money.dart';
+import '../../journey/application/journey_providers.dart';
+import '../../rewards/application/rewards_providers.dart';
 import '../../notes/application/notes_providers.dart';
 import '../../review/application/review_providers.dart';
 import '../../schedule/application/schedule_providers.dart';
@@ -33,6 +35,11 @@ class MoreScreen extends ConsumerWidget {
     final paused = features.appBlocking
         ? ref.watch(blockedAppsProvider).value?.length ?? 0
         : 0;
+
+    final journeyDays = ref.watch(journeyProvider).value?.daysDone ?? 0;
+    final ready = (ref.watch(rewardsProvider).value ?? const [])
+        .where((v) => v.progress.earned && !v.progress.claimed)
+        .length;
 
     String count(int n, String one, String many) => '$n ${n == 1 ? one : many}';
 
@@ -72,6 +79,22 @@ class MoreScreen extends ConsumerWidget {
             ? 'Nothing spent yet'
             : '${formatMoney(spent, code)} this period',
         route: Routes.money,
+      ),
+      _Hub(
+        icon: Icons.route_rounded,
+        kind: PastelKind.leave,
+        title: 'Journey',
+        status: journeyDays == 0
+            ? 'Tuck is ready to set off'
+            : '${count(journeyDays, 'day', 'days')} along',
+        route: Routes.journey,
+      ),
+      _Hub(
+        icon: Icons.redeem_rounded,
+        kind: PastelKind.morning,
+        title: 'Rewards',
+        status: ready == 0 ? 'Treats you set' : '$ready ready to enjoy',
+        route: Routes.rewards,
       ),
       if (features.appBlocking)
         _Hub(
@@ -121,6 +144,15 @@ class MoreScreen extends ConsumerWidget {
               subtitle: 'Your week, mornings and evenings',
               chevron: true,
               onTap: () => Navigator.of(context).pushNamed(Routes.settings),
+            ),
+            PaceTile(
+              key: const ValueKey('more-support'),
+              icon: Icons.favorite_outline_rounded,
+              kind: PastelKind.evening,
+              title: 'If you\'re struggling',
+              subtitle: 'Kind words and people to call',
+              chevron: true,
+              onTap: () => Navigator.of(context).pushNamed(Routes.support),
             ),
             if (features.reminders)
               PaceTile(

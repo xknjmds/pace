@@ -13,6 +13,7 @@ import 'generated/schema_v5.dart' as v5;
 import 'generated/schema_v6.dart' as v6;
 import 'generated/schema_v7.dart' as v7;
 import 'generated/schema_v8.dart' as v8;
+import 'generated/schema_v9.dart' as v9;
 
 void main() {
   late SchemaVerifier verifier;
@@ -39,7 +40,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 9);
+    await verifier.migrateAndValidate(db, 10);
 
     final s = await db.settingsDao.get();
     expect(s.lowEnergyEnabled, isTrue);
@@ -76,7 +77,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 9);
+    await verifier.migrateAndValidate(db, 10);
 
     final s = await db.settingsDao.get();
     expect(s.targetWakeMinutes, 7 * 60);
@@ -101,7 +102,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 9);
+    await verifier.migrateAndValidate(db, 10);
     expect(await db.focusSessionsDao.getActive(), isNull);
     final s = (await db.focusSessionsDao.recent()).single;
     expect(s.endedAt, DateTime.utc(2026, 11, 15, 19));
@@ -123,7 +124,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 9);
+    await verifier.migrateAndValidate(db, 10);
     final s = await db.settingsDao.get();
     expect(s.targetWakeMinutes, 7 * 60);
     expect(s.weekendLeewayMinutes, 60);
@@ -151,7 +152,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 9);
+    await verifier.migrateAndValidate(db, 10);
     final s = await db.settingsDao.get();
     expect(s.verseEnabled, isTrue);
     expect(s.gateEnabled, isFalse);
@@ -184,7 +185,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 9);
+    await verifier.migrateAndValidate(db, 10);
     final task = (await db.tasksDao.getAll()).single;
     expect(task.status, TaskStatus.submitted);
     expect(task.submittedAt, isNotNull);
@@ -210,7 +211,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 9);
+    await verifier.migrateAndValidate(db, 10);
     final s = await db.settingsDao.get();
     expect(s.onboardedAt, DateTime.utc(2026, 11, 18));
   });
@@ -237,7 +238,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 9);
+    await verifier.migrateAndValidate(db, 10);
     final log = await db.dailyLogsDao.get(DateTime(2026, 11, 18));
     expect(log!.routineDone, isTrue);
     expect(log.mood, isNull);
@@ -247,10 +248,34 @@ void main() {
     expect(s.welcomeBackDate, isNull);
   });
 
-  test('a fresh database matches the v9 snapshot', () async {
-    final connection = await verifier.startAt(9);
+  test('a v9 database upgrades to v10 with an empty rewards list', () async {
+    final schema = await verifier.schemaAt(9);
+    final old = v9.DatabaseAtV9(schema.newConnection());
+    await old
+        .into(old.dailyLogs)
+        .insert(
+          v9.DailyLogsCompanion.insert(
+            date: '2026-11-18',
+            mood: const Value('good'),
+            updatedAt: '2026-11-18T20:00:00.000Z',
+          ),
+        );
+    await old.close();
+
+    final db = AppDatabase(schema.newConnection());
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 10);
+    expect(
+      (await db.dailyLogsDao.get(DateTime(2026, 11, 18)))!.mood,
+      Mood.good,
+    );
+    expect(await db.rewardsDao.getAll(), isEmpty);
+  });
+
+  test('a fresh database matches the v10 snapshot', () async {
+    final connection = await verifier.startAt(10);
     final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 9);
+    await verifier.migrateAndValidate(db, 10);
   });
 }

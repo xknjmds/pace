@@ -8,6 +8,7 @@ import 'daos/class_blocks_dao.dart';
 import 'daos/habits_dao.dart';
 import 'daos/blocked_apps_dao.dart';
 import 'daos/notes_dao.dart';
+import 'daos/rewards_dao.dart';
 import 'daos/finance_dao.dart';
 import 'daos/calendar_events_dao.dart';
 import 'daos/daily_logs_dao.dart';
@@ -27,6 +28,7 @@ export 'daos/class_blocks_dao.dart';
 export 'daos/habits_dao.dart';
 export 'daos/blocked_apps_dao.dart';
 export 'daos/notes_dao.dart';
+export 'daos/rewards_dao.dart';
 export 'daos/finance_dao.dart';
 export 'daos/calendar_events_dao.dart';
 export 'daos/daily_logs_dao.dart';
@@ -60,6 +62,7 @@ part 'app_database.g.dart';
     Budgets,
     CalendarEvents,
     CheckIns,
+    Rewards,
   ],
   daos: [
     SettingsDao,
@@ -77,6 +80,7 @@ part 'app_database.g.dart';
     FinanceDao,
     CalendarEventsDao,
     CheckInsDao,
+    RewardsDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -117,7 +121,7 @@ class AppDatabase extends _$AppDatabase {
   static DateTime _utcNow() => DateTime.now().toUtc();
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   /// Schema history. Never edit a released step (CLAUDE.md rule 8); add one,
   /// then regenerate: `drift_dev schema dump`, then `schema steps` into
@@ -135,6 +139,7 @@ class AppDatabase extends _$AppDatabase {
   /// - v8 (D1): `settings.onboarded_at`
   /// - v9 (D2): `daily_logs.mood`; settings for the light day, steady mode
   ///   and welcome back
+  /// - v10 (D6): `rewards`
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
@@ -230,6 +235,9 @@ class AppDatabase extends _$AppDatabase {
         ]) {
           await m.addColumn(s, column);
         }
+      },
+      from9To10: (m, schema) async {
+        await m.createTable(schema.rewards);
       },
     ),
     beforeOpen: (_) => settingsDao.ensureRow(),

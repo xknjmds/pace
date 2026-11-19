@@ -61,6 +61,13 @@ class JourneyInputs {
   final Set<String> submittedDays;
   final int focusSessions;
   final int deadlinesSubmitted;
+
+  /// Every day with something done, from any source.
+  Set<String> get doneDays => {
+    ...routineDays,
+    ...movementDays,
+    ...submittedDays,
+  };
 }
 
 class Journey {
@@ -94,8 +101,7 @@ class Journey {
 
 /// Pure: where Tuck is. More history can only move Tuck forward.
 Journey journeyFrom(JourneyInputs i) {
-  final days = {...i.routineDays, ...i.movementDays, ...i.submittedDays};
-  final done = days.length;
+  final done = i.doneDays.length;
 
   JourneyStop? reached;
   JourneyStop? next;

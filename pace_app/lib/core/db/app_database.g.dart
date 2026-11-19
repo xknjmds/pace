@@ -9496,6 +9496,469 @@ class CheckInsCompanion extends UpdateCompanion<CheckIn> {
   }
 }
 
+class $RewardsTable extends Rewards with TableInfo<$RewardsTable, Reward> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RewardsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: uuidV4,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _daysNeededMeta = const VerificationMeta(
+    'daysNeeded',
+  );
+  @override
+  late final GeneratedColumn<int> daysNeeded = GeneratedColumn<int>(
+    'days_needed',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _claimedAtMeta = const VerificationMeta(
+    'claimedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> claimedAt = GeneratedColumn<DateTime>(
+    'claimed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    updatedAt,
+    deletedAt,
+    title,
+    daysNeeded,
+    createdAt,
+    claimedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'rewards';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Reward> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('days_needed')) {
+      context.handle(
+        _daysNeededMeta,
+        daysNeeded.isAcceptableOrUnknown(data['days_needed']!, _daysNeededMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_daysNeededMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('claimed_at')) {
+      context.handle(
+        _claimedAtMeta,
+        claimedAt.isAcceptableOrUnknown(data['claimed_at']!, _claimedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Reward map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Reward(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      daysNeeded: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}days_needed'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      claimedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}claimed_at'],
+      ),
+    );
+  }
+
+  @override
+  $RewardsTable createAlias(String alias) {
+    return $RewardsTable(attachedDatabase, alias);
+  }
+}
+
+class Reward extends DataClass implements Insertable<Reward> {
+  final String id;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String title;
+  final int daysNeeded;
+  final DateTime createdAt;
+  final DateTime? claimedAt;
+  const Reward({
+    required this.id,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.title,
+    required this.daysNeeded,
+    required this.createdAt,
+    this.claimedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['title'] = Variable<String>(title);
+    map['days_needed'] = Variable<int>(daysNeeded);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || claimedAt != null) {
+      map['claimed_at'] = Variable<DateTime>(claimedAt);
+    }
+    return map;
+  }
+
+  RewardsCompanion toCompanion(bool nullToAbsent) {
+    return RewardsCompanion(
+      id: Value(id),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      title: Value(title),
+      daysNeeded: Value(daysNeeded),
+      createdAt: Value(createdAt),
+      claimedAt: claimedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(claimedAt),
+    );
+  }
+
+  factory Reward.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Reward(
+      id: serializer.fromJson<String>(json['id']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      title: serializer.fromJson<String>(json['title']),
+      daysNeeded: serializer.fromJson<int>(json['daysNeeded']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      claimedAt: serializer.fromJson<DateTime?>(json['claimedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'title': serializer.toJson<String>(title),
+      'daysNeeded': serializer.toJson<int>(daysNeeded),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'claimedAt': serializer.toJson<DateTime?>(claimedAt),
+    };
+  }
+
+  Reward copyWith({
+    String? id,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    String? title,
+    int? daysNeeded,
+    DateTime? createdAt,
+    Value<DateTime?> claimedAt = const Value.absent(),
+  }) => Reward(
+    id: id ?? this.id,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    title: title ?? this.title,
+    daysNeeded: daysNeeded ?? this.daysNeeded,
+    createdAt: createdAt ?? this.createdAt,
+    claimedAt: claimedAt.present ? claimedAt.value : this.claimedAt,
+  );
+  Reward copyWithCompanion(RewardsCompanion data) {
+    return Reward(
+      id: data.id.present ? data.id.value : this.id,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      title: data.title.present ? data.title.value : this.title,
+      daysNeeded: data.daysNeeded.present
+          ? data.daysNeeded.value
+          : this.daysNeeded,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      claimedAt: data.claimedAt.present ? data.claimedAt.value : this.claimedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Reward(')
+          ..write('id: $id, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('title: $title, ')
+          ..write('daysNeeded: $daysNeeded, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('claimedAt: $claimedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    updatedAt,
+    deletedAt,
+    title,
+    daysNeeded,
+    createdAt,
+    claimedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Reward &&
+          other.id == this.id &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.title == this.title &&
+          other.daysNeeded == this.daysNeeded &&
+          other.createdAt == this.createdAt &&
+          other.claimedAt == this.claimedAt);
+}
+
+class RewardsCompanion extends UpdateCompanion<Reward> {
+  final Value<String> id;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String> title;
+  final Value<int> daysNeeded;
+  final Value<DateTime> createdAt;
+  final Value<DateTime?> claimedAt;
+  final Value<int> rowid;
+  const RewardsCompanion({
+    this.id = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.title = const Value.absent(),
+    this.daysNeeded = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.claimedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RewardsCompanion.insert({
+    this.id = const Value.absent(),
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    required String title,
+    required int daysNeeded,
+    required DateTime createdAt,
+    this.claimedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : updatedAt = Value(updatedAt),
+       title = Value(title),
+       daysNeeded = Value(daysNeeded),
+       createdAt = Value(createdAt);
+  static Insertable<Reward> custom({
+    Expression<String>? id,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? title,
+    Expression<int>? daysNeeded,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? claimedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (title != null) 'title': title,
+      if (daysNeeded != null) 'days_needed': daysNeeded,
+      if (createdAt != null) 'created_at': createdAt,
+      if (claimedAt != null) 'claimed_at': claimedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RewardsCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String>? title,
+    Value<int>? daysNeeded,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? claimedAt,
+    Value<int>? rowid,
+  }) {
+    return RewardsCompanion(
+      id: id ?? this.id,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      title: title ?? this.title,
+      daysNeeded: daysNeeded ?? this.daysNeeded,
+      createdAt: createdAt ?? this.createdAt,
+      claimedAt: claimedAt ?? this.claimedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (daysNeeded.present) {
+      map['days_needed'] = Variable<int>(daysNeeded.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (claimedAt.present) {
+      map['claimed_at'] = Variable<DateTime>(claimedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RewardsCompanion(')
+          ..write('id: $id, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('title: $title, ')
+          ..write('daysNeeded: $daysNeeded, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('claimedAt: $claimedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -9519,6 +9982,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $BudgetsTable budgets = $BudgetsTable(this);
   late final $CalendarEventsTable calendarEvents = $CalendarEventsTable(this);
   late final $CheckInsTable checkIns = $CheckInsTable(this);
+  late final $RewardsTable rewards = $RewardsTable(this);
   late final SettingsDao settingsDao = SettingsDao(this as AppDatabase);
   late final WeekdayScheduleDao weekdayScheduleDao = WeekdayScheduleDao(
     this as AppDatabase,
@@ -9547,6 +10011,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this as AppDatabase,
   );
   late final CheckInsDao checkInsDao = CheckInsDao(this as AppDatabase);
+  late final RewardsDao rewardsDao = RewardsDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -9569,6 +10034,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     budgets,
     calendarEvents,
     checkIns,
+    rewards,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -14371,6 +14837,249 @@ typedef $$CheckInsTableProcessedTableManager =
       CheckIn,
       PrefetchHooks Function()
     >;
+typedef $$RewardsTableCreateCompanionBuilder =
+    RewardsCompanion Function({
+      Value<String> id,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      required String title,
+      required int daysNeeded,
+      required DateTime createdAt,
+      Value<DateTime?> claimedAt,
+      Value<int> rowid,
+    });
+typedef $$RewardsTableUpdateCompanionBuilder =
+    RewardsCompanion Function({
+      Value<String> id,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String> title,
+      Value<int> daysNeeded,
+      Value<DateTime> createdAt,
+      Value<DateTime?> claimedAt,
+      Value<int> rowid,
+    });
+
+class $$RewardsTableFilterComposer
+    extends Composer<_$AppDatabase, $RewardsTable> {
+  $$RewardsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get daysNeeded => $composableBuilder(
+    column: $table.daysNeeded,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get claimedAt => $composableBuilder(
+    column: $table.claimedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RewardsTableOrderingComposer
+    extends Composer<_$AppDatabase, $RewardsTable> {
+  $$RewardsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get daysNeeded => $composableBuilder(
+    column: $table.daysNeeded,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get claimedAt => $composableBuilder(
+    column: $table.claimedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RewardsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RewardsTable> {
+  $$RewardsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<int> get daysNeeded => $composableBuilder(
+    column: $table.daysNeeded,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get claimedAt =>
+      $composableBuilder(column: $table.claimedAt, builder: (column) => column);
+}
+
+class $$RewardsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RewardsTable,
+          Reward,
+          $$RewardsTableFilterComposer,
+          $$RewardsTableOrderingComposer,
+          $$RewardsTableAnnotationComposer,
+          $$RewardsTableCreateCompanionBuilder,
+          $$RewardsTableUpdateCompanionBuilder,
+          (Reward, BaseReferences<_$AppDatabase, $RewardsTable, Reward>),
+          Reward,
+          PrefetchHooks Function()
+        > {
+  $$RewardsTableTableManager(_$AppDatabase db, $RewardsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RewardsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RewardsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RewardsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<int> daysNeeded = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> claimedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RewardsCompanion(
+                id: id,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                title: title,
+                daysNeeded: daysNeeded,
+                createdAt: createdAt,
+                claimedAt: claimedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                required String title,
+                required int daysNeeded,
+                required DateTime createdAt,
+                Value<DateTime?> claimedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RewardsCompanion.insert(
+                id: id,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                title: title,
+                daysNeeded: daysNeeded,
+                createdAt: createdAt,
+                claimedAt: claimedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$RewardsTable, Reward>(table),
+                  BaseReferences<_$AppDatabase, $RewardsTable, Reward>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RewardsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RewardsTable,
+      Reward,
+      $$RewardsTableFilterComposer,
+      $$RewardsTableOrderingComposer,
+      $$RewardsTableAnnotationComposer,
+      $$RewardsTableCreateCompanionBuilder,
+      $$RewardsTableUpdateCompanionBuilder,
+      (Reward, BaseReferences<_$AppDatabase, $RewardsTable, Reward>),
+      Reward,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -14412,4 +15121,6 @@ class $AppDatabaseManager {
       $$CalendarEventsTableTableManager(_db, _db.calendarEvents);
   $$CheckInsTableTableManager get checkIns =>
       $$CheckInsTableTableManager(_db, _db.checkIns);
+  $$RewardsTableTableManager get rewards =>
+      $$RewardsTableTableManager(_db, _db.rewards);
 }

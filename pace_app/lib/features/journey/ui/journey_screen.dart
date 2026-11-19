@@ -7,6 +7,7 @@ import '../../../core/theme/pace_tokens.dart';
 import '../../../core/widgets/pace_page.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/tuck.dart';
+import '../../../routes.dart';
 import '../application/journey_providers.dart';
 import '../domain/journey.dart';
 
@@ -30,6 +31,17 @@ class JourneyScreen extends ConsumerWidget {
             _Stops(journey: journey),
             const SectionHeader('Firsts'),
             _Firsts(journey: journey),
+            const SizedBox(height: 16),
+            Card(
+              child: ListTile(
+                key: const ValueKey('open-rewards'),
+                leading: const Icon(Icons.redeem_rounded),
+                title: const Text('Your rewards'),
+                subtitle: const Text('Treats you set for yourself'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => Navigator.of(context).pushNamed(Routes.rewards),
+              ),
+            ),
           ],
         ],
       ],
