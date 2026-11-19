@@ -80,6 +80,9 @@ class Settings extends Table with SyncColumns {
   /// v6: when calendar events were last fetched; null when never.
   DateTimeColumn get calendarSyncedAt => dateTime().nullable()();
 
+  /// v8: when the first-run setup was finished or skipped; null shows it.
+  DateTimeColumn get onboardedAt => dateTime().nullable()();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }

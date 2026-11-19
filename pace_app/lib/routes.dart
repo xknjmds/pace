@@ -6,6 +6,7 @@ import 'features/blocking/ui/gate_screen.dart';
 import 'features/calendar/ui/calendar_screen.dart';
 import 'features/finance/ui/money_screen.dart';
 import 'features/notes/ui/notes_screen.dart';
+import 'features/onboarding/ui/setup_screen.dart';
 import 'features/review/ui/check_in_screen.dart';
 import 'features/schedule/ui/schedule_screen.dart';
 import 'features/review/ui/review_screen.dart';
@@ -36,6 +37,9 @@ abstract final class Routes {
   static const money = '/money';
   static const calendar = '/calendar';
 
+  /// First-run setup, shown until it is finished or skipped.
+  static const setup = '/setup';
+
   /// The hub tab with every other screen.
   static const more = '/more';
 
@@ -56,6 +60,7 @@ abstract final class Routes {
     notes: (_) => const ReadableWidth(child: NotesScreen()),
     money: (_) => const ReadableWidth(child: MoneyScreen()),
     calendar: (_) => const ReadableWidth(child: CalendarScreen()),
+    setup: (_) => const ReadableWidth(child: SetupScreen()),
   };
 
   static Route<void> _route(String name) => MaterialPageRoute(

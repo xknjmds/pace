@@ -117,7 +117,7 @@ class AppDatabase extends _$AppDatabase {
   static DateTime _utcNow() => DateTime.now().toUtc();
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   /// Schema history. Never edit a released step (CLAUDE.md rule 8); add one,
   /// then regenerate: `drift_dev schema dump`, then `schema steps` into
@@ -132,6 +132,7 @@ class AppDatabase extends _$AppDatabase {
   ///   calendar tables; settings for the verse, currency, gate and calendar;
   ///   `tasks.submitted_at`
   /// - v7 (v2.1): `check_ins`; `tasks.submit_note`
+  /// - v8 (D1): `settings.onboarded_at`
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
@@ -209,6 +210,11 @@ class AppDatabase extends _$AppDatabase {
       from6To7: (m, schema) async {
         await m.createTable(schema.checkIns);
         await m.addColumn(schema.tasks, schema.tasks.submitNote);
+      },
+      from7To8: (m, schema) async {
+        await m.addColumn(schema.settings, schema.settings.onboardedAt);
+        // Anyone upgrading has already set the app up by hand.
+        await customStatement('UPDATE settings SET onboarded_at = updated_at');
       },
     ),
     beforeOpen: (_) => settingsDao.ensureRow(),

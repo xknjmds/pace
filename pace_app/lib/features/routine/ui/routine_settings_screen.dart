@@ -449,6 +449,15 @@ class RoutineSettingsScreen extends ConsumerWidget {
               chevron: true,
               onTap: () => Navigator.of(context).pushNamed(Routes.schedule),
             ),
+            PaceTile(
+              key: const ValueKey('setup-again'),
+              icon: Icons.auto_awesome_rounded,
+              kind: PastelKind.calm,
+              title: 'Quick setup',
+              subtitle: 'Answer the first-run questions again',
+              chevron: true,
+              onTap: () => Navigator.of(context).pushNamed(Routes.setup),
+            ),
             if (features.appBlocking)
               PaceTile(
                 icon: Icons.do_not_disturb_on_rounded,

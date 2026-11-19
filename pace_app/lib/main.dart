@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 
 import 'app.dart';
+import 'core/db/database_provider.dart';
 import 'core/home_widget/home_widget_bridge.dart';
 import 'core/home_widget/home_widget_bridge_impl.dart';
 import 'core/home_widget/noop_home_widget_bridge.dart';
@@ -50,6 +51,12 @@ Future<void> main() async {
           : const Stream.empty(),
     );
   });
+  // A fresh install opens on the first-run setup, over Today.
+  var needsSetup = false;
+  await report.guard('setup check', () async {
+    final s = await container.read(appDatabaseProvider).settingsDao.get();
+    needsSetup = s.onboardedAt == null;
+  });
   Uri? launchedWith;
   if (features.homeWidget) {
     await report.guard('widget launch', () async {
@@ -62,7 +69,9 @@ Future<void> main() async {
       container: container,
       child: PaceApp(
         initialRoute:
-            fromNotification ?? routeForWidgetUri(launchedWith) ?? Routes.today,
+            fromNotification ??
+            routeForWidgetUri(launchedWith) ??
+            (needsSetup ? Routes.setup : Routes.today),
       ),
     ),
   );

@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart' hide isNull, isNotNull;
+import 'package:drift/native.dart';
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pace/core/db/app_database.dart';
@@ -10,6 +11,7 @@ import 'generated/schema_v3.dart' as v3;
 import 'generated/schema_v4.dart' as v4;
 import 'generated/schema_v5.dart' as v5;
 import 'generated/schema_v6.dart' as v6;
+import 'generated/schema_v7.dart' as v7;
 
 void main() {
   late SchemaVerifier verifier;
@@ -36,7 +38,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 7);
+    await verifier.migrateAndValidate(db, 8);
 
     final s = await db.settingsDao.get();
     expect(s.lowEnergyEnabled, isTrue);
@@ -73,7 +75,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 7);
+    await verifier.migrateAndValidate(db, 8);
 
     final s = await db.settingsDao.get();
     expect(s.targetWakeMinutes, 7 * 60);
@@ -98,7 +100,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 7);
+    await verifier.migrateAndValidate(db, 8);
     expect(await db.focusSessionsDao.getActive(), isNull);
     final s = (await db.focusSessionsDao.recent()).single;
     expect(s.endedAt, DateTime.utc(2026, 11, 15, 19));
@@ -120,7 +122,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 7);
+    await verifier.migrateAndValidate(db, 8);
     final s = await db.settingsDao.get();
     expect(s.targetWakeMinutes, 7 * 60);
     expect(s.weekendLeewayMinutes, 60);
@@ -148,7 +150,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 7);
+    await verifier.migrateAndValidate(db, 8);
     final s = await db.settingsDao.get();
     expect(s.verseEnabled, isTrue);
     expect(s.gateEnabled, isFalse);
@@ -181,7 +183,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 7);
+    await verifier.migrateAndValidate(db, 8);
     final task = (await db.tasksDao.getAll()).single;
     expect(task.status, TaskStatus.submitted);
     expect(task.submittedAt, isNotNull);
@@ -192,10 +194,36 @@ void main() {
     );
   });
 
-  test('a fresh database matches the v7 snapshot', () async {
-    final connection = await verifier.startAt(7);
+  test('a v7 install counts as already set up', () async {
+    final schema = await verifier.schemaAt(7);
+    final old = v7.DatabaseAtV7(schema.newConnection());
+    await old
+        .into(old.settings)
+        .insert(
+          v7.SettingsCompanion.insert(
+            id: const Value(1),
+            updatedAt: '2026-11-18T00:00:00.000Z',
+          ),
+        );
+    await old.close();
+
+    final db = AppDatabase(schema.newConnection());
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 8);
+    final s = await db.settingsDao.get();
+    expect(s.onboardedAt, DateTime.utc(2026, 11, 18));
+  });
+
+  test('a fresh install has not been set up yet', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    expect((await db.settingsDao.get()).onboardedAt, isNull);
+  });
+
+  test('a fresh database matches the v8 snapshot', () async {
+    final connection = await verifier.startAt(8);
     final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 7);
+    await verifier.migrateAndValidate(db, 8);
   });
 }

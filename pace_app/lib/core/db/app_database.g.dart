@@ -285,6 +285,17 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _onboardedAtMeta = const VerificationMeta(
+    'onboardedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> onboardedAt = GeneratedColumn<DateTime>(
+    'onboarded_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     updatedAt,
@@ -310,6 +321,7 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     windDownLockEnabled,
     unlockMinutes,
     calendarSyncedAt,
+    onboardedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -520,6 +532,15 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         ),
       );
     }
+    if (data.containsKey('onboarded_at')) {
+      context.handle(
+        _onboardedAtMeta,
+        onboardedAt.isAcceptableOrUnknown(
+          data['onboarded_at']!,
+          _onboardedAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -621,6 +642,10 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}calendar_synced_at'],
       ),
+      onboardedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}onboarded_at'],
+      ),
     );
   }
 
@@ -673,6 +698,9 @@ class Setting extends DataClass implements Insertable<Setting> {
 
   /// v6: when calendar events were last fetched; null when never.
   final DateTime? calendarSyncedAt;
+
+  /// v8: when the first-run setup was finished or skipped; null shows it.
+  final DateTime? onboardedAt;
   const Setting({
     required this.updatedAt,
     this.deletedAt,
@@ -697,6 +725,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     required this.windDownLockEnabled,
     required this.unlockMinutes,
     this.calendarSyncedAt,
+    this.onboardedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -733,6 +762,9 @@ class Setting extends DataClass implements Insertable<Setting> {
     map['unlock_minutes'] = Variable<int>(unlockMinutes);
     if (!nullToAbsent || calendarSyncedAt != null) {
       map['calendar_synced_at'] = Variable<DateTime>(calendarSyncedAt);
+    }
+    if (!nullToAbsent || onboardedAt != null) {
+      map['onboarded_at'] = Variable<DateTime>(onboardedAt);
     }
     return map;
   }
@@ -772,6 +804,9 @@ class Setting extends DataClass implements Insertable<Setting> {
       calendarSyncedAt: calendarSyncedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(calendarSyncedAt),
+      onboardedAt: onboardedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(onboardedAt),
     );
   }
 
@@ -822,6 +857,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       calendarSyncedAt: serializer.fromJson<DateTime?>(
         json['calendarSyncedAt'],
       ),
+      onboardedAt: serializer.fromJson<DateTime?>(json['onboardedAt']),
     );
   }
   @override
@@ -851,6 +887,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       'windDownLockEnabled': serializer.toJson<bool>(windDownLockEnabled),
       'unlockMinutes': serializer.toJson<int>(unlockMinutes),
       'calendarSyncedAt': serializer.toJson<DateTime?>(calendarSyncedAt),
+      'onboardedAt': serializer.toJson<DateTime?>(onboardedAt),
     };
   }
 
@@ -878,6 +915,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     bool? windDownLockEnabled,
     int? unlockMinutes,
     Value<DateTime?> calendarSyncedAt = const Value.absent(),
+    Value<DateTime?> onboardedAt = const Value.absent(),
   }) => Setting(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -911,6 +949,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     calendarSyncedAt: calendarSyncedAt.present
         ? calendarSyncedAt.value
         : this.calendarSyncedAt,
+    onboardedAt: onboardedAt.present ? onboardedAt.value : this.onboardedAt,
   );
   Setting copyWithCompanion(SettingsCompanion data) {
     return Setting(
@@ -977,6 +1016,9 @@ class Setting extends DataClass implements Insertable<Setting> {
       calendarSyncedAt: data.calendarSyncedAt.present
           ? data.calendarSyncedAt.value
           : this.calendarSyncedAt,
+      onboardedAt: data.onboardedAt.present
+          ? data.onboardedAt.value
+          : this.onboardedAt,
     );
   }
 
@@ -1005,7 +1047,8 @@ class Setting extends DataClass implements Insertable<Setting> {
           ..write('morningLockEnabled: $morningLockEnabled, ')
           ..write('windDownLockEnabled: $windDownLockEnabled, ')
           ..write('unlockMinutes: $unlockMinutes, ')
-          ..write('calendarSyncedAt: $calendarSyncedAt')
+          ..write('calendarSyncedAt: $calendarSyncedAt, ')
+          ..write('onboardedAt: $onboardedAt')
           ..write(')'))
         .toString();
   }
@@ -1035,6 +1078,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     windDownLockEnabled,
     unlockMinutes,
     calendarSyncedAt,
+    onboardedAt,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1062,7 +1106,8 @@ class Setting extends DataClass implements Insertable<Setting> {
           other.morningLockEnabled == this.morningLockEnabled &&
           other.windDownLockEnabled == this.windDownLockEnabled &&
           other.unlockMinutes == this.unlockMinutes &&
-          other.calendarSyncedAt == this.calendarSyncedAt);
+          other.calendarSyncedAt == this.calendarSyncedAt &&
+          other.onboardedAt == this.onboardedAt);
 }
 
 class SettingsCompanion extends UpdateCompanion<Setting> {
@@ -1089,6 +1134,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
   final Value<bool> windDownLockEnabled;
   final Value<int> unlockMinutes;
   final Value<DateTime?> calendarSyncedAt;
+  final Value<DateTime?> onboardedAt;
   const SettingsCompanion({
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -1113,6 +1159,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     this.windDownLockEnabled = const Value.absent(),
     this.unlockMinutes = const Value.absent(),
     this.calendarSyncedAt = const Value.absent(),
+    this.onboardedAt = const Value.absent(),
   });
   SettingsCompanion.insert({
     required DateTime updatedAt,
@@ -1138,6 +1185,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     this.windDownLockEnabled = const Value.absent(),
     this.unlockMinutes = const Value.absent(),
     this.calendarSyncedAt = const Value.absent(),
+    this.onboardedAt = const Value.absent(),
   }) : updatedAt = Value(updatedAt);
   static Insertable<Setting> custom({
     Expression<DateTime>? updatedAt,
@@ -1163,6 +1211,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Expression<bool>? windDownLockEnabled,
     Expression<int>? unlockMinutes,
     Expression<DateTime>? calendarSyncedAt,
+    Expression<DateTime>? onboardedAt,
   }) {
     return RawValuesInsertable({
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -1199,6 +1248,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
         'wind_down_lock_enabled': windDownLockEnabled,
       if (unlockMinutes != null) 'unlock_minutes': unlockMinutes,
       if (calendarSyncedAt != null) 'calendar_synced_at': calendarSyncedAt,
+      if (onboardedAt != null) 'onboarded_at': onboardedAt,
     });
   }
 
@@ -1226,6 +1276,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Value<bool>? windDownLockEnabled,
     Value<int>? unlockMinutes,
     Value<DateTime?>? calendarSyncedAt,
+    Value<DateTime?>? onboardedAt,
   }) {
     return SettingsCompanion(
       updatedAt: updatedAt ?? this.updatedAt,
@@ -1252,6 +1303,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
       windDownLockEnabled: windDownLockEnabled ?? this.windDownLockEnabled,
       unlockMinutes: unlockMinutes ?? this.unlockMinutes,
       calendarSyncedAt: calendarSyncedAt ?? this.calendarSyncedAt,
+      onboardedAt: onboardedAt ?? this.onboardedAt,
     );
   }
 
@@ -1333,6 +1385,9 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     if (calendarSyncedAt.present) {
       map['calendar_synced_at'] = Variable<DateTime>(calendarSyncedAt.value);
     }
+    if (onboardedAt.present) {
+      map['onboarded_at'] = Variable<DateTime>(onboardedAt.value);
+    }
     return map;
   }
 
@@ -1361,7 +1416,8 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
           ..write('morningLockEnabled: $morningLockEnabled, ')
           ..write('windDownLockEnabled: $windDownLockEnabled, ')
           ..write('unlockMinutes: $unlockMinutes, ')
-          ..write('calendarSyncedAt: $calendarSyncedAt')
+          ..write('calendarSyncedAt: $calendarSyncedAt, ')
+          ..write('onboardedAt: $onboardedAt')
           ..write(')'))
         .toString();
   }
@@ -9197,6 +9253,7 @@ typedef $$SettingsTableCreateCompanionBuilder =
       Value<bool> windDownLockEnabled,
       Value<int> unlockMinutes,
       Value<DateTime?> calendarSyncedAt,
+      Value<DateTime?> onboardedAt,
     });
 typedef $$SettingsTableUpdateCompanionBuilder =
     SettingsCompanion Function({
@@ -9223,6 +9280,7 @@ typedef $$SettingsTableUpdateCompanionBuilder =
       Value<bool> windDownLockEnabled,
       Value<int> unlockMinutes,
       Value<DateTime?> calendarSyncedAt,
+      Value<DateTime?> onboardedAt,
     });
 
 class $$SettingsTableFilterComposer
@@ -9346,6 +9404,11 @@ class $$SettingsTableFilterComposer
 
   ColumnFilters<DateTime> get calendarSyncedAt => $composableBuilder(
     column: $table.calendarSyncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get onboardedAt => $composableBuilder(
+    column: $table.onboardedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -9473,6 +9536,11 @@ class $$SettingsTableOrderingComposer
     column: $table.calendarSyncedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get onboardedAt => $composableBuilder(
+    column: $table.onboardedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettingsTableAnnotationComposer
@@ -9592,6 +9660,11 @@ class $$SettingsTableAnnotationComposer
     column: $table.calendarSyncedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get onboardedAt => $composableBuilder(
+    column: $table.onboardedAt,
+    builder: (column) => column,
+  );
 }
 
 class $$SettingsTableTableManager
@@ -9645,6 +9718,7 @@ class $$SettingsTableTableManager
                 Value<bool> windDownLockEnabled = const Value.absent(),
                 Value<int> unlockMinutes = const Value.absent(),
                 Value<DateTime?> calendarSyncedAt = const Value.absent(),
+                Value<DateTime?> onboardedAt = const Value.absent(),
               }) => SettingsCompanion(
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -9669,6 +9743,7 @@ class $$SettingsTableTableManager
                 windDownLockEnabled: windDownLockEnabled,
                 unlockMinutes: unlockMinutes,
                 calendarSyncedAt: calendarSyncedAt,
+                onboardedAt: onboardedAt,
               ),
           createCompanionCallback:
               ({
@@ -9695,6 +9770,7 @@ class $$SettingsTableTableManager
                 Value<bool> windDownLockEnabled = const Value.absent(),
                 Value<int> unlockMinutes = const Value.absent(),
                 Value<DateTime?> calendarSyncedAt = const Value.absent(),
+                Value<DateTime?> onboardedAt = const Value.absent(),
               }) => SettingsCompanion.insert(
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -9719,6 +9795,7 @@ class $$SettingsTableTableManager
                 windDownLockEnabled: windDownLockEnabled,
                 unlockMinutes: unlockMinutes,
                 calendarSyncedAt: calendarSyncedAt,
+                onboardedAt: onboardedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(
