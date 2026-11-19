@@ -476,7 +476,9 @@ class RoutineSettingsScreen extends ConsumerWidget {
               icon: Icons.auto_awesome_rounded,
               kind: PastelKind.calm,
               title: 'Quick setup',
-              subtitle: 'Answer the first-run questions again',
+              subtitle:
+                  'Answer the first-run questions again. Replaces the '
+                  'week and wake time.',
               chevron: true,
               onTap: () => Navigator.of(context).pushNamed(Routes.setup),
             ),

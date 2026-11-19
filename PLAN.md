@@ -437,6 +437,16 @@ Done when
 
 Not planned for now: an AI chatbot (needs a network), and partner vouchers (need a backend, M11 at the earliest).
 
+**Status (2026-11-19, overnight run).**
+- Built and committed on `phase-d`: D1, D2, D3, D5, D6, D7, the D4 release drafts (`release/`)
+  and the D8 sleep-check spike. Schema is at v11.
+- Waiting on the owner:
+  - D4 billing: approve `in_app_purchase`, then confirm prices and the free vs PACE+ split.
+  - D8: run the 3-night sleep check on the phone; the step counter and Sleep API need approval.
+  - D9: starts only after the D8 result.
+  - D10: needs Google verification.
+- Real-device checks are listed in `NOTES.md` under Phase D.
+
 ---
 
 ## M11. Accounts and sync (the SaaS version, after v2)
