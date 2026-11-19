@@ -396,3 +396,14 @@ a real phone**, so A2 and B1 are not done in the PLAN.md sense.
 - Low-energy mode lists only rewards that are ready to enjoy.
 - Entry points: More (Journey and Rewards tiles, plus "If you're struggling" in the App
   group) and the Journey screen.
+
+### D7. Next routine and the school year
+- After 12 routine days in 21, Review offers one idea at a time: a steady bedtime (fewer
+  than 5 bedtimes logged in 14 days), then study time (fewer than 3 focus sessions), then a
+  budget (none set). "Not now" is remembered in `settings.dismissed_suggestions` (v11).
+  Hidden in low-energy mode.
+- Your school year (`/review/year`, from Review): totals since the 1st of the start month
+  (`settings.school_year_start_month`, June by default, changeable on the screen). Positive
+  totals only, no rates.
+- **Not built:** exporting the year as an image. Sharing needs `share_plus` (or saving needs a
+  file-picker plugin), and both are new dependencies to ask about first.

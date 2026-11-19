@@ -356,6 +356,27 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     requiredDuringInsert: false,
   );
   @override
+  late final GeneratedColumnWithTypeConverter<List<String>, String>
+  dismissedSuggestions = GeneratedColumn<String>(
+    'dismissed_suggestions',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  ).withConverter<List<String>>($SettingsTable.$converterdismissedSuggestions);
+  static const VerificationMeta _schoolYearStartMonthMeta =
+      const VerificationMeta('schoolYearStartMonth');
+  @override
+  late final GeneratedColumn<int> schoolYearStartMonth = GeneratedColumn<int>(
+    'school_year_start_month',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(6),
+  );
+  @override
   List<GeneratedColumn> get $columns => [
     updatedAt,
     deletedAt,
@@ -386,6 +407,8 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     steadyOfferDismissedAt,
     lastOpenedAt,
     welcomeBackDate,
+    dismissedSuggestions,
+    schoolYearStartMonth,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -647,6 +670,15 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         ),
       );
     }
+    if (data.containsKey('school_year_start_month')) {
+      context.handle(
+        _schoolYearStartMonthMeta,
+        schoolYearStartMonth.isAcceptableOrUnknown(
+          data['school_year_start_month']!,
+          _schoolYearStartMonthMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -772,6 +804,17 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         DriftSqlType.string,
         data['${effectivePrefix}welcome_back_date'],
       ),
+      dismissedSuggestions: $SettingsTable.$converterdismissedSuggestions
+          .fromSql(
+            attachedDatabase.typeMapping.read(
+              DriftSqlType.string,
+              data['${effectivePrefix}dismissed_suggestions'],
+            )!,
+          ),
+      schoolYearStartMonth: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}school_year_start_month'],
+      )!,
     );
   }
 
@@ -779,6 +822,9 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
   $SettingsTable createAlias(String alias) {
     return $SettingsTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<List<String>, String> $converterdismissedSuggestions =
+      const StringListConverter();
 }
 
 class Setting extends DataClass implements Insertable<Setting> {
@@ -843,6 +889,13 @@ class Setting extends DataClass implements Insertable<Setting> {
   /// v9: the day (`yyyy-MM-dd`) Today greets a returning owner; cleared once
   /// the card is closed.
   final String? welcomeBackDate;
+
+  /// v11: next-routine suggestions the owner said "not now" to.
+  final List<String> dismissedSuggestions;
+
+  /// v11: the month (1 to 12) a school year starts, for the year in review.
+  /// June by default, as in the Philippine school calendar.
+  final int schoolYearStartMonth;
   const Setting({
     required this.updatedAt,
     this.deletedAt,
@@ -873,6 +926,8 @@ class Setting extends DataClass implements Insertable<Setting> {
     this.steadyOfferDismissedAt,
     this.lastOpenedAt,
     this.welcomeBackDate,
+    required this.dismissedSuggestions,
+    required this.schoolYearStartMonth,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -928,6 +983,14 @@ class Setting extends DataClass implements Insertable<Setting> {
     if (!nullToAbsent || welcomeBackDate != null) {
       map['welcome_back_date'] = Variable<String>(welcomeBackDate);
     }
+    {
+      map['dismissed_suggestions'] = Variable<String>(
+        $SettingsTable.$converterdismissedSuggestions.toSql(
+          dismissedSuggestions,
+        ),
+      );
+    }
+    map['school_year_start_month'] = Variable<int>(schoolYearStartMonth);
     return map;
   }
 
@@ -982,6 +1045,8 @@ class Setting extends DataClass implements Insertable<Setting> {
       welcomeBackDate: welcomeBackDate == null && nullToAbsent
           ? const Value.absent()
           : Value(welcomeBackDate),
+      dismissedSuggestions: Value(dismissedSuggestions),
+      schoolYearStartMonth: Value(schoolYearStartMonth),
     );
   }
 
@@ -1040,6 +1105,12 @@ class Setting extends DataClass implements Insertable<Setting> {
       ),
       lastOpenedAt: serializer.fromJson<DateTime?>(json['lastOpenedAt']),
       welcomeBackDate: serializer.fromJson<String?>(json['welcomeBackDate']),
+      dismissedSuggestions: serializer.fromJson<List<String>>(
+        json['dismissedSuggestions'],
+      ),
+      schoolYearStartMonth: serializer.fromJson<int>(
+        json['schoolYearStartMonth'],
+      ),
     );
   }
   @override
@@ -1077,6 +1148,10 @@ class Setting extends DataClass implements Insertable<Setting> {
       ),
       'lastOpenedAt': serializer.toJson<DateTime?>(lastOpenedAt),
       'welcomeBackDate': serializer.toJson<String?>(welcomeBackDate),
+      'dismissedSuggestions': serializer.toJson<List<String>>(
+        dismissedSuggestions,
+      ),
+      'schoolYearStartMonth': serializer.toJson<int>(schoolYearStartMonth),
     };
   }
 
@@ -1110,6 +1185,8 @@ class Setting extends DataClass implements Insertable<Setting> {
     Value<DateTime?> steadyOfferDismissedAt = const Value.absent(),
     Value<DateTime?> lastOpenedAt = const Value.absent(),
     Value<String?> welcomeBackDate = const Value.absent(),
+    List<String>? dismissedSuggestions,
+    int? schoolYearStartMonth,
   }) => Setting(
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -1153,6 +1230,8 @@ class Setting extends DataClass implements Insertable<Setting> {
     welcomeBackDate: welcomeBackDate.present
         ? welcomeBackDate.value
         : this.welcomeBackDate,
+    dismissedSuggestions: dismissedSuggestions ?? this.dismissedSuggestions,
+    schoolYearStartMonth: schoolYearStartMonth ?? this.schoolYearStartMonth,
   );
   Setting copyWithCompanion(SettingsCompanion data) {
     return Setting(
@@ -1237,6 +1316,12 @@ class Setting extends DataClass implements Insertable<Setting> {
       welcomeBackDate: data.welcomeBackDate.present
           ? data.welcomeBackDate.value
           : this.welcomeBackDate,
+      dismissedSuggestions: data.dismissedSuggestions.present
+          ? data.dismissedSuggestions.value
+          : this.dismissedSuggestions,
+      schoolYearStartMonth: data.schoolYearStartMonth.present
+          ? data.schoolYearStartMonth.value
+          : this.schoolYearStartMonth,
     );
   }
 
@@ -1271,7 +1356,9 @@ class Setting extends DataClass implements Insertable<Setting> {
           ..write('steadyMode: $steadyMode, ')
           ..write('steadyOfferDismissedAt: $steadyOfferDismissedAt, ')
           ..write('lastOpenedAt: $lastOpenedAt, ')
-          ..write('welcomeBackDate: $welcomeBackDate')
+          ..write('welcomeBackDate: $welcomeBackDate, ')
+          ..write('dismissedSuggestions: $dismissedSuggestions, ')
+          ..write('schoolYearStartMonth: $schoolYearStartMonth')
           ..write(')'))
         .toString();
   }
@@ -1307,6 +1394,8 @@ class Setting extends DataClass implements Insertable<Setting> {
     steadyOfferDismissedAt,
     lastOpenedAt,
     welcomeBackDate,
+    dismissedSuggestions,
+    schoolYearStartMonth,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1340,7 +1429,9 @@ class Setting extends DataClass implements Insertable<Setting> {
           other.steadyMode == this.steadyMode &&
           other.steadyOfferDismissedAt == this.steadyOfferDismissedAt &&
           other.lastOpenedAt == this.lastOpenedAt &&
-          other.welcomeBackDate == this.welcomeBackDate);
+          other.welcomeBackDate == this.welcomeBackDate &&
+          other.dismissedSuggestions == this.dismissedSuggestions &&
+          other.schoolYearStartMonth == this.schoolYearStartMonth);
 }
 
 class SettingsCompanion extends UpdateCompanion<Setting> {
@@ -1373,6 +1464,8 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
   final Value<DateTime?> steadyOfferDismissedAt;
   final Value<DateTime?> lastOpenedAt;
   final Value<String?> welcomeBackDate;
+  final Value<List<String>> dismissedSuggestions;
+  final Value<int> schoolYearStartMonth;
   const SettingsCompanion({
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -1403,6 +1496,8 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     this.steadyOfferDismissedAt = const Value.absent(),
     this.lastOpenedAt = const Value.absent(),
     this.welcomeBackDate = const Value.absent(),
+    this.dismissedSuggestions = const Value.absent(),
+    this.schoolYearStartMonth = const Value.absent(),
   });
   SettingsCompanion.insert({
     required DateTime updatedAt,
@@ -1434,6 +1529,8 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     this.steadyOfferDismissedAt = const Value.absent(),
     this.lastOpenedAt = const Value.absent(),
     this.welcomeBackDate = const Value.absent(),
+    this.dismissedSuggestions = const Value.absent(),
+    this.schoolYearStartMonth = const Value.absent(),
   }) : updatedAt = Value(updatedAt);
   static Insertable<Setting> custom({
     Expression<DateTime>? updatedAt,
@@ -1465,6 +1562,8 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Expression<DateTime>? steadyOfferDismissedAt,
     Expression<DateTime>? lastOpenedAt,
     Expression<String>? welcomeBackDate,
+    Expression<String>? dismissedSuggestions,
+    Expression<int>? schoolYearStartMonth,
   }) {
     return RawValuesInsertable({
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -1508,6 +1607,10 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
         'steady_offer_dismissed_at': steadyOfferDismissedAt,
       if (lastOpenedAt != null) 'last_opened_at': lastOpenedAt,
       if (welcomeBackDate != null) 'welcome_back_date': welcomeBackDate,
+      if (dismissedSuggestions != null)
+        'dismissed_suggestions': dismissedSuggestions,
+      if (schoolYearStartMonth != null)
+        'school_year_start_month': schoolYearStartMonth,
     });
   }
 
@@ -1541,6 +1644,8 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Value<DateTime?>? steadyOfferDismissedAt,
     Value<DateTime?>? lastOpenedAt,
     Value<String?>? welcomeBackDate,
+    Value<List<String>>? dismissedSuggestions,
+    Value<int>? schoolYearStartMonth,
   }) {
     return SettingsCompanion(
       updatedAt: updatedAt ?? this.updatedAt,
@@ -1574,6 +1679,8 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
           steadyOfferDismissedAt ?? this.steadyOfferDismissedAt,
       lastOpenedAt: lastOpenedAt ?? this.lastOpenedAt,
       welcomeBackDate: welcomeBackDate ?? this.welcomeBackDate,
+      dismissedSuggestions: dismissedSuggestions ?? this.dismissedSuggestions,
+      schoolYearStartMonth: schoolYearStartMonth ?? this.schoolYearStartMonth,
     );
   }
 
@@ -1675,6 +1782,18 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     if (welcomeBackDate.present) {
       map['welcome_back_date'] = Variable<String>(welcomeBackDate.value);
     }
+    if (dismissedSuggestions.present) {
+      map['dismissed_suggestions'] = Variable<String>(
+        $SettingsTable.$converterdismissedSuggestions.toSql(
+          dismissedSuggestions.value,
+        ),
+      );
+    }
+    if (schoolYearStartMonth.present) {
+      map['school_year_start_month'] = Variable<int>(
+        schoolYearStartMonth.value,
+      );
+    }
     return map;
   }
 
@@ -1709,7 +1828,9 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
           ..write('steadyMode: $steadyMode, ')
           ..write('steadyOfferDismissedAt: $steadyOfferDismissedAt, ')
           ..write('lastOpenedAt: $lastOpenedAt, ')
-          ..write('welcomeBackDate: $welcomeBackDate')
+          ..write('welcomeBackDate: $welcomeBackDate, ')
+          ..write('dismissedSuggestions: $dismissedSuggestions, ')
+          ..write('schoolYearStartMonth: $schoolYearStartMonth')
           ..write(')'))
         .toString();
   }
@@ -10072,6 +10193,8 @@ typedef $$SettingsTableCreateCompanionBuilder =
       Value<DateTime?> steadyOfferDismissedAt,
       Value<DateTime?> lastOpenedAt,
       Value<String?> welcomeBackDate,
+      Value<List<String>> dismissedSuggestions,
+      Value<int> schoolYearStartMonth,
     });
 typedef $$SettingsTableUpdateCompanionBuilder =
     SettingsCompanion Function({
@@ -10104,6 +10227,8 @@ typedef $$SettingsTableUpdateCompanionBuilder =
       Value<DateTime?> steadyOfferDismissedAt,
       Value<DateTime?> lastOpenedAt,
       Value<String?> welcomeBackDate,
+      Value<List<String>> dismissedSuggestions,
+      Value<int> schoolYearStartMonth,
     });
 
 class $$SettingsTableFilterComposer
@@ -10257,6 +10382,17 @@ class $$SettingsTableFilterComposer
 
   ColumnFilters<String> get welcomeBackDate => $composableBuilder(
     column: $table.welcomeBackDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<List<String>, List<String>, String>
+  get dismissedSuggestions => $composableBuilder(
+    column: $table.dismissedSuggestions,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<int> get schoolYearStartMonth => $composableBuilder(
+    column: $table.schoolYearStartMonth,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -10414,6 +10550,16 @@ class $$SettingsTableOrderingComposer
     column: $table.welcomeBackDate,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get dismissedSuggestions => $composableBuilder(
+    column: $table.dismissedSuggestions,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get schoolYearStartMonth => $composableBuilder(
+    column: $table.schoolYearStartMonth,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SettingsTableAnnotationComposer
@@ -10563,6 +10709,17 @@ class $$SettingsTableAnnotationComposer
     column: $table.welcomeBackDate,
     builder: (column) => column,
   );
+
+  GeneratedColumnWithTypeConverter<List<String>, String>
+  get dismissedSuggestions => $composableBuilder(
+    column: $table.dismissedSuggestions,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get schoolYearStartMonth => $composableBuilder(
+    column: $table.schoolYearStartMonth,
+    builder: (column) => column,
+  );
 }
 
 class $$SettingsTableTableManager
@@ -10622,6 +10779,8 @@ class $$SettingsTableTableManager
                 Value<DateTime?> steadyOfferDismissedAt = const Value.absent(),
                 Value<DateTime?> lastOpenedAt = const Value.absent(),
                 Value<String?> welcomeBackDate = const Value.absent(),
+                Value<List<String>> dismissedSuggestions = const Value.absent(),
+                Value<int> schoolYearStartMonth = const Value.absent(),
               }) => SettingsCompanion(
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -10652,6 +10811,8 @@ class $$SettingsTableTableManager
                 steadyOfferDismissedAt: steadyOfferDismissedAt,
                 lastOpenedAt: lastOpenedAt,
                 welcomeBackDate: welcomeBackDate,
+                dismissedSuggestions: dismissedSuggestions,
+                schoolYearStartMonth: schoolYearStartMonth,
               ),
           createCompanionCallback:
               ({
@@ -10684,6 +10845,8 @@ class $$SettingsTableTableManager
                 Value<DateTime?> steadyOfferDismissedAt = const Value.absent(),
                 Value<DateTime?> lastOpenedAt = const Value.absent(),
                 Value<String?> welcomeBackDate = const Value.absent(),
+                Value<List<String>> dismissedSuggestions = const Value.absent(),
+                Value<int> schoolYearStartMonth = const Value.absent(),
               }) => SettingsCompanion.insert(
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -10714,6 +10877,8 @@ class $$SettingsTableTableManager
                 steadyOfferDismissedAt: steadyOfferDismissedAt,
                 lastOpenedAt: lastOpenedAt,
                 welcomeBackDate: welcomeBackDate,
+                dismissedSuggestions: dismissedSuggestions,
+                schoolYearStartMonth: schoolYearStartMonth,
               ),
           withReferenceMapper: (p0) => p0
               .map(

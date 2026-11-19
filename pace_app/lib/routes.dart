@@ -13,6 +13,7 @@ import 'features/wellbeing/ui/support_screen.dart';
 import 'features/review/ui/check_in_screen.dart';
 import 'features/schedule/ui/schedule_screen.dart';
 import 'features/review/ui/review_screen.dart';
+import 'features/review/ui/year_review_screen.dart';
 import 'features/routine/ui/routine_settings_screen.dart';
 import 'features/shell/home_shell.dart';
 import 'features/shell/shell_tabs.dart';
@@ -52,6 +53,9 @@ abstract final class Routes {
   /// Rewards the owner sets for themselves.
   static const rewards = '/rewards';
 
+  /// The school year so far, in kind totals.
+  static const year = '/review/year';
+
   /// The hub tab with every other screen.
   static const more = '/more';
 
@@ -76,6 +80,7 @@ abstract final class Routes {
     support: (_) => const ReadableWidth(child: SupportScreen()),
     journey: (_) => const ReadableWidth(child: JourneyScreen()),
     rewards: (_) => const ReadableWidth(child: RewardsScreen()),
+    year: (_) => const ReadableWidth(child: YearReviewScreen()),
   };
 
   static Route<void> _route(String name) => MaterialPageRoute(

@@ -14,6 +14,7 @@ import 'generated/schema_v6.dart' as v6;
 import 'generated/schema_v7.dart' as v7;
 import 'generated/schema_v8.dart' as v8;
 import 'generated/schema_v9.dart' as v9;
+import 'generated/schema_v10.dart' as v10;
 
 void main() {
   late SchemaVerifier verifier;
@@ -40,7 +41,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 10);
+    await verifier.migrateAndValidate(db, 11);
 
     final s = await db.settingsDao.get();
     expect(s.lowEnergyEnabled, isTrue);
@@ -77,7 +78,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 10);
+    await verifier.migrateAndValidate(db, 11);
 
     final s = await db.settingsDao.get();
     expect(s.targetWakeMinutes, 7 * 60);
@@ -102,7 +103,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 10);
+    await verifier.migrateAndValidate(db, 11);
     expect(await db.focusSessionsDao.getActive(), isNull);
     final s = (await db.focusSessionsDao.recent()).single;
     expect(s.endedAt, DateTime.utc(2026, 11, 15, 19));
@@ -124,7 +125,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 10);
+    await verifier.migrateAndValidate(db, 11);
     final s = await db.settingsDao.get();
     expect(s.targetWakeMinutes, 7 * 60);
     expect(s.weekendLeewayMinutes, 60);
@@ -152,7 +153,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 10);
+    await verifier.migrateAndValidate(db, 11);
     final s = await db.settingsDao.get();
     expect(s.verseEnabled, isTrue);
     expect(s.gateEnabled, isFalse);
@@ -185,7 +186,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 10);
+    await verifier.migrateAndValidate(db, 11);
     final task = (await db.tasksDao.getAll()).single;
     expect(task.status, TaskStatus.submitted);
     expect(task.submittedAt, isNotNull);
@@ -211,7 +212,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 10);
+    await verifier.migrateAndValidate(db, 11);
     final s = await db.settingsDao.get();
     expect(s.onboardedAt, DateTime.utc(2026, 11, 18));
   });
@@ -238,7 +239,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 10);
+    await verifier.migrateAndValidate(db, 11);
     final log = await db.dailyLogsDao.get(DateTime(2026, 11, 18));
     expect(log!.routineDone, isTrue);
     expect(log.mood, isNull);
@@ -264,7 +265,7 @@ void main() {
 
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 10);
+    await verifier.migrateAndValidate(db, 11);
     expect(
       (await db.dailyLogsDao.get(DateTime(2026, 11, 18)))!.mood,
       Mood.good,
@@ -272,10 +273,43 @@ void main() {
     expect(await db.rewardsDao.getAll(), isEmpty);
   });
 
-  test('a fresh database matches the v10 snapshot', () async {
-    final connection = await verifier.startAt(10);
+  test('a v10 database upgrades to v11 and keeps rewards', () async {
+    final schema = await verifier.schemaAt(10);
+    final old = v10.DatabaseAtV10(schema.newConnection());
+    await old
+        .into(old.rewards)
+        .insert(
+          v10.RewardsCompanion.insert(
+            id: 'r-1',
+            title: 'Milk tea',
+            daysNeeded: 5,
+            createdAt: '2026-11-18T00:00:00.000Z',
+            updatedAt: '2026-11-18T00:00:00.000Z',
+          ),
+        );
+    await old
+        .into(old.settings)
+        .insert(
+          v10.SettingsCompanion.insert(
+            id: const Value(1),
+            updatedAt: '2026-11-18T00:00:00.000Z',
+          ),
+        );
+    await old.close();
+
+    final db = AppDatabase(schema.newConnection());
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 11);
+    expect((await db.rewardsDao.getAll()).single.title, 'Milk tea');
+    final s = await db.settingsDao.get();
+    expect(s.dismissedSuggestions, isEmpty);
+    expect(s.schoolYearStartMonth, 6);
+  });
+
+  test('a fresh database matches the v11 snapshot', () async {
+    final connection = await verifier.startAt(11);
     final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 10);
+    await verifier.migrateAndValidate(db, 11);
   });
 }

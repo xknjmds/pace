@@ -11,6 +11,7 @@ import '../../../routes.dart';
 import '../application/review_providers.dart';
 import '../domain/weekly_summary.dart';
 import '../../wellbeing/ui/review_extras.dart';
+import 'next_routine_card.dart';
 import 'trends_section.dart';
 import '../../../core/widgets/pace_page.dart';
 
@@ -173,6 +174,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                   '${summary.sleep.length == 1 ? 'night' : 'nights'} logged.',
                 ),
         ),
+        const NextRoutineCard(),
         const WellbeingReviewSection(),
         Card(
           child: ListTile(
@@ -182,6 +184,16 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             subtitle: const Text('Every day done is a step forward'),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => Navigator.of(context).pushNamed(Routes.journey),
+          ),
+        ),
+        Card(
+          child: ListTile(
+            key: const ValueKey('open-year'),
+            leading: const Icon(Icons.auto_awesome_rounded),
+            title: const Text('Your school year'),
+            subtitle: const Text('Everything you did since the year began'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => Navigator.of(context).pushNamed(Routes.year),
           ),
         ),
         const TrendsSection(),

@@ -121,7 +121,7 @@ class AppDatabase extends _$AppDatabase {
   static DateTime _utcNow() => DateTime.now().toUtc();
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   /// Schema history. Never edit a released step (CLAUDE.md rule 8); add one,
   /// then regenerate: `drift_dev schema dump`, then `schema steps` into
@@ -140,6 +140,7 @@ class AppDatabase extends _$AppDatabase {
   /// - v9 (D2): `daily_logs.mood`; settings for the light day, steady mode
   ///   and welcome back
   /// - v10 (D6): `rewards`
+  /// - v11 (D7): settings for dismissed suggestions and the school year
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
@@ -238,6 +239,16 @@ class AppDatabase extends _$AppDatabase {
       },
       from9To10: (m, schema) async {
         await m.createTable(schema.rewards);
+      },
+      from10To11: (m, schema) async {
+        await m.addColumn(
+          schema.settings,
+          schema.settings.dismissedSuggestions,
+        );
+        await m.addColumn(
+          schema.settings,
+          schema.settings.schoolYearStartMonth,
+        );
       },
     ),
     beforeOpen: (_) => settingsDao.ensureRow(),

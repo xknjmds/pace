@@ -99,6 +99,16 @@ class Settings extends Table with SyncColumns {
   /// the card is closed.
   TextColumn get welcomeBackDate => text().nullable()();
 
+  /// v11: next-routine suggestions the owner said "not now" to.
+  TextColumn get dismissedSuggestions => text()
+      .map(const StringListConverter())
+      .withDefault(const Constant('[]'))();
+
+  /// v11: the month (1 to 12) a school year starts, for the year in review.
+  /// June by default, as in the Philippine school calendar.
+  IntColumn get schoolYearStartMonth =>
+      integer().withDefault(const Constant(6))();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
