@@ -50,75 +50,83 @@ class _ClassBlockSheetState extends State<ClassBlockSheet> {
         20,
         20 + MediaQuery.viewInsetsOf(context).bottom,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(widget.title, style: theme.textTheme.titleLarge),
-          const SizedBox(height: 16),
-          TextField(
-            key: const ValueKey('block-subject'),
-            controller: _subject,
-            autofocus: widget.initial == null,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(labelText: 'Subject'),
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<int>(
-            key: const ValueKey('block-day'),
-            initialValue: _weekday,
-            decoration: const InputDecoration(labelText: 'Day'),
-            items: [
-              for (final e in weekdayNames.entries)
-                DropdownMenuItem(value: e.key, child: Text(e.value)),
-            ],
-            onChanged: (d) => setState(() => _weekday = d),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TimeButton(
-                  key: const ValueKey('block-start'),
-                  minutes: _start,
-                  placeholder: 'Starts',
-                  onChanged: (m) => setState(() => _start = m),
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8),
-                child: Text('to'),
-              ),
-              Expanded(
-                child: TimeButton(
-                  key: const ValueKey('block-end'),
-                  minutes: _end,
-                  placeholder: 'Ends',
-                  onChanged: (m) => setState(() => _end = m),
-                ),
-              ),
-            ],
-          ),
-          if (timesWrong)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                'The end needs to be after the start.',
-                style: theme.textTheme.bodySmall,
-              ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(widget.title, style: theme.textTheme.titleLarge),
+            const SizedBox(height: 16),
+            TextField(
+              key: const ValueKey('block-subject'),
+              controller: _subject,
+              autofocus: widget.initial == null,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(labelText: 'Subject'),
+              onChanged: (_) => setState(() {}),
             ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _room,
-            decoration: const InputDecoration(labelText: 'Room (optional)'),
-          ),
-          const SizedBox(height: 20),
-          FilledButton(
-            onPressed: b.complete ? () => Navigator.of(context).pop(b) : null,
-            child: const Text('Save'),
-          ),
-        ],
+            const SizedBox(height: 12),
+            DropdownButtonFormField<int>(
+              key: const ValueKey('block-day'),
+              initialValue: _weekday,
+              decoration: const InputDecoration(labelText: 'Day'),
+              items: [
+                for (final e in weekdayNames.entries)
+                  DropdownMenuItem(value: e.key, child: Text(e.value)),
+              ],
+              onChanged: (d) => setState(() => _weekday = d),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TimeButton(
+                    key: const ValueKey('block-start'),
+                    minutes: _start,
+                    placeholder: 'Starts',
+                    onChanged: (m) => setState(() => _start = m),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: Text('to'),
+                ),
+                Expanded(
+                  child: TimeButton(
+                    key: const ValueKey('block-end'),
+                    minutes: _end,
+                    placeholder: 'Ends',
+                    onChanged: (m) => setState(() => _end = m),
+                  ),
+                ),
+              ],
+            ),
+            if (timesWrong)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'The end needs to be after the start.',
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
+            const SizedBox(height: 12),
+            TextField(
+              key: const ValueKey('block-room'),
+              controller: _room,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(labelText: 'Room (optional)'),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 20),
+            FilledButton(
+              // Read the fields at tap time, not at the last rebuild.
+              onPressed: b.complete
+                  ? () => Navigator.of(context).pop(_block)
+                  : null,
+              child: const Text('Save'),
+            ),
+          ],
+        ),
       ),
     );
   }

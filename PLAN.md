@@ -323,6 +323,36 @@ Done when
 
 ---
 
+## v2.1 fixes (from owner testing, 2026-11-19)
+
+**F1. Class room not saved (bug)**
+- The class sheet's Save returned the form as of the last rebuild; typing a room never
+  rebuilt it, so a room typed last (or a room-only edit) was dropped. Fixed in the sheet,
+  shared by add, edit and import review.
+
+**F2. Check-in sheet for routine steps and deadlines**
+- Tapping a routine step (wake, eat, leave, wind-down) opens a quick sheet: done on time,
+  done a bit later (pick the actual time), or didn't happen today, plus an optional short reason
+- Deadlines get the same sheet: submitted, submitted late (pick time), or couldn't submit (let go)
+- Done steps can be tapped again to change or clear the check-in
+- Review and Trends show neutral counts ("1 a bit later"), never misses or red
+- Notification buttons stay one tap (on time, now)
+
+Done when
+- Every outcome is stored and survives a restart; wake averages use the picked time
+- "Didn't happen" quiets that step's reminders for the rest of the day
+- Low-energy mode keeps the sheet short (note collapsed)
+
+**F3. Schedule widget layouts (Android)**
+- Each schedule widget picks its layout when placed, and can be reconfigured:
+  list (current), time-block timeline, now & next, day progress strip
+- All layouts follow low-energy mode, dark mode, and the block-boundary alarms
+
+Done when
+- All four layouts are correct on a real phone, survive a reboot, and update without opening the app
+
+---
+
 ## M11. Accounts and sync (the SaaS version, after v2)
 
 Drift stays the source of truth on the device. Supabase (Postgres, auth, row-level security)
