@@ -89,4 +89,20 @@ void main() {
     expect(find.text('1 more on the way.'), findsOneWidget);
     await unmount(tester);
   });
+
+  testWidgets('remove then undo brings the same reward back', (tester) async {
+    final r = await db.rewardsDao.add(title: 'Stickers', daysNeeded: 5);
+    await pump(tester);
+    await tester.tap(find.byKey(ValueKey('reward-menu-${r.id}')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Remove'));
+    await tester.pumpAndSettle();
+    expect(await db.rewardsDao.getAll(), isEmpty);
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+    final back = (await db.rewardsDao.getAll()).single;
+    expect(back.id, r.id);
+    expect(back.createdAt, r.createdAt);
+    await unmount(tester);
+  });
 }

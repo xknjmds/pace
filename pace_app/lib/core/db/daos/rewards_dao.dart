@@ -45,6 +45,10 @@ class RewardsDao extends DatabaseAccessor<AppDatabase> with _$RewardsDaoMixin {
   Future<void> remove(String id) =>
       _write(id, RewardsCompanion(deletedAt: Value(db.now())));
 
+  /// Undo for [remove]: the reward comes back with its days intact.
+  Future<void> restore(String id) =>
+      _write(id, const RewardsCompanion(deletedAt: Value(null)));
+
   Future<void> _write(String id, RewardsCompanion patch) =>
       (update(rewards)..where((t) => t.id.equals(id))).write(
         patch.copyWith(updatedAt: Value(db.now())),

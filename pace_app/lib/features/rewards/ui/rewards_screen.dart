@@ -116,10 +116,9 @@ class _RewardCard extends ConsumerWidget {
                           showUndo(
                             context,
                             message: 'Removed ${quoted(r.title)}',
-                            onUndo: () => ref
-                                .read(appDatabaseProvider)
-                                .rewardsDao
-                                .add(title: r.title, daysNeeded: r.daysNeeded),
+                            // The card is gone by then; the dao was read
+                            // while it was still here.
+                            onUndo: () => dao.restore(r.id),
                           );
                         }
                     }

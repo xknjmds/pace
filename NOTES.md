@@ -392,8 +392,7 @@ a real phone**, so A2 and B1 are not done in the PLAN.md sense.
   never auto-earns a new reward. An unclaimed reward never expires.
 - "Log the cost" opens Money; it does not create an expense itself, so finance stays
   independent (rule 13).
-- Removing is soft with Undo; Undo re-adds the reward as new, so its count restarts from
-  today. Good enough for now; a true restore needs a `restore` on the DAO.
+- Removing is soft with Undo, which restores the same row with its days intact.
 - Low-energy mode lists only rewards that are ready to enjoy.
 - Entry points: More (Journey and Rewards tiles, plus "If you're struggling" in the App
   group) and the Journey screen.
