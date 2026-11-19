@@ -1,6 +1,8 @@
 package com.el.pace
 
 import android.app.AppOpsManager
+import android.app.usage.UsageEvents
+import android.app.usage.UsageStatsManager
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
@@ -83,6 +85,11 @@ class MainActivity : FlutterActivity() {
               openAppDetails()
               result.success(null)
             }
+            "screenEvents" -> {
+              val from = (call.argument<Number>("from") ?: 0).toLong()
+              val to = (call.argument<Number>("to") ?: 0).toLong()
+              result.success(screenEvents(from, to))
+            }
             else -> result.notImplemented()
           }
         }
@@ -136,6 +143,33 @@ class MainActivity : FlutterActivity() {
     } catch (_: ActivityNotFoundException) {
       startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
+  }
+
+  /**
+   * Screen on, unlock and screen off moments between [from] and [to] (epoch
+   * ms), for the sleep check spike (D8). Needs usage access; without it, or
+   * before Android 9, the list is empty. Nothing leaves the phone.
+   */
+  private fun screenEvents(from: Long, to: Long): List<Map<String, Any>> {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P || !hasUsageAccess()) {
+      return emptyList()
+    }
+    val usm = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+    val events = usm.queryEvents(from, to)
+    val out = mutableListOf<Map<String, Any>>()
+    val e = UsageEvents.Event()
+    while (events.hasNextEvent()) {
+      events.getNextEvent(e)
+      val on =
+          when (e.eventType) {
+            UsageEvents.Event.SCREEN_INTERACTIVE,
+            UsageEvents.Event.KEYGUARD_HIDDEN -> true
+            UsageEvents.Event.SCREEN_NON_INTERACTIVE -> false
+            else -> null
+          } ?: continue
+      out.add(mapOf("t" to e.timeStamp, "on" to on))
+    }
+    return out
   }
 
   private fun hasUsageAccess(): Boolean {

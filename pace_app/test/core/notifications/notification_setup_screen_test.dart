@@ -202,4 +202,10 @@ class _FakeDevice implements DeviceSettings {
 
   @override
   Future<void> openAppDetails() async => opened.add('details');
+
+  @override
+  Future<List<(DateTime, bool)>> screenEvents(
+    DateTime from,
+    DateTime to,
+  ) async => const [];
 }

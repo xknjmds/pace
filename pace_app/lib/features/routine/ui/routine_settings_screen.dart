@@ -489,6 +489,16 @@ class RoutineSettingsScreen extends ConsumerWidget {
                 chevron: true,
                 onTap: () => Navigator.of(context).pushNamed(Routes.gate),
               ),
+            if (features.appBlocking)
+              PaceTile(
+                key: const ValueKey('sleep-check'),
+                icon: Icons.science_outlined,
+                kind: PastelKind.evening,
+                title: 'Sleep check (test)',
+                subtitle: 'Compare phone use with your sleep log',
+                chevron: true,
+                onTap: () => Navigator.of(context).pushNamed(Routes.sleepCheck),
+              ),
             if (features.calendarSync)
               PaceTile(
                 icon: Icons.event_rounded,

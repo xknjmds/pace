@@ -407,3 +407,20 @@ a real phone**, so A2 and B1 are not done in the PLAN.md sense.
   totals only, no rates.
 - **Not built:** exporting the year as an image. Sharing needs `share_plus` (or saving needs a
   file-picker plugin), and both are new dependencies to ask about first.
+
+### D8. Activity spike (sleep check only)
+- Built: `estimateSleep` (pure, tested). Between 20:00 and noon it finds the longest stretch
+  with the screen off, ignoring pickups under 3 minutes (checking the time), and needs at least
+  2 h; 4 h or more reads as "confident". Screen events come from usage access (the gate's
+  existing permission) via `screenEvents` on the `com.el.pace/device` channel. Nothing is
+  stored.
+- Test screen: Settings > Extras > "Sleep check (test)" shows the last three nights, logged
+  bed and wake beside the phone's quiet stretch.
+- **Not built, waiting on the owner:**
+  - Step counter: needs the `ACTIVITY_RECOGNITION` permission. Ask first.
+  - Google Sleep API: needs `play-services-location`, a new dependency. Ask first.
+- **To do on the phone (the spike's "done when"):** write down real sleep and wake times for
+  three nights, compare them with the test screen, and record accuracy and phone model here.
+  **D9 (suggestions) waits for that result** (CLAUDE.md: stop after a spike to report).
+- **Verified here:** `assembleDebug` compiles. A stale Gradle daemon broke the plugin loader
+  once; `./gradlew --stop` fixed it.

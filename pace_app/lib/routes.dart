@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'core/notifications/ui/notification_setup_screen.dart';
 import 'core/widgets/readable_width.dart';
+import 'features/activity/ui/sleep_check_screen.dart';
 import 'features/blocking/ui/gate_screen.dart';
 import 'features/calendar/ui/calendar_screen.dart';
 import 'features/finance/ui/money_screen.dart';
@@ -56,6 +57,9 @@ abstract final class Routes {
   /// The school year so far, in kind totals.
   static const year = '/review/year';
 
+  /// D8 spike: phone use beside the sleep log (Android, usage access).
+  static const sleepCheck = '/lab/sleep';
+
   /// The hub tab with every other screen.
   static const more = '/more';
 
@@ -81,6 +85,7 @@ abstract final class Routes {
     journey: (_) => const ReadableWidth(child: JourneyScreen()),
     rewards: (_) => const ReadableWidth(child: RewardsScreen()),
     year: (_) => const ReadableWidth(child: YearReviewScreen()),
+    sleepCheck: (_) => const ReadableWidth(child: SleepCheckScreen()),
   };
 
   static Route<void> _route(String name) => MaterialPageRoute(
