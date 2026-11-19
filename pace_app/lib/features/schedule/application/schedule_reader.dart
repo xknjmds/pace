@@ -10,6 +10,19 @@ import '../domain/schedule_parser.dart';
 /// pixels in the same coordinates (for reading coloured time blocks).
 typedef ScheduleScan = ({List<OcrLine> lines, RgbaImage? image});
 
+/// Which step of reading a photo failed, and why. Shown to the owner so a
+/// failure can be reported instead of guessed at.
+class ScheduleReadException implements Exception {
+  const ScheduleReadException(this.step, this.cause);
+
+  /// "pick" (opening the camera or gallery) or "read" (text recognition).
+  final String step;
+  final Object cause;
+
+  @override
+  String toString() => 'ScheduleReadException($step): $cause';
+}
+
 /// Picks a photo and reads its text on the device. Behind an interface so
 /// tests and other platforms never touch the plugins.
 abstract interface class ScheduleReader {
@@ -23,16 +36,26 @@ class MlKitScheduleReader implements ScheduleReader {
 
   @override
   Future<ScheduleScan?> pickAndRead({required bool camera}) async {
-    final file = await ImagePicker().pickImage(
-      source: camera ? ImageSource.camera : ImageSource.gallery,
-      maxWidth: 2400,
-    );
+    final XFile? file;
+    try {
+      file = await ImagePicker().pickImage(
+        source: camera ? ImageSource.camera : ImageSource.gallery,
+        maxWidth: 2400,
+      );
+    } catch (e) {
+      throw ScheduleReadException('pick', e);
+    }
     if (file == null) return null;
     final recognizer = TextRecognizer();
     try {
-      final result = await recognizer.processImage(
-        InputImage.fromFilePath(file.path),
-      );
+      final RecognizedText result;
+      try {
+        result = await recognizer.processImage(
+          InputImage.fromFilePath(file.path),
+        );
+      } catch (e) {
+        throw ScheduleReadException('read', e);
+      }
       final lines = [
         for (final block in result.blocks)
           for (final line in block.lines)
@@ -46,7 +69,9 @@ class MlKitScheduleReader implements ScheduleReader {
       ];
       return (lines: lines, image: await _decode(file.path));
     } finally {
-      await recognizer.close();
+      try {
+        await recognizer.close();
+      } catch (_) {}
     }
   }
 

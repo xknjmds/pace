@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/db/app_database.dart';
@@ -80,16 +81,9 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     ScheduleScan? scan;
     try {
       scan = await ref.read(scheduleReaderProvider).pickAndRead(camera: camera);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'That photo could not be read. You can add classes by hand.',
-            ),
-          ),
-        );
-      }
+    } catch (e) {
+      debugPrint('Schedule import failed: $e');
+      if (mounted) _showReadError(e);
     } finally {
       if (mounted) setState(() => _reading = false);
     }
@@ -100,6 +94,49 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
         builder: (_) => ImportReviewScreen(
           candidates: parseSchedule(read.lines, image: read.image),
           scanned: read.lines,
+        ),
+      ),
+    );
+  }
+
+  /// Says which step failed, calmly, with the technical detail one tap
+  /// away so it can be reported.
+  void _showReadError(Object error) {
+    final step = error is ScheduleReadException ? error.step : 'other';
+    final cause = error is ScheduleReadException ? error.cause : error;
+    final message = switch (step) {
+      'pick' => 'The camera or gallery could not open that photo.',
+      'read' => 'The text in that photo could not be read.',
+      _ => 'That photo could not be read.',
+    };
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$message You can add classes by hand.'),
+        duration: const Duration(seconds: 8),
+        action: SnackBarAction(
+          label: 'Details',
+          onPressed: () => showDialog<void>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('What went wrong'),
+              content: SelectableText('Step: $step\n\n$cause'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Clipboard.setData(
+                      ClipboardData(text: 'Step: $step\n$cause'),
+                    );
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Copy'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Close'),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
