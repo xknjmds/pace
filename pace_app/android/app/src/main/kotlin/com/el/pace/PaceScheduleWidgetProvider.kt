@@ -92,7 +92,8 @@ class PaceScheduleWidgetProvider : HomeWidgetProvider() {
         widgetData: SharedPreferences,
     ) {
       val now = System.currentTimeMillis()
-      val day = dayFrom(widgetData.getString("schedule_json", null), now)
+      val json = widgetData.getString("schedule_json", null)
+      val day = dayFrom(json, now)
       ids.forEach { id ->
         val views =
             when (ScheduleWidgetPrefs.layout(context, id)) {
@@ -100,6 +101,8 @@ class PaceScheduleWidgetProvider : HomeWidgetProvider() {
               ScheduleWidgetLayout.NOW_NEXT -> nowNext(context, day)
               ScheduleWidgetLayout.TIMELINE -> timeline(context, day, mgr.getAppWidgetOptions(id))
               ScheduleWidgetLayout.STRIP -> strip(context, day, mgr.getAppWidgetOptions(id))
+              ScheduleWidgetLayout.WEEK ->
+                  week(context, day, weekFrom(json, now), mgr.getAppWidgetOptions(id))
             }
         views.setOnClickPendingIntent(
             R.id.schedule_root,
@@ -252,41 +255,119 @@ class PaceScheduleWidgetProvider : HomeWidgetProvider() {
       return views
     }
 
+    private fun week(
+        context: Context,
+        day: ScheduleDay,
+        week: ScheduleWeek,
+        options: Bundle,
+    ): RemoteViews {
+      // Low energy: the whole week is too much; show today's now and next.
+      if (week.lowEnergy) return timeline(context, day, options)
+      val views = RemoteViews(context.packageName, R.layout.pace_schedule_widget_week)
+      views.setTextViewText(
+          R.id.schedule_header_title, context.getString(R.string.schedule_widget_title_week))
+      if (week.empty) {
+        views.setViewVisibility(R.id.schedule_empty, View.VISIBLE)
+        views.setTextViewText(R.id.schedule_empty, context.getString(R.string.schedule_widget_none_week))
+        views.setViewVisibility(R.id.schedule_canvas, View.GONE)
+        return views
+      }
+      val (w, h) = sizeDp(options)
+      val bmp = ScheduleWidgetRenderer(context).week(week, w - 24, h - 56)
+      views.setViewVisibility(R.id.schedule_empty, View.GONE)
+      views.setViewVisibility(R.id.schedule_canvas, View.VISIBLE)
+      views.setImageViewBitmap(R.id.schedule_canvas, bmp)
+      views.setContentDescription(
+          R.id.schedule_canvas,
+          context.getString(
+              R.string.schedule_widget_week_description,
+              week.days
+                  .filter { it.items.isNotEmpty() }
+                  .joinToString("; ") { d ->
+                    ScheduleWidgetRenderer.dayName(d.midnight) + ": " +
+                        d.items.joinToString(", ") { "${hm(it.start)} ${label(it)}" }
+                  }))
+      return views
+    }
+
+    /** Today's blocks from the published week. */
     private fun dayFrom(json: String?, now: Long): ScheduleDay {
       if (json == null) return ScheduleDay(emptyList(), now, false)
       return try {
         val o = JSONObject(json)
-        val cal = Calendar.getInstance().apply { timeInMillis = now }
-        // Calendar: Sunday = 1 ... Saturday = 7. PACE: Monday = 1 ... Sunday = 7.
-        val weekday = (cal.get(Calendar.DAY_OF_WEEK) + 5) % 7 + 1
         val midnight = startOfDay(now)
-        val dayEnd = startOfDay(midnight + 26 * 3_600_000L)
-        val out = mutableListOf<ScheduleItem>()
-        val classes = o.optJSONObject("classes")?.optJSONArray("$weekday")
-        if (classes != null) {
-          for (i in 0 until classes.length()) {
-            val c = classes.getJSONObject(i)
-            out.add(
-                ScheduleItem(
-                    atMinute(midnight, c.getInt("s")),
-                    atMinute(midnight, c.getInt("e")),
-                    c.getString("t"),
-                    c.optString("r").ifBlank { null }))
-          }
-        }
-        val events = o.optJSONArray("events")
-        if (events != null) {
-          for (i in 0 until events.length()) {
-            val e = events.getJSONObject(i)
-            val s = e.getLong("s")
-            val f = e.getLong("e")
-            if (s < dayEnd && f > midnight) out.add(ScheduleItem(s, f, e.getString("t"), null))
-          }
-        }
-        ScheduleDay(out.sortedBy { it.start }, now, o.optBoolean("lowEnergy", false))
+        ScheduleDay(itemsOn(o, midnight), now, o.optBoolean("lowEnergy", false))
       } catch (e: Exception) {
         ScheduleDay(emptyList(), now, false)
       }
+    }
+
+    /** Monday to Sunday of the week that holds [now]. */
+    private fun weekFrom(json: String?, now: Long): ScheduleWeek {
+      val today = startOfDay(now)
+      val todayWeekday = weekdayOf(today)
+      val monday = addDays(today, 1 - todayWeekday)
+      val o =
+          try {
+            json?.let { JSONObject(it) }
+          } catch (e: Exception) {
+            null
+          }
+      val days =
+          (0 until 7).map { i ->
+            val midnight = addDays(monday, i)
+            val items =
+                try {
+                  if (o == null) emptyList() else itemsOn(o, midnight)
+                } catch (e: Exception) {
+                  emptyList()
+                }
+            WeekDay(i + 1, midnight, items, midnight == today)
+          }
+      return ScheduleWeek(days, now, o?.optBoolean("lowEnergy", false) ?: false)
+    }
+
+    /** Calendar: Sunday = 1 ... Saturday = 7. PACE: Monday = 1 ... Sunday = 7. */
+    private fun weekdayOf(t: Long): Int {
+      val cal = Calendar.getInstance().apply { timeInMillis = t }
+      return (cal.get(Calendar.DAY_OF_WEEK) + 5) % 7 + 1
+    }
+
+    /** [midnight] moved by [days] calendar days (safe across DST changes). */
+    private fun addDays(midnight: Long, days: Int): Long =
+        Calendar.getInstance()
+            .apply {
+              timeInMillis = midnight
+              add(Calendar.DAY_OF_MONTH, days)
+            }
+            .timeInMillis
+
+    /** Classes for the weekday of [midnight] plus events overlapping that day, sorted. */
+    private fun itemsOn(o: JSONObject, midnight: Long): List<ScheduleItem> {
+      val dayEnd = addDays(midnight, 1)
+      val out = mutableListOf<ScheduleItem>()
+      val classes = o.optJSONObject("classes")?.optJSONArray("${weekdayOf(midnight)}")
+      if (classes != null) {
+        for (i in 0 until classes.length()) {
+          val c = classes.getJSONObject(i)
+          out.add(
+              ScheduleItem(
+                  atMinute(midnight, c.getInt("s")),
+                  atMinute(midnight, c.getInt("e")),
+                  c.getString("t"),
+                  c.optString("r").ifBlank { null }))
+        }
+      }
+      val events = o.optJSONArray("events")
+      if (events != null) {
+        for (i in 0 until events.length()) {
+          val e = events.getJSONObject(i)
+          val s = e.getLong("s")
+          val f = e.getLong("e")
+          if (s < dayEnd && f > midnight) out.add(ScheduleItem(s, f, e.getString("t"), null))
+        }
+      }
+      return out.sortedBy { it.start }
     }
 
     /** Wakes at the next start or end today, or just after midnight. */

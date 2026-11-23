@@ -1,0 +1,86 @@
+<template>
+  <style>
+    @font-face { font-family: "Figtree"; font-weight: 600; src: url("assets/fonts/Figtree-SemiBold.ttf"); }
+    @font-face { font-family: "Figtree"; font-weight: 700; src: url("assets/fonts/Figtree-Bold.ttf"); }
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Figtree", sans-serif; }
+    #lv-world { position: absolute; inset: 0; background: #dceae3; }
+    #lv-clock {
+      position: absolute; left: 150px; top: 330px; display: flex; align-items: center;
+      font-size: 250px; font-weight: 700; color: #1c2622; letter-spacing: -0.02em; line-height: 1;
+    }
+    .lv-slot { display: block; width: 0.6em; height: 1em; overflow: hidden; text-align: center; }
+    .lv-strip { display: block; }
+    .lv-strip span { display: block; height: 1em; line-height: 1em; }
+    .lv-colon { display: block; width: 0.28em; text-align: center; transform: translateY(-0.06em); }
+    #lv-labels { position: absolute; left: 160px; top: 610px; width: 640px; height: 100px; }
+    .lv-label { position: absolute; left: 0; top: 0; font-size: 80px; font-weight: 600; color: #26282c; white-space: nowrap; }
+    #lv-l3 { color: #35665a; }
+    #lv-l2, #lv-l3 { opacity: 0; }
+    #lv-panel {
+      position: absolute; left: 880px; top: 290px; width: 900px; height: 531px; border-radius: 40px; overflow: hidden;
+      background: #faf8f5; box-shadow: none;
+    }
+    #lv-tl { display: block; width: 900px; height: 531px; }
+    #lv-tuck { position: absolute; left: 0px; top: 400px; width: 520px; height: 520px; }
+    #lv-tuck img { width: 100%; height: 100%; display: block; }
+  </style>
+  <div data-hf-id="hf-0a7u" id="root" data-composition-id="leave" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-zy84" id="lv-world">
+      <div data-hf-id="hf-huln" id="lv-clock" data-layout-allow-overflow></div>
+      <div data-hf-id="hf-l8sd" id="lv-labels">
+        <div data-hf-id="hf-x55c" class="lv-label" id="lv-l1">Up</div>
+        <div data-hf-id="hf-nj47" class="lv-label" id="lv-l2">Breakfast</div>
+        <div data-hf-id="hf-ki5e" class="lv-label" id="lv-l3">Leave</div>
+      </div>
+      <div data-hf-id="hf-87lm" id="lv-panel"><img data-hf-id="hf-g5vq" id="lv-tl" src="assets/screens/crop_timeline.png" alt="Your day: Up 06:30, Breakfast 07:15, Leave 08:00" /></div>
+    </div>
+    <div data-hf-id="hf-xmur" id="lv-tuck"><img data-hf-id="hf-7eie" src="assets/img/tuck_leaving.png" alt="Tuck walking with a backpack" /></div>
+  </div>
+  <script>
+    (function () {
+      const FS = 250;
+      const states = ["06:30", "07:15", "08:00"];
+      const clock = document.getElementById("lv-clock");
+      const strips = [];
+      for (let i = 0; i < 5; i++) {
+        if (i === 2) { const c = document.createElement("span"); c.className = "lv-colon"; c.textContent = ":"; clock.appendChild(c); strips.push(null); continue; }
+        const slot = document.createElement("span"); slot.className = "lv-slot";
+        const strip = document.createElement("span"); strip.className = "lv-strip";
+        states.forEach((s) => { const d = document.createElement("span"); d.textContent = s[i]; strip.appendChild(d); });
+        slot.appendChild(strip); clock.appendChild(slot); strips.push(strip);
+      }
+      const tl = gsap.timeline({ paused: true });
+
+      // Tuck walks across; the new world is revealed right behind him.
+      const walk = 0.95;
+      tl.fromTo("#lv-tuck", { x: -560 }, { x: 1980, duration: walk, ease: "power1.inOut" }, 0);
+      tl.fromTo("#lv-world", { clipPath: "inset(0px 2200px 0px 0px)" },
+        { clipPath: "inset(0px -320px 0px 0px)", duration: walk, ease: "power1.inOut" }, 0);
+      tl.fromTo("#lv-tuck img", { y: 0, rotation: -2 },
+        { y: -14, rotation: 2, duration: walk / 6, ease: "sine.inOut", repeat: 5, yoyo: true }, 0);
+
+      // The timeline draws down one row at a time; the big clock follows it.
+      const H = 531;
+      const stage = [69, 185, 377, 531];
+      const at = [0.75, 1.35, 1.95];
+      tl.set("#lv-panel", { clipPath: `inset(0px 0px ${H - stage[0]}px 0px round 40px)` }, 0);
+      gsap.set(strips.filter(Boolean), { y: 0 });
+      tl.fromTo("#lv-clock", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power3.out" }, 0.5);
+      tl.fromTo("#lv-l1", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.18, ease: "power3.out" }, 0.62);
+      at.forEach((t, k) => {
+        tl.to("#lv-panel", { clipPath: `inset(0px 0px ${H - stage[k + 1]}px 0px round 40px)`, duration: 0.34, ease: "power3.out" }, t - 0.04);
+        if (k > 0) {
+          strips.forEach((s, i) => {
+            if (!s) return;
+            if (states[k][i] !== states[k - 1][i]) tl.to(s, { y: -k * FS, duration: 0.16, ease: "power3.inOut" }, t - 0.1);
+            else tl.set(s, { y: -k * FS }, t - 0.1);
+          });
+          const prev = `#lv-l${k}`, next = `#lv-l${k + 1}`;
+          tl.to(prev, { opacity: 0, filter: "blur(8px)", duration: 0.12, ease: "power2.in" }, t - 0.12);
+          tl.fromTo(next, { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "power3.out" }, t);
+        }
+      });
+      window.__timelines["leave"] = tl;
+    })();
+  </script>
+</template>

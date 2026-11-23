@@ -5,3 +5,20 @@ branding/archive/cairn/final/renders/
 branding/archive/cairn/concepts/renders/
 # OS
 .DS_Store
+
+# Logs and Python bytecode
+*.log
+__pycache__/
+*.pyc
+
+# Intermediate build outputs
+docs/build/
+pitch/build/
+
+# Video editor cache, backups, and thumbnails
+video/showreel/.hyperframes/
+video/showreel/.thumbnails/
+
+# Local reference / scratch files
+BLANK_README.md
+schedule.jpg

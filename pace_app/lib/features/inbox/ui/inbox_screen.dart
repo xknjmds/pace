@@ -239,7 +239,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
               ),
             ),
         ],
-        if (settings != null && features.reminders) ...[
+        if (settings != null && features.persistentCapture) ...[
           const SizedBox(height: 16),
           Card(
             child: SwitchListTile(

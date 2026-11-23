@@ -105,7 +105,8 @@ class _NotificationSetupScreenState
 
   @override
   Widget build(BuildContext context) {
-    if (!ref.watch(platformFeaturesProvider).reminders) {
+    final features = ref.watch(platformFeaturesProvider);
+    if (!features.reminders) {
       return Scaffold(
         appBar: AppBar(title: const Text('Reminders')),
         body: const Center(
@@ -132,9 +133,12 @@ class _NotificationSetupScreenState
         Padding(
           padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
           child: Text(
-            'PACE works by nudging you at the right moment. For that, '
-            'Android needs three things from you. Each one is optional, '
-            'but reminders are less reliable without them.',
+            features.androidReminderChecks
+                ? 'PACE works by nudging you at the right moment. For that, '
+                      'Android needs three things from you. Each one is optional, '
+                      'but reminders are less reliable without them.'
+                : 'PACE works by nudging you at the right moment. Allow '
+                      'notifications so reminders can appear on time.',
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.45,
@@ -155,34 +159,38 @@ class _NotificationSetupScreenState
                   child: const Text('Open settings'),
                 ),
         ),
-        _StepCard(
-          step: SetupStep.exactAlarms,
-          done: p.exactAlarmsAllowed,
-          title: 'Exact timing',
-          why:
-              'Without this, Android may hold a reminder back for several '
-              'minutes to save battery. A leave-by time needs the minute.',
-          action: 'Allow exact timing',
-          onPressed: () => _run(gateway.requestExactAlarmPermission),
-        ),
-        _StepCard(
-          step: SetupStep.battery,
-          done: p.batteryUnrestricted,
-          title: 'Keep running in the background',
-          why:
-              'Some phones pause apps to save battery, which can silence '
-              'reminders. Turning battery optimisation off for PACE keeps '
-              'them coming.',
-          action: 'Turn off optimisation',
-          onPressed: () => _run(gateway.requestBatteryUnrestricted),
-        ),
-        if (guideFor(ref.watch(manufacturerProvider).value ?? '')
-            case final guide?)
-          _MakerCard(
-            guide: guide,
-            onAutoStart: () => ref.read(deviceSettingsProvider).openAutoStart(),
-            onAppInfo: () => ref.read(deviceSettingsProvider).openAppDetails(),
+        if (features.androidReminderChecks) ...[
+          _StepCard(
+            step: SetupStep.exactAlarms,
+            done: p.exactAlarmsAllowed,
+            title: 'Exact timing',
+            why:
+                'Without this, Android may hold a reminder back for several '
+                'minutes to save battery. A leave-by time needs the minute.',
+            action: 'Allow exact timing',
+            onPressed: () => _run(gateway.requestExactAlarmPermission),
           ),
+          _StepCard(
+            step: SetupStep.battery,
+            done: p.batteryUnrestricted,
+            title: 'Keep running in the background',
+            why:
+                'Some phones pause apps to save battery, which can silence '
+                'reminders. Turning battery optimisation off for PACE keeps '
+                'them coming.',
+            action: 'Turn off optimisation',
+            onPressed: () => _run(gateway.requestBatteryUnrestricted),
+          ),
+          if (guideFor(ref.watch(manufacturerProvider).value ?? '')
+              case final guide?)
+            _MakerCard(
+              guide: guide,
+              onAutoStart: () =>
+                  ref.read(deviceSettingsProvider).openAutoStart(),
+              onAppInfo: () =>
+                  ref.read(deviceSettingsProvider).openAppDetails(),
+            ),
+        ],
         const SectionHeader('Check it works'),
         Card(
           child: Padding(

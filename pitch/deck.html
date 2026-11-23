@@ -1,0 +1,2880 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PACE Pitch Deck</title>
+  <meta name="description"
+    content="PACE: a calm Android app that tells a student what to do right now. Pitch deck with speaker notes.">
+  <link rel="icon" href="assets/tuck/tuck_icon.png">
+
+  <!--
+  ===================================================================
+  TEAM DETAILS: edit this block. Everything else updates from it:
+  the title, team and closing slides, and the presenter notes PDF
+  (run `python3 pitch/tool/build_notes.py` after editing).
+  Leave a value in [square brackets] and it shows as a dashed
+  placeholder chip. Delete a member line to remove that card. Roles are not shown.
+  "presents" lists the slide numbers that member presents.
+  ===================================================================
+-->
+  <script id="team" type="application/json">
+{
+  "teamName": "main.dart",
+  "event": "GEE2102 Startup Pitch",
+  "school": "our classmates",
+  "members": [
+    { "name": "El Jhon Braña", "presents": "1–2" },
+    { "name": "Ma Maniella Locsin", "presents": "3–4" },
+    { "name": "Japheth Bayogos", "presents": "5–6" },
+    { "name": "Jaymark Miado", "presents": "7–8" },
+    { "name": "Angelica Necole Magalona", "presents": "9–10" },
+    { "name": "Krizzelle Joece Gumbao", "presents": "11" },
+    { "name": "Jhon Eric Braga", "presents": "12–13 + Q&A" }
+  ]
+}
+</script>
+
+  <style>
+    /* ---------- Fonts: the app's own files ---------- */
+    @font-face {
+      font-family: Figtree;
+      src: url(assets/fonts/Figtree-Regular.ttf) format("truetype");
+      font-weight: 400;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: Figtree;
+      src: url(assets/fonts/Figtree-Medium.ttf) format("truetype");
+      font-weight: 500;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: Figtree;
+      src: url(assets/fonts/Figtree-SemiBold.ttf) format("truetype");
+      font-weight: 600;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: Figtree;
+      src: url(assets/fonts/Figtree-Bold.ttf) format("truetype");
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Material Symbols Rounded";
+      src: url(assets/fonts/MaterialSymbolsRounded-subset.woff2) format("woff2");
+      font-weight: 400 600;
+      font-display: block;
+    }
+
+    /* ---------- Tokens: copied from pace_colors.dart / pace_pastels.dart / pace_tokens.dart ---------- */
+    :root {
+      color-scheme: light;
+      --page: #FAF8F5;
+      --card: #FFFFFF;
+      --mist: #F5F2EE;
+      --sunken: #F1EEE9;
+      --sunken-deep: #EAE6E0;
+      --text: #26282C;
+      --soft: #64666C;
+      --line: #86898F;
+      --line-soft: #E6E2DC;
+      --action: #2B2D31;
+      --on-action: #FAF8F5;
+      --mint: #DCEAE3;
+      --accent: #35665A;
+      --on-accent: #FFFFFF;
+      --sage: #E4EAE3;
+      --moss: #35665A;
+      --moss-light: #9CC3B4;
+      --morning: #F7E8CC;
+      --morning-ink: #8A5E14;
+      --leave: #DCEAE3;
+      --leave-ink: #2B5A4E;
+      --deadline: #F0E4D2;
+      --deadline-ink: #7A5634;
+      --focus: #DCE8EF;
+      --focus-ink: #365D73;
+      --evening: #E7E2F0;
+      --evening-ink: #55497A;
+      --calm: #E4EAE3;
+      --calm-ink: #465C52;
+      --lift: 0 1px 3px #1C1D201A;
+      /* Card elevation 1, shadow 0x1A1C1D20 */
+      --soft-shadow: 0 4px 20px #1C26220F;
+      /* PaceRadius.softShadow */
+      /* PaceRadius */
+      --r-s: 14px;
+      --r-m: 18px;
+      --r-card: 26px;
+      --r-sheet: 32px;
+      --r-now: 30px;
+      /* PaceMotion */
+      --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      --t-press: 150ms;
+      --t-quick: 180ms;
+      --t-standard: 240ms;
+      --t-emph: 300ms;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --page: #1A1B1E;
+        --card: #24262A;
+        --mist: #292B2F;
+        --sunken: #2E3035;
+        --sunken-deep: #36383D;
+        --text: #EEEBE6;
+        --soft: #A9ACB2;
+        --line: #7A7D84;
+        --line-soft: #3A3D42;
+        --action: #F1EEE8;
+        --on-action: #1A1B1E;
+        --mint: #2C3A35;
+        --accent: #9CC3B4;
+        --on-accent: #14231E;
+        --sage: #2C3833;
+        --morning: #3E3320;
+        --morning-ink: #F0CF96;
+        --leave: #2A4139;
+        --leave-ink: #AFD3C4;
+        --deadline: #3B3226;
+        --deadline-ink: #E6C9A6;
+        --focus: #263A45;
+        --focus-ink: #A9CBE0;
+        --evening: #35304A;
+        --evening-ink: #CDC3EC;
+        --calm: #2C3833;
+        --calm-ink: #C0D3C9;
+        --lift: none;
+        --soft-shadow: 0 4px 20px #0000004D;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --page: #1A1B1E;
+      --card: #24262A;
+      --mist: #292B2F;
+      --sunken: #2E3035;
+      --sunken-deep: #36383D;
+      --text: #EEEBE6;
+      --soft: #A9ACB2;
+      --line: #7A7D84;
+      --line-soft: #3A3D42;
+      --action: #F1EEE8;
+      --on-action: #1A1B1E;
+      --mint: #2C3A35;
+      --accent: #9CC3B4;
+      --on-accent: #14231E;
+      --sage: #2C3833;
+      --morning: #3E3320;
+      --morning-ink: #F0CF96;
+      --leave: #2A4139;
+      --leave-ink: #AFD3C4;
+      --deadline: #3B3226;
+      --deadline-ink: #E6C9A6;
+      --focus: #263A45;
+      --focus-ink: #A9CBE0;
+      --evening: #35304A;
+      --evening-ink: #CDC3EC;
+      --calm: #2C3833;
+      --calm-ink: #C0D3C9;
+      --lift: none;
+      --soft-shadow: 0 4px 20px #0000004D;
+    }
+
+    /* Pastel families (PastelKind) */
+    .p-morning {
+      --fill: var(--morning);
+      --ink: var(--morning-ink);
+    }
+
+    .p-leave {
+      --fill: var(--leave);
+      --ink: var(--leave-ink);
+    }
+
+    .p-deadline {
+      --fill: var(--deadline);
+      --ink: var(--deadline-ink);
+    }
+
+    .p-focus {
+      --fill: var(--focus);
+      --ink: var(--focus-ink);
+    }
+
+    .p-evening {
+      --fill: var(--evening);
+      --ink: var(--evening-ink);
+    }
+
+    .p-calm {
+      --fill: var(--calm);
+      --ink: var(--calm-ink);
+    }
+
+    /* ---------- Base ---------- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      background: var(--page);
+      color: var(--text);
+      font-family: Figtree, system-ui, sans-serif;
+      letter-spacing: .1px;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .ms {
+      font-family: "Material Symbols Rounded";
+      font-weight: normal;
+      font-style: normal;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      white-space: nowrap;
+      direction: ltr;
+      display: inline-block;
+      font-feature-settings: "liga";
+      font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+      user-select: none;
+    }
+
+    .ms.fill {
+      font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+    }
+
+    .ms.bold {
+      font-variation-settings: "FILL" 0, "wght" 600, "GRAD" 0, "opsz" 24;
+    }
+
+    .tab {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ---------- Stage: a 1600×900 canvas scaled to fit ---------- */
+    #viewport {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    #stage {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 1600px;
+      height: 900px;
+      transform: translate(-50%, -50%) scale(var(--scale, 1));
+      transform-origin: center;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 64px 88px 72px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transition-property: opacity, visibility;
+      transition-duration: var(--t-emph), 0s;
+      transition-delay: 0s, var(--t-emph);
+      transition-timing-function: var(--ease-out);
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transition-delay: 0s, 0s;
+    }
+
+    .slide .rise {
+      opacity: 0;
+      transition-property: opacity;
+      transition-duration: var(--t-emph);
+      transition-timing-function: var(--ease-out);
+    }
+
+    .slide.active .rise {
+      opacity: 1;
+      transition-delay: calc(var(--i, 0) * 100ms);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+
+      /* PaceRouteTransitions: fade in while rising 4 %, strong ease-out */
+      .slide {
+        transform: translateY(36px);
+        transition-property: opacity, visibility, transform;
+        transition-duration: var(--t-emph), 0s, var(--t-emph);
+        transition-delay: 0s, var(--t-emph), 0s;
+      }
+
+      .slide.active {
+        transform: none;
+      }
+
+      .slide .rise {
+        transform: translateY(12px);
+        filter: blur(4px);
+        transition-property: opacity, transform, filter;
+      }
+
+      .slide.active .rise {
+        transform: none;
+        filter: blur(0);
+      }
+
+      .breathe {
+        animation: breathe 3.6s ease-in-out infinite;
+        transform-origin: 50% 100%;
+      }
+
+      @keyframes breathe {
+
+        0%,
+        100% {
+          scale: 1 1;
+        }
+
+        50% {
+          scale: 1.012 1.025;
+        }
+      }
+    }
+
+    .slide aside.notes {
+      display: none;
+    }
+
+    /* ---------- PacePage header: big title + soft subtitle, Tuck as `leading` ---------- */
+    .head {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      margin-bottom: 36px;
+    }
+
+    .head .titles {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: .3px;
+      color: var(--soft);
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: 56px;
+      line-height: 1.08;
+      font-weight: 700;
+      letter-spacing: -0.016em;
+      text-wrap: balance;
+    }
+
+    .sub {
+      margin-top: 14px;
+      font-size: 25px;
+      line-height: 1.4;
+      color: var(--soft);
+      max-width: 1080px;
+      text-wrap: pretty;
+    }
+
+    .tuck {
+      width: 168px;
+      height: 168px;
+      flex: none;
+      object-fit: contain;
+    }
+
+    .tuck.sm {
+      width: 132px;
+      height: 132px;
+    }
+
+    /* ---------- Kit: cards, tiles, chips (PaceSectionCard / PaceTile / PastelIconChip) ---------- */
+    .card {
+      background: var(--card);
+      border-radius: var(--r-card);
+      box-shadow: var(--lift);
+      border: 1px solid transparent;
+      /* keeps an edge in forced-colors mode */
+      padding: 22px 26px 24px;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 23px;
+      font-weight: 600;
+      min-height: 48px;
+    }
+
+    .card p,
+    .card li {
+      font-size: 20px;
+      line-height: 1.45;
+      color: var(--soft);
+    }
+
+    .card p strong,
+    .card li strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .chip {
+      --s: 44px;
+      width: var(--s);
+      height: var(--s);
+      flex: none;
+      border-radius: calc(var(--s) * .31);
+      background: var(--fill);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+    }
+
+    .chip .ms {
+      font-size: calc(var(--s) * .56);
+    }
+
+    .chip.lg {
+      --s: 56px;
+    }
+
+    .tile {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 18px;
+      border-radius: var(--r-m);
+    }
+
+    .tile .t {
+      font-size: 21px;
+      font-weight: 600;
+    }
+
+    .tile .s {
+      font-size: 18px;
+      color: var(--soft);
+      line-height: 1.4;
+      margin-top: 2px;
+    }
+
+    .card.tile {
+      border-radius: var(--r-card);
+    }
+
+    .tile .v {
+      margin-left: auto;
+      font-size: 21px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .group {
+      background: var(--card);
+      border-radius: var(--r-card);
+      box-shadow: var(--lift);
+      border: 1px solid transparent;
+      padding: 8px;
+    }
+
+    /* 18 + 8 = 26 */
+    .stadium {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 40px;
+      padding: 0 18px;
+      border-radius: 999px;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: .1px;
+      white-space: nowrap;
+    }
+
+    .stadium.fill-pastel {
+      background: var(--fill);
+      color: var(--ink);
+    }
+
+    .stadium.outline {
+      border: 1px solid var(--line-soft);
+      color: var(--text);
+      background: var(--card);
+    }
+
+    .stadium.mint {
+      background: var(--mint);
+      color: var(--text);
+    }
+
+    .stadium .ms {
+      font-size: 20px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      height: 52px;
+      padding: 0 24px;
+      border-radius: 999px;
+      border: 0;
+      font: 600 16px/1 Figtree, sans-serif;
+      letter-spacing: .1px;
+      background: var(--action);
+      color: var(--on-action);
+    }
+
+    .tag {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: .4px;
+      color: var(--soft);
+      text-transform: uppercase;
+    }
+
+    .src {
+      font-size: 15px;
+      color: var(--soft);
+      line-height: 1.45;
+    }
+
+    .src b {
+      font-weight: 600;
+    }
+
+    .grid {
+      display: grid;
+      gap: 20px;
+    }
+
+    .cap::first-letter {
+      text-transform: uppercase;
+    }
+
+    .spacer {
+      flex: 1;
+    }
+
+    .body {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .foot {
+      margin-top: 24px;
+    }
+
+    .placeholder {
+      display: inline-block;
+      padding: .05em .55em;
+      border: 2px dashed var(--line);
+      border-radius: .8em;
+      color: var(--soft);
+      font-style: normal;
+      line-height: 1.25;
+    }
+
+    /* ---------- Phone mock-ups, at real dp sizes ---------- */
+    .phone {
+      width: 372px;
+      height: 760px;
+      flex: none;
+      border-radius: 48px;
+      padding: 10px;
+      background: #1C2622;
+      box-shadow: var(--soft-shadow), 0 30px 60px -30px #1C262259;
+    }
+
+    .screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 38px;
+      overflow: hidden;
+      background: var(--page);
+      font-size: 14px;
+    }
+
+    .statusbar {
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 26px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .app {
+      padding: 4px 16px 0;
+    }
+
+    .app h2 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      padding: 6px 4px 0;
+    }
+
+    .app .appsub {
+      font-size: 16px;
+      color: var(--soft);
+      padding: 2px 4px 10px;
+    }
+
+    .now {
+      border-radius: var(--r-now);
+      background: var(--fill);
+      padding: 14px 18px 16px;
+      margin: 6px 0;
+    }
+
+    .now .lbl {
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .3px;
+      color: color-mix(in srgb, var(--text) 72%, transparent);
+    }
+
+    .now .lbl .cairn {
+      margin-left: auto;
+    }
+
+    .now .big {
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      margin: 4px 0 12px;
+    }
+
+    .now .huge {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      margin-top: 4px;
+    }
+
+    .now .body {
+      font-size: 16px;
+      margin: 4px 0 14px;
+    }
+
+    .steps {
+      display: flex;
+      gap: 8px;
+    }
+
+    .step {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: var(--r-s);
+      background: color-mix(in srgb, var(--card) 55%, transparent);
+    }
+
+    .step.next {
+      background: var(--card);
+    }
+
+    .step.done {
+      background: var(--accent);
+      color: var(--on-accent);
+    }
+
+    .step .k {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .3px;
+      opacity: .75;
+    }
+
+    .step .tm {
+      font-size: 16px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .step .ms {
+      margin-left: auto;
+      font-size: 18px;
+    }
+
+    .cairn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.7px;
+    }
+
+    .cairn i {
+      display: block;
+      border-radius: 99px;
+      background: color-mix(in srgb, var(--ink) 18%, transparent);
+    }
+
+    .cairn i.on {
+      background: var(--ink);
+    }
+
+    .mcard {
+      background: var(--card);
+      border-radius: var(--r-card);
+      box-shadow: var(--lift);
+      border: 1px solid transparent;
+      padding: 2px 8px 10px 16px;
+      margin: 10px 0;
+    }
+
+    .mcard .mh {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 44px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .mcard .chip {
+      --s: 32px;
+    }
+
+    .mrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 8px 7px 0;
+      font-size: 15px;
+    }
+
+    .mrow .dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--line);
+      flex: none;
+    }
+
+    .mrow .dot.on {
+      border-color: var(--accent);
+      background: var(--accent);
+      display: grid;
+      place-items: center;
+      color: var(--on-accent);
+    }
+
+    .mrow .dot.on .ms {
+      font-size: 14px;
+    }
+
+    .mrow .when {
+      margin-left: auto;
+      color: var(--soft);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .navpill {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 10px;
+      height: 68px;
+      border-radius: 30px;
+      background: var(--card);
+      box-shadow: var(--soft-shadow);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 4px;
+    }
+
+    .navpill .d {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .3px;
+      color: var(--soft);
+    }
+
+    .navpill .d .ind {
+      width: 56px;
+      height: 30px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+    }
+
+    .navpill .d .ms {
+      font-size: 22px;
+    }
+
+    .navpill .d.sel {
+      color: var(--text);
+    }
+
+    .navpill .d.sel .ind {
+      background: var(--mint);
+    }
+
+    /* ---------- Deck chrome: floating nav pill, copied from the app's bottom bar ---------- */
+    #chrome {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      translate: -50% 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px;
+      height: 60px;
+      background: var(--card);
+      border-radius: 30px;
+      box-shadow: var(--soft-shadow);
+      border: 1px solid transparent;
+      transition-property: opacity;
+      transition-duration: var(--t-standard);
+      transition-timing-function: var(--ease-out);
+    }
+
+    #chrome.idle {
+      opacity: 0;
+    }
+
+    #chrome:focus-within {
+      opacity: 1;
+    }
+
+    #chrome button {
+      width: 48px;
+      height: 48px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--soft);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition-property: scale, background-color, color;
+      transition-duration: var(--t-press);
+      transition-timing-function: ease-out;
+    }
+
+    #chrome button .ms {
+      font-size: 24px;
+    }
+
+    #chrome button:not(:disabled):active {
+      scale: .96;
+    }
+
+    #chrome button:disabled {
+      opacity: .38;
+      cursor: default;
+    }
+
+    #chrome button[aria-pressed="true"] {
+      background: var(--mint);
+      color: var(--text);
+    }
+
+    @media (hover: hover) {
+      #chrome button:not(:disabled):hover {
+        background: var(--mist);
+        color: var(--text);
+      }
+    }
+
+    #chrome button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    #where {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 48px;
+      padding: 0 18px;
+      border-radius: 999px;
+      background: var(--mint);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      min-width: 220px;
+      justify-content: center;
+    }
+
+    #where .n {
+      font-variant-numeric: tabular-nums;
+      color: var(--soft);
+      font-weight: 600;
+    }
+
+    .sep {
+      width: 1px;
+      height: 28px;
+      background: var(--line-soft);
+      margin: 0 4px;
+    }
+
+    #notes {
+      position: fixed;
+      right: 18px;
+      bottom: 92px;
+      z-index: 9;
+      width: min(460px, calc(100vw - 32px));
+      max-height: 60vh;
+      overflow: auto;
+      overscroll-behavior: contain;
+      background: var(--card);
+      border-radius: var(--r-card);
+      box-shadow: var(--soft-shadow);
+      border: 1px solid transparent;
+      padding: 18px 22px 20px;
+      font-size: 16px;
+      line-height: 1.55;
+      opacity: 0;
+      visibility: hidden;
+      transition-property: opacity, visibility;
+      transition-duration: var(--t-standard), 0s;
+      transition-delay: 0s, var(--t-standard);
+      transition-timing-function: var(--ease-out);
+    }
+
+    #notes.open {
+      opacity: 1;
+      visibility: visible;
+      transition-delay: 0s, 0s;
+    }
+
+    #notes h3 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    #notes p,
+    #notes li {
+      color: var(--text);
+      margin-top: 6px;
+    }
+
+    #notes ul {
+      padding-left: 18px;
+    }
+
+    #notes .time {
+      margin-left: auto;
+    }
+
+    #notes em.cue {
+      font-style: normal;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    #hint {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      translate: -50% 0;
+      font-size: 14px;
+      color: var(--soft);
+      background: var(--card);
+      padding: 8px 16px;
+      border-radius: 999px;
+      box-shadow: var(--soft-shadow);
+      z-index: 11;
+      transition-property: opacity;
+      transition-duration: var(--t-standard);
+    }
+
+    #hint.gone {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ?still: no motion (screenshots, PDF) */
+    .still *,
+    .still *::before,
+    .still *::after {
+      transition: none !important;
+      animation: none !important;
+    }
+
+    .still #chrome,
+    .still #hint {
+      display: none !important;
+    }
+
+    :root[data-theme="dark"] .phone,
+    :root:not([data-theme="light"]) .phone {
+      box-shadow: var(--soft-shadow), 0 0 0 1px var(--line-soft);
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]) .phone {
+        box-shadow: var(--soft-shadow), 0 30px 60px -30px #1C262259;
+      }
+    }
+
+    :root[data-theme="light"] .phone {
+      box-shadow: var(--soft-shadow), 0 30px 60px -30px #1C262259;
+    }
+
+    @media print {
+
+      #chrome,
+      #notes,
+      #hint {
+        display: none !important;
+      }
+    }
+
+    /* ---------- Audience window: nothing but the slides ---------- */
+    body:not(.presenter):not(.tools) #chrome,
+    body:not(.presenter):not(.tools) #notes,
+    body:not(.presenter) #hint,
+    body:not(.presenter) #pextra {
+      display: none !important;
+    }
+
+    /* ---------- Presenter window (deck.html?presenter, opened with P) ---------- */
+    body.presenter {
+      --pw: min(640px, 50vw);
+    }
+
+    body.presenter #viewport {
+      inset: auto;
+      left: 24px;
+      top: 24px;
+      width: var(--pw);
+      aspect-ratio: 16 / 9;
+      height: auto;
+      border-radius: var(--r-card);
+      background: var(--page);
+      box-shadow: var(--soft-shadow);
+      border: 1px solid var(--line-soft);
+    }
+
+    body.presenter #chrome {
+      left: 24px;
+      top: calc(24px + var(--pw) * 9 / 16 + 18px);
+      bottom: auto;
+      translate: none;
+      width: var(--pw);
+      justify-content: center;
+      opacity: 1 !important;
+    }
+
+    body.presenter #chrome .sep,
+    body.presenter #btn-notes,
+    body.presenter #btn-theme,
+    body.presenter #btn-full,
+    body.presenter #hint {
+      display: none;
+    }
+
+    body.presenter #where {
+      flex: 1;
+    }
+
+    body.presenter #notes {
+      left: calc(var(--pw) + 56px);
+      right: 24px;
+      top: 24px;
+      bottom: 24px;
+      width: auto;
+      max-height: none;
+      opacity: 1;
+      visibility: visible;
+      font-size: 21px;
+      line-height: 1.6;
+      padding: 24px 30px 28px;
+    }
+
+    body.presenter #notes h3 {
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+
+    #pextra {
+      position: fixed;
+      left: 24px;
+      top: calc(24px + var(--pw) * 9 / 16 + 18px + 60px + 18px);
+      width: var(--pw);
+      display: none;
+    }
+
+    body.presenter #pextra {
+      display: block;
+    }
+
+    #pextra .pcards {
+      display: grid;
+      grid-template-columns: 1.7fr 1fr;
+      gap: 14px;
+    }
+
+    #pextra .pcard {
+      background: var(--card);
+      border-radius: var(--r-card);
+      box-shadow: var(--lift);
+      border: 1px solid transparent;
+      padding: 16px 20px 18px;
+    }
+
+    #pextra .pbig {
+      font-size: 22px;
+      font-weight: 600;
+      line-height: 1.3;
+      margin-top: 4px;
+    }
+
+    #pextra .ptime {
+      font-size: 40px;
+      font-weight: 600;
+      letter-spacing: -1px;
+      margin-top: 2px;
+    }
+
+    #pextra .pkeys {
+      margin-top: 14px;
+      font-size: 14px;
+      color: var(--soft);
+      line-height: 1.5;
+    }
+
+    /* ---------- Presenter notes controls ---------- */
+    :root {
+      --hl: #F9E29C;
+    }
+
+    :root[data-theme="dark"] {
+      --hl: #6B5A1E;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --hl: #6B5A1E;
+      }
+    }
+
+    #npanel {
+      display: contents;
+    }
+
+    #ntools,
+    #help {
+      display: none;
+    }
+
+    body.presenter #npanel {
+      position: fixed;
+      left: calc(var(--pw) + 56px);
+      right: 24px;
+      top: 24px;
+      bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      background: var(--card);
+      border-radius: var(--r-card);
+      box-shadow: var(--soft-shadow);
+      border: 1px solid transparent;
+      overflow: hidden;
+    }
+
+    body.presenter #ntools {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 2px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line-soft);
+      flex: none;
+    }
+
+    #ntools .tg {
+      display: flex;
+      align-items: center;
+    }
+
+    #ntools .tval {
+      min-width: 28px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--soft);
+    }
+
+    #ntools .tsep {
+      width: 1px;
+      height: 24px;
+      background: var(--line-soft);
+      margin: 0 6px;
+    }
+
+    #ntools button,
+    #pextra .tbtn button,
+    #help button {
+      width: 40px;
+      height: 40px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--soft);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition-property: scale, background-color, color;
+      transition-duration: var(--t-press);
+      transition-timing-function: ease-out;
+    }
+
+    #ntools button .ms,
+    #pextra .tbtn button .ms,
+    #help button .ms {
+      font-size: 22px;
+    }
+
+    #ntools button:not(:disabled):active,
+    #pextra .tbtn button:active,
+    #help button:active {
+      scale: .96;
+    }
+
+    #ntools button[aria-pressed="true"] {
+      background: var(--mint);
+      color: var(--text);
+    }
+
+    #ntools button:focus-visible,
+    #pextra .tbtn button:focus-visible,
+    #help button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    @media (hover: hover) {
+
+      #ntools button:hover,
+      #pextra .tbtn button:hover,
+      #help button:hover {
+        background: var(--mist);
+        color: var(--text);
+      }
+
+      #ntools button[aria-pressed="true"]:hover {
+        background: var(--mint);
+      }
+    }
+
+    body.presenter #npanel #notes {
+      position: static;
+      flex: 1;
+      min-height: 0;
+      width: auto;
+      max-height: none;
+      left: auto;
+      right: auto;
+      top: auto;
+      bottom: auto;
+      background: transparent;
+      box-shadow: none;
+      border: 0;
+      border-radius: 0;
+      font-size: var(--nsize, 21px);
+      line-height: var(--nlead, 1.6);
+      padding: 18px 28px 28px;
+      scroll-behavior: smooth;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body.presenter #npanel #notes {
+        scroll-behavior: auto;
+      }
+    }
+
+    body.presenter #notes h3 {
+      font-size: 0.85em;
+    }
+
+    #notes mark.hl {
+      background: var(--hl);
+      color: inherit;
+      border-radius: 4px;
+      padding: 0 2px;
+      margin: 0 -2px;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+    }
+
+    body.hlmode #notes {
+      cursor: text;
+    }
+
+    body.hlmode #notes mark.hl {
+      cursor: pointer;
+      outline: 1px dashed var(--line);
+      outline-offset: 1px;
+    }
+
+    body.hlmode #ntools #t-hl {
+      background: var(--hl);
+      color: var(--text);
+    }
+
+    body.focusmode #notes p,
+    body.focusmode #notes li {
+      opacity: .32;
+      transition-property: opacity;
+      transition-duration: var(--t-quick);
+      transition-timing-function: var(--ease-out);
+      border-left: 3px solid transparent;
+      padding-left: 12px;
+      margin-left: -15px;
+    }
+
+    body.focusmode #notes p.rd,
+    body.focusmode #notes li.rd {
+      opacity: 1;
+      border-left-color: var(--accent);
+    }
+
+    #pextra .pcards {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    #pextra .pcard {
+      position: relative;
+      padding: 14px 18px 16px;
+    }
+
+    #pextra .pbig {
+      font-size: 19px;
+    }
+
+    #pextra .ptime {
+      font-size: 34px;
+    }
+
+    #pextra .pbar {
+      height: 6px;
+      border-radius: 99px;
+      background: var(--sunken);
+      margin: 8px 0 6px;
+      overflow: hidden;
+    }
+
+    #pextra .pbar i {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: 99px;
+      background: var(--accent);
+      transition: width var(--t-standard) var(--ease-out), background-color var(--t-quick);
+    }
+
+    #pextra .pbar i.over {
+      background: var(--morning-ink);
+    }
+
+    /* warm, never red */
+    #pextra .tbtn {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      display: flex;
+      gap: 0;
+    }
+
+    #pextra {
+      max-height: calc(100vh - (24px + var(--pw) * 9 / 16 + 18px + 60px + 18px) - 12px);
+      overflow: auto;
+      overscroll-behavior: contain;
+    }
+
+    #pstate {
+      font-weight: 600;
+      color: var(--morning-ink);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    #help {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      padding: 24px;
+      background: color-mix(in srgb, var(--page) 70%, transparent);
+      align-items: center;
+      justify-content: center;
+    }
+
+    #help:not([hidden]) {
+      display: flex;
+    }
+
+    #help .hcard {
+      background: var(--card);
+      border-radius: var(--r-card);
+      box-shadow: var(--soft-shadow);
+      padding: 18px 22px 22px;
+      width: min(560px, 100%);
+      max-height: 100%;
+      overflow: auto;
+      overscroll-behavior: contain;
+    }
+
+    #help .hhead {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      margin-bottom: 8px;
+    }
+
+    #help dl {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px 18px;
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    #help dt {
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    #help dd {
+      color: var(--soft);
+    }
+
+    /* Audience window can be blanked from the presenter window (B): a calm Tuck instead of black.
+       A fixed overlay on top of everything, so it covers the whole screen, nav pill and all. */
+    #blank {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      background: var(--page);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition-property: opacity, visibility;
+      transition-duration: var(--t-emph), 0s;
+      transition-delay: 0s, var(--t-emph);
+      transition-timing-function: var(--ease-out);
+    }
+
+    body.blanked #blank {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition-delay: 0s, 0s;
+    }
+
+    #blank .scene {
+      display: grid;
+      justify-items: center;
+      gap: 0;
+      width: min(34vw, 46vh, 520px);
+    }
+
+    #blank .tk {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      transform-origin: 50% 100%;
+    }
+
+    #blank .tk img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    #blank .tk .blink {
+      opacity: 0;
+    }
+
+    #blank .ground {
+      width: 62%;
+      height: 3.2%;
+      margin-top: -3%;
+      border-radius: 50%;
+      background: var(--line-soft);
+      opacity: .7;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      body.blanked #blank .tk {
+        animation: tk-breathe 3.6s ease-in-out infinite, tk-sway 7.2s ease-in-out infinite;
+      }
+
+      body.blanked #blank .tk .blink {
+        animation: tk-blink 5.4s steps(1, end) infinite;
+      }
+
+      @keyframes tk-breathe {
+        0%, 100% { scale: 1 1; }
+        50% { scale: 1.012 1.028; }
+      }
+
+      @keyframes tk-sway {
+        0%, 100% { rotate: -1deg; }
+        50% { rotate: 1deg; }
+      }
+
+      @keyframes tk-blink {
+        0%, 91%, 96%, 100% { opacity: 0; }
+        92%, 95% { opacity: 1; }
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="blank" aria-hidden="true">
+    <div class="scene">
+      <div class="tk">
+        <img src="assets/tuck/tuck_default.png" alt="">
+        <img class="blink" src="assets/tuck/tuck_blink.png" alt="">
+      </div>
+      <div class="ground"></div>
+    </div>
+  </div>
+
+  <div id="viewport">
+    <main id="stage" aria-live="polite">
+
+      <!-- ============ 1 · Promise (title) ============ -->
+      <section class="slide p-leave" data-label="Promise" data-time="0:10">
+        <div style="display:flex; align-items:center; gap:72px; height:100%; padding: 0 40px;">
+          <div style="flex:1">
+            <svg class="rise" style="--i:0; width: 420px; height: auto; color: var(--accent); display:block"
+              viewBox="0 0 570 256" role="img" aria-label="PACE">
+              <g fill="none" stroke="currentColor" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 192 V75 H60 A33 33 0 0 1 60 141 H11" />
+                <path d="M153 192 L201.46 75 L249.93 192 M170.40 150 H232.53" />
+                <path d="M408.35 91.07 A60.0 60.0 0 1 0 408.35 175.93" />
+                <path d="M547.93 75 H481.93 V192 H547.93 M481.93 133.5 H535.93" />
+              </g>
+            </svg>
+            <p class="rise" style="--i:1; font-size: 30px; font-weight: 400; margin-top: 2px; color: var(--soft);">
+              Progress Always Comes Eventually</p>
+            <p class="rise"
+              style="--i:2; font-size: 40px; font-weight: 700; letter-spacing: -0.014em; line-height: 1.2; margin-top: 30px; max-width: 860px; text-wrap: balance;">
+              PACE helps students who keep running late start the right thing at the right time.</p>
+            <div class="rise" style="--i:3; display:flex; flex-wrap:wrap; gap:12px; margin-top: 36px;">
+              <span class="stadium mint" style="height:48px; font-size:20px;"><span class="ms">groups</span><span
+                  data-team="teamName"></span></span>
+              <span class="stadium outline" style="height:48px; font-size:20px;"><span class="ms">school</span><span
+                  data-team="event"></span></span>
+            </div>
+            <p class="rise src" style="--i:4; margin-top: 16px; font-size: 18px;" data-team="memberNames"></p>
+          </div>
+          <img class="tuck breathe rise" style="--i:1; width: 400px; height: 400px;" src="assets/tuck/tuck_default.png"
+            alt="Tuck the turtle waving">
+        </div>
+        <aside class="notes" data-time="0:10">
+          <p>Good afternoon. We're <strong>main.dart</strong>, and this is PACE. Our promise in one line: <strong>PACE
+              helps students who keep running late start the right thing at the right time.</strong></p>
+          <p><em class="cue">Signpost:</em> “Let us show you what that looks like on a real morning.”</p>
+        </aside>
+      </section>
+
+      <!-- ============ 2 · Problem hook ============ -->
+      <section class="slide p-morning" data-label="Problem" data-time="0:30">
+        <div class="head" style="margin-bottom: 28px;">
+          <div class="titles">
+            <div class="eyebrow rise" style="--i:0"><span class="chip p-deadline" style="--s:32px"><span
+                  class="ms">schedule</span></span>The problem</div>
+            <h1 class="rise" style="--i:1">7:41 AM. Class starts at 8:00. Baby just woke up.</h1>
+          </div>
+          <img class="tuck breathe" src="assets/tuck/tuck_leaving.png" alt="Tuck walking with a backpack">
+        </div>
+        <div class="body">
+          <div style="display:grid; grid-template-columns: 1.25fr 1fr; gap: 24px; align-items: stretch;">
+            <div class="rise p-morning"
+              style="--i:2; background: var(--fill); border-radius: var(--r-now); padding: 30px 34px; display:flex; flex-direction:column; justify-content:center;">
+              <div class="tag" style="color: var(--ink)">Illustrative scenario, based on our own mornings</div>
+              <p style="font-size: 27px; line-height: 1.5; margin-top: 14px;">She skips breakfast, runs, and walks in at
+                <strong class="tab">8:15</strong>. The quiz has already started.
+              </p>
+              <p style="font-size: 27px; line-height: 1.5; margin-top: 12px;">Her lab report is due at 9. She remembered
+                it at 11 last night.</p>
+            </div>
+            <div class="group rise" style="--i:3">
+              <div class="tile"><span class="chip p-calm"><span class="ms">person</span></span>
+                <div>
+                  <div class="tag">A person</div>
+                  <div class="t">A 2nd-year student with no daily system</div>
+                </div>
+              </div>
+              <div class="tile"><span class="chip p-morning"><span class="ms">alarm</span></span>
+                <div>
+                  <div class="tag">A moment</div>
+                  <div class="t">The 40 minutes between waking and class</div>
+                </div>
+              </div>
+              <div class="tile"><span class="chip p-deadline"><span class="ms">event_note</span></span>
+                <div>
+                  <div class="tag">A consequence</div>
+                  <div class="t">Marked late, 15 minutes of a quiz lost, a rushed submission</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rise foot" style="--i:4; display:flex; align-items:center; gap: 16px;">
+          <span class="stadium fill-pastel p-focus" style="height:48px; font-size:21px;"><span
+              class="ms">school</span>~75%</span>
+          <p style="font-size: 20px;">of college students call themselves procrastinators. <span class="src">Steel &amp;
+              Ferrari (2013). We'll measure lateness ourselves (slide 7).</span></p>
+        </div>
+        <aside class="notes" data-time="0:30">
+          <p>Meet Baby. <strong>7:41 AM. Class starts at 8:00. She just woke up.</strong> <em class="cue">Pause.</em>
+          </p>
+          <p>She skips breakfast, runs, and walks in at 8:15. The quiz has started. And the lab report due at 9? She
+            only remembered it at 11 last night.</p>
+          <p>Baby is made up, but this morning isn't: it's ours. And about three in four college students call
+            themselves procrastinators.</p>
+          <p><em class="cue">Signpost:</em> “We've named the problem. Here's the workflow we propose.”</p>
+        </aside>
+      </section>
+
+      <!-- ============ 3 · Solution as a workflow change ============ -->
+      <section class="slide p-leave" data-label="Solution" data-time="0:35">
+        <div class="head" style="margin-bottom: 28px;">
+          <div class="titles">
+            <div class="eyebrow rise" style="--i:0"><span class="chip p-leave" style="--s:32px"><span
+                  class="ms">wb_sunny</span></span>The solution</div>
+            <h1 class="rise" style="--i:1">PACE turns a guessed morning into a planned one.</h1>
+          </div>
+          <img class="tuck breathe" src="assets/tuck/tuck_morning.png" alt="Tuck stretching with a small sun">
+        </div>
+        <div class="body">
+          <div style="display:grid; grid-template-columns: 1fr 56px 1.15fr; gap: 0 12px; align-items: stretch;">
+            <div class="tag rise" style="--i:2; padding: 0 18px 10px;">Today</div>
+            <div></div>
+            <div class="tag rise" style="--i:3; padding: 0 18px 10px; color: var(--accent);">With PACE</div>
+
+            <div class="tile rise" style="--i:2; background: var(--mist);"><span class="chip"
+                style="background:var(--sunken-deep); color:var(--soft)"><span class="ms">bedtime</span></span>
+              <div class="t" style="font-weight:500">Wake time is a guess</div>
+            </div>
+            <div class="rise" style="--i:3; display:grid; place-items:center; color: var(--soft)"><span class="ms"
+                style="font-size:32px">arrow_forward</span></div>
+            <div class="tile card rise" style="--i:3; padding: 16px 18px; border-radius: var(--r-m);"><span
+                class="chip p-morning"><span class="ms">view_timeline</span></span>
+              <div class="t">Wake, eat and leave times worked out from class time</div>
+            </div>
+
+            <div class="tile rise" style="--i:2; background: var(--mist); margin-top: 12px;"><span class="chip"
+                style="background:var(--sunken-deep); color:var(--soft)"><span class="ms">directions_walk</span></span>
+              <div class="t" style="font-weight:500">You leave when you notice the clock</div>
+            </div>
+            <div class="rise" style="--i:3; display:grid; place-items:center; color: var(--soft); margin-top: 12px;">
+              <span class="ms" style="font-size:32px">arrow_forward</span>
+            </div>
+            <div class="tile card rise" style="--i:3; padding: 16px 18px; border-radius: var(--r-m); margin-top: 12px;">
+              <span class="chip p-leave"><span class="ms">notifications</span></span>
+              <div class="t">A reminder at each step. Late? One next step: “Leave now”</div>
+            </div>
+
+            <div class="tile rise" style="--i:2; background: var(--mist); margin-top: 12px;"><span class="chip"
+                style="background:var(--sunken-deep); color:var(--soft)"><span class="ms">event_note</span></span>
+              <div class="t" style="font-weight:500">Deadlines remembered the night before</div>
+            </div>
+            <div class="rise" style="--i:3; display:grid; place-items:center; color: var(--soft); margin-top: 12px;">
+              <span class="ms" style="font-size:32px">arrow_forward</span>
+            </div>
+            <div class="tile card rise" style="--i:3; padding: 16px 18px; border-radius: var(--r-m); margin-top: 12px;">
+              <span class="chip p-deadline"><span class="ms">event_note</span></span>
+              <div class="t">Reminders 3 days, 1 day, morning of, 2 hours before</div>
+            </div>
+
+            <div class="tile rise" style="--i:2; background: var(--mist); margin-top: 12px;"><span class="chip"
+                style="background:var(--sunken-deep); color:var(--soft)"><span
+                  class="ms">do_not_disturb_on</span></span>
+              <div class="t" style="font-weight:500">One bad day resets your streak</div>
+            </div>
+            <div class="rise" style="--i:3; display:grid; place-items:center; color: var(--soft); margin-top: 12px;">
+              <span class="ms" style="font-size:32px">arrow_forward</span>
+            </div>
+            <div class="tile card rise" style="--i:3; padding: 16px 18px; border-radius: var(--r-m); margin-top: 12px;">
+              <span class="chip p-calm"><span class="ms">spa</span></span>
+              <div class="t">Low-energy mode for bad days. No streaks, no red</div>
+            </div>
+          </div>
+        </div>
+        <div class="rise foot" style="--i:4; display:flex; align-items:center; gap: 16px;">
+          <span class="stadium mint" style="height:44px; font-size:18px;"><span class="ms">lightbulb</span>Key
+            difference</span>
+          <p style="font-size: 20px;">PACE does the planning, and forgives. <span class="src">Outcome to test: fewer
+              late arrivals and fewer late submissions.</span></p>
+        </div>
+        <aside class="notes" data-time="0:35">
+          <p>Here's the change. <strong>Today</strong>, wake time is a guess, you leave when you notice the clock,
+            deadlines show up the night before, and one bad day resets your streak.</p>
+          <p><strong>With PACE</strong>, you enter your class time once, and it works out when to wake, eat and leave,
+            with a reminder at each step. If you're late, it shows one thing: “Leave now.” Deadlines get four reminders
+            that come closer. And on a bad day, low-energy mode shows only what's close. No streaks, no red.</p>
+          <p>That's our key difference: <strong>PACE does the planning, and it forgives.</strong></p>
+          <p><em class="cue">Signpost:</em> “And this isn't a mock-up. Here's the app.”</p>
+        </aside>
+      </section>
+
+      <!-- ============ 4 · Built ============ -->
+      <section class="slide p-leave" data-label="Built" data-time="0:20">
+        <div style="display:flex; gap: 64px; height: 100%;">
+          <div class="phone rise" style="--i:1; margin-top: -24px;">
+            <div class="screen">
+              <div class="statusbar"><span class="tab">07:12</span><span style="display:flex; gap:4px"><span class="ms"
+                    style="font-size:15px">notifications</span></span></div>
+              <div class="app">
+                <h2>Today</h2>
+                <div class="appsub">Thursday, 19 November</div>
+                <div class="now p-leave">
+                  <div class="lbl">Right now
+                    <span class="cairn" aria-hidden="true"><i style="width:12.3px;height:7.5px"></i><i class="on"
+                        style="width:21.1px;height:8.5px"></i><i class="on" style="width:30px;height:9.5px"></i></span>
+                  </div>
+                  <div class="big">Next: leave at 07:35</div>
+                  <div class="steps">
+                    <div class="step done">
+                      <div>
+                        <div class="k">Up</div>
+                        <div class="tm">06:30</div>
+                      </div><span class="ms">check</span>
+                    </div>
+                    <div class="step done">
+                      <div>
+                        <div class="k">Eat</div>
+                        <div class="tm">06:50</div>
+                      </div><span class="ms">check</span>
+                    </div>
+                    <div class="step next">
+                      <div>
+                        <div class="k">Leave</div>
+                        <div class="tm">07:35</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mcard">
+                  <div class="mh"><span class="chip p-focus"><span class="ms">check_circle</span></span>Top 3 today
+                  </div>
+                  <div class="mrow"><span class="dot on"><span class="ms bold">check</span></span>Read chapter 4 notes
+                  </div>
+                  <div class="mrow"><span class="dot"></span>Physics lab write-up</div>
+                  <div class="mrow"><span class="dot"></span>Email group about slides</div>
+                </div>
+                <div class="mcard">
+                  <div class="mh"><span class="chip p-deadline"><span class="ms">event_note</span></span>Due soon</div>
+                  <div class="mrow">Physics lab write-up<span class="when">Tomorrow 23:59</span></div>
+                  <div class="mrow">History essay draft<span class="when">Sat 17:00</span></div>
+                </div>
+              </div>
+              <div class="navpill">
+                <div class="d sel"><span class="ind"><span class="ms fill">wb_sunny</span></span>Today</div>
+                <div class="d"><span class="ind"><span class="ms">event_note</span></span>Deadlines</div>
+                <div class="d"><span class="ind"><span class="ms">inbox</span></span>Inbox</div>
+                <div class="d"><span class="ind"><span class="ms">timer</span></span>Focus</div>
+                <div class="d"><span class="ind"><span class="ms">grid_view</span></span>More</div>
+              </div>
+            </div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; padding-top: 8px;">
+            <div class="eyebrow rise" style="--i:0"><span class="chip p-leave" style="--s:32px"><span
+                  class="ms">verified</span></span>Proof it's real</div>
+            <h1 class="rise" style="--i:0">It's built. Open the app, see the one next thing.</h1>
+            <p class="sub rise" style="--i:2">A working Android app: offline, no account, data stays on the phone.</p>
+            <div class="grid rise" style="--i:3; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px;">
+              <div class="card">
+                <div class="tag">Automated tests</div>
+                <div class="tab" style="font-size:52px; font-weight:600; letter-spacing:-1.5px; margin-top:2px">335
+                </div>
+              </div>
+              <div class="card">
+                <div class="tag">Feature modules</div>
+                <div class="tab" style="font-size:52px; font-weight:600; letter-spacing:-1.5px; margin-top:2px">13</div>
+              </div>
+              <div class="card">
+                <div class="tag">Accounts needed</div>
+                <div class="tab" style="font-size:52px; font-weight:600; letter-spacing:-1.5px; margin-top:2px">0</div>
+              </div>
+            </div>
+            <div class="card rise p-morning"
+              style="--i:4; background: var(--fill); box-shadow:none; border-radius: var(--r-now); padding: 18px 24px; margin-top: 16px;">
+              <div
+                style="display:flex; align-items:center; font-size:16px; font-weight:600; letter-spacing:.3px; color: color-mix(in srgb, var(--text) 72%, transparent);">
+                One thing now <span class="spacer"></span><span class="tag" style="color:var(--ink)">When the morning
+                  runs late</span></div>
+              <div style="font-size:34px; font-weight:700; letter-spacing:-0.4px; margin-top: 4px;">Leave now</div>
+              <div style="font-size:20px; margin: 2px 0 14px;">You arrive about 08:05.</div>
+              <span class="btn" style="background: var(--ink); color: var(--fill);"><span
+                  class="ms">directions_walk</span>I'm out the door</span>
+            </div>
+            <div class="spacer"></div>
+            <p class="src rise" style="--i:5; font-size:16px;"><b>Honest status:</b> reminder timing on real phones is
+              still being checked.</p>
+          </div>
+        </div>
+        <aside class="notes" data-time="0:20">
+          <p>This is the real Today screen. Open the app and you see <strong>“Right now”</strong>: the next step and its
+            time. Late? It switches to <strong>“Leave now. You arrive about 08:05.”</strong></p>
+          <p>It's built and tested: 335 automated tests, 13 modules, no account, and your data stays on your phone.
+            We're still checking reminder timing on real phones.</p>
+          <p><em class="cue">Signpost:</em> “So who is this for?”</p>
+        </aside>
+      </section>
+
+      <!-- ============ 5 · Market ============ -->
+      <section class="slide p-focus" data-label="Market" data-time="0:20">
+        <div class="head" style="margin-bottom: 28px;">
+          <div class="titles">
+            <div class="eyebrow rise" style="--i:0"><span class="chip p-focus" style="--s:32px"><span
+                  class="ms">school</span></span>Market</div>
+            <h1 class="rise" style="--i:1">First buyers: college students on Android who start the day behind.</h1>
+          </div>
+          <img class="tuck breathe" src="assets/tuck/tuck_leaving.png" alt="">
+        </div>
+        <div class="body">
+          <div style="display:grid; grid-template-columns: 1.55fr 1fr; gap: 28px; align-items: center;">
+            <div style="display:grid; gap: 14px;">
+              <div class="rise" style="--i:2;">
+                <div class="p-focus"
+                  style="width: 100%; height: 96px; border-radius: var(--r-card); background: var(--fill); display:flex; align-items:center; padding: 0 28px; gap: 18px;">
+                  <span class="tab" style="font-size: 42px; font-weight: 700; color: var(--ink)">269M</span><span
+                    style="font-size: 21px;">higher-ed students worldwide, 2024</span><span class="spacer"></span><span
+                    class="tag">Data · UNESCO</span>
+                </div>
+              </div>
+              <div class="rise" style="--i:3;">
+                <div class="p-leave"
+                  style="width: 86%; height: 96px; border-radius: var(--r-card); background: var(--fill); display:flex; align-items:center; padding: 0 28px; gap: 18px;">
+                  <span class="tab" style="font-size: 42px; font-weight: 700; color: var(--ink)">~196M</span><span
+                    style="font-size: 21px;">on Android (72.8%)</span><span class="spacer"></span><span
+                    class="tag">Estimate</span>
+                </div>
+              </div>
+              <div class="rise" style="--i:4;">
+                <div class="p-morning"
+                  style="width: 72%; height: 96px; border-radius: var(--r-card); background: var(--fill); display:flex; align-items:center; padding: 0 28px; gap: 18px;">
+                  <span class="tab" style="font-size: 42px; font-weight: 700; color: var(--ink)">~147M</span><span
+                    style="font-size: 21px;">self-described procrastinators</span><span class="spacer"></span><span
+                    class="tag">Estimate</span>
+                </div>
+              </div>
+            </div>
+            <div class="card rise" style="--i:5; padding: 28px 30px 30px;">
+              <div class="card-title"><span class="chip p-leave"><span class="ms">flag</span></span>Reachable segment
+              </div>
+              <div class="cap" style="font-size: 34px; font-weight: 700; letter-spacing:-0.4px; margin-top: 14px;"
+                data-team="school"></div>
+              <p style="margin-top: 8px;">The 30 students in our classroom.</p>
+              <div style="height:1px; background: var(--line-soft); margin: 20px 0 18px;"></div>
+              <div class="tag">Pilot target</div>
+              <div style="font-size: 30px; font-weight: 600; margin-top: 4px;" class="tab">30 classmates · 8 weeks</div>
+            </div>
+          </div>
+        </div>
+        <p class="src rise foot" style="--i:6; font-size:16px;">Estimates assume students match the global Android share
+          (StatCounter, Nov 2025) and ~75% self-identify as procrastinators (Steel &amp; Ferrari 2013). High-school
+          students not counted.</p>
+        <aside class="notes" data-time="0:20">
+          <p>Our first buyers are <strong>college students on Android who start the day behind</strong>. Worldwide
+            that's about 147 million people, an estimate built from UNESCO and StatCounter figures.</p>
+          <p>But the segment we start with is <strong>BSIT 3A-SD</strong>: our 30 classmates, over 8 weeks.</p>
+          <p><em class="cue">Signpost:</em> “Here's how PACE makes money.”</p>
+        </aside>
+      </section>
+
+      <!-- ============ 6 · Business model ============ -->
+      <section class="slide p-calm" data-label="Business model" data-time="0:25">
+        <div class="head" style="margin-bottom: 28px;">
+          <div class="titles">
+            <div class="eyebrow rise" style="--i:0"><span class="chip p-calm" style="--s:32px"><span
+                  class="ms">payments</span></span>Business model</div>
+            <h1 class="rise" style="--i:1">Students pay ₱49 a month for Plus. The planner stays free.</h1>
+          </div>
+          <img class="tuck breathe" src="assets/tuck/tuck_proud.png" alt="">
+        </div>
+        <div class="body">
+          <div class="grid" style="grid-template-columns: repeat(3, 1fr); gap: 20px;">
+            <div class="card rise" style="--i:2; padding: 26px 28px 28px;">
+              <div class="card-title"><span class="chip p-leave"><span class="ms">person</span></span>Who pays</div>
+              <div style="font-size: 30px; font-weight: 600; margin-top: 12px;">The student</div>
+              <p style="margin-top: 6px;">Or a parent, for their child.</p>
+            </div>
+            <div class="card rise" style="--i:3; padding: 26px 28px 28px;">
+              <div class="card-title"><span class="chip p-morning"><span class="ms">calendar_month</span></span>How
+                often</div>
+              <div class="tab" style="font-size: 30px; font-weight: 600; margin-top: 12px;">₱49 / month</div>
+              <p style="margin-top: 6px;">or ₱399 / year (about 32% less).</p>
+            </div>
+            <div class="card rise" style="--i:4; padding: 26px 28px 28px;">
+              <div class="card-title"><span class="chip p-focus"><span class="ms">cloud_sync</span></span>Why</div>
+              <div style="font-size: 30px; font-weight: 600; margin-top: 12px;">Never lose your plan</div>
+              <p style="margin-top: 6px;">Sync and backup across phone and laptop.</p>
+            </div>
+          </div>
+          <div class="grid rise" style="--i:5; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+            <div class="group" style="padding: 16px 22px; box-shadow:none; background: var(--mist);">
+              <div class="tag">Free, forever</div>
+              <p style="font-size: 20px; margin-top: 6px;">Morning planner · deadlines · focus timer · low-energy mode ·
+                widgets</p>
+            </div>
+            <div class="group" style="padding: 16px 22px;">
+              <div class="tag" style="color: var(--accent)">Plus · ₱49/month</div>
+              <p style="font-size: 20px; margin-top: 6px;">Sync + backup · phone and laptop · extra widgets and Tuck
+                themes</p>
+            </div>
+          </div>
+        </div>
+        <p class="src rise foot" style="--i:6; font-size:16px;"><b>Assumptions:</b> price untested; Plus needs accounts,
+          which we build after the pilot. <b>Comparable:</b> Tiimo keeps a free plan and about 50,000 of its 500,000+
+          users pay (~10%).</p>
+        <aside class="notes" data-time="0:25">
+          <p><strong>Who pays?</strong> The student, or a parent. <strong>How often?</strong> ₱49 a month, or ₱399 a
+            year. <strong>Why?</strong> So you never lose your plan: sync and backup across your phone and laptop.</p>
+          <p>The planner itself stays free forever, because the students who need it most shouldn't hit a paywall.
+            Tiimo, a similar app, does the same; about one in ten of its users pay. Our price is an assumption, and
+            we'll test it.</p>
+          <p><em class="cue">Signpost:</em> “Before any forecast, here's how we'll prove it.”</p>
+        </aside>
+      </section>
+
+      <!-- ============ 7 · Validation ============ -->
+      <section class="slide p-leave" data-label="Validation" data-time="0:35">
+        <div class="head" style="margin-bottom: 24px;">
+          <div class="titles">
+            <div class="eyebrow rise" style="--i:0"><span class="chip p-leave" style="--s:32px"><span
+                  class="ms">fact_check</span></span>Validation <span class="stadium fill-pastel p-morning"
+                style="height:30px; font-size:14px; margin-left: 6px;">Planned · no results yet</span></div>
+            <h1 class="rise" style="--i:1">Evidence before forecasts: three tests, starting week 1.</h1>
+          </div>
+        </div>
+        <div class="body">
+          <div class="grid" style="grid-template-columns: repeat(3, 1fr); gap: 20px;">
+            <div class="card rise" style="--i:2; padding: 24px 26px 26px;">
+              <div class="card-title"><span class="chip p-deadline"><span class="ms">quiz</span></span>01 · Problem
+                proof</div>
+              <p style="color: var(--text); font-weight: 600; margin-top: 6px;">Is lateness common enough?</p>
+              <p style="margin-top: 12px;"><strong>Test:</strong> survey all 30 classmates, interview 8</p>
+              <p style="margin-top: 8px;"><strong>Metric:</strong> % late to first class at least once a week</p>
+              <p style="margin-top: 8px;"><strong>When:</strong> week 1. This is our baseline.</p>
+            </div>
+            <div class="card rise" style="--i:3; padding: 24px 26px 26px;">
+              <div class="card-title"><span class="chip p-focus"><span class="ms">smartphone</span></span>02 · Use proof
+              </div>
+              <p style="color: var(--text); font-weight: 600; margin-top: 6px;">Can students set it up alone?</p>
+              <p style="margin-top: 12px;"><strong>Test:</strong> 10 classmates set up their week with no help</p>
+              <p style="margin-top: 8px;"><strong>Metric:</strong> % done in under 5 minutes; time taken</p>
+              <p style="margin-top: 8px;"><strong>When:</strong> week 2</p>
+            </div>
+            <div class="card rise" style="--i:4; padding: 24px 26px 26px;">
+              <div class="card-title"><span class="chip p-morning"><span class="ms">payments</span></span>03 · Business
+                proof</div>
+              <p style="color: var(--text); font-weight: 600; margin-top: 6px;">Will they keep using it, and pay?</p>
+              <p style="margin-top: 12px;"><strong>Test:</strong> 8-week pilot with all 30 classmates</p>
+              <p style="margin-top: 8px;"><strong>Metric:</strong> % still using in week 8; late days a week vs
+                baseline; % who pre-order Plus</p>
+              <p style="margin-top: 8px;"><strong>When:</strong> weeks 3–10</p>
+            </div>
+          </div>
+        </div>
+        <p class="src rise foot" style="--i:5; font-size:16px;">Every result will report its sample size, time period,
+          baseline and metric definition. <b>What we have today:</b> a working app with 335 automated tests. That's
+          technical proof, not customer proof.</p>
+        <aside class="notes" data-time="0:35">
+          <p>We don't have customer data yet, so here's exactly how we'll get it. Three tests, each one could prove us
+            wrong.</p>
+          <p><strong>Problem proof, week 1:</strong> survey all 30 classmates and interview 8. Are they late to first
+            class at least once a week? That number is our baseline.</p>
+          <p><strong>Use proof, week 2:</strong> can 10 classmates set up their week alone in under five minutes?</p>
+          <p><strong>Business proof, weeks 3 to 10:</strong> a pilot with all 30 classmates. Are they still using it in
+            week 8? Are they late less often than at baseline? Will they pre-order Plus?</p>
+          <p><em class="cue">Pause after “each one could prove us wrong.”</em></p>
+          <p><em class="cue">Signpost:</em> “If it works, is ₱49 worth it to a student? Here's our model.”</p>
+        </aside>
+      </section>
+
+      <!-- ============ 8 · ROI ============ -->
+      <section class="slide p-morning" data-label="ROI" data-time="0:25">
+        <div class="head" style="margin-bottom: 24px;">
+          <div class="titles">
+            <div class="eyebrow rise" style="--i:0"><span class="chip p-morning" style="--s:32px"><span
+                  class="ms">calculate</span></span>ROI for one student <span class="stadium fill-pastel p-morning"
+                style="height:30px; font-size:14px; margin-left: 6px;">Modeled · assumptions</span></div>
+            <h1 class="rise" style="--i:1">Plus pays for itself if PACE saves 1.4 minutes a school day.</h1>
+          </div>
+        </div>
+        <div class="body">
+          <div style="display:grid; grid-template-columns: 1.5fr auto 1fr auto 1fr; gap: 16px; align-items: stretch;">
+            <div class="card rise" style="--i:2; padding: 24px 28px;">
+              <div class="tag">Modeled monthly value</div>
+              <p class="tab" style="font-size: 21px; color: var(--text); margin-top: 12px;">5 min/day × 22 school days =
+                110 min</p>
+              <p class="tab" style="font-size: 21px; color: var(--text); margin-top: 6px;">1.83 h × ₱94/h</p>
+              <div class="tab" style="font-size: 46px; font-weight: 700; letter-spacing:-1px; margin-top: 10px;">₱172
+              </div>
+            </div>
+            <div class="rise" style="--i:3; display:grid; place-items:center; font-size: 40px; color: var(--soft);">−
+            </div>
+            <div class="card rise" style="--i:3; padding: 24px 28px;">
+              <div class="tag">Plus fee</div>
+              <p style="font-size: 21px; margin-top: 12px;">per month</p>
+              <div class="tab" style="font-size: 46px; font-weight: 700; letter-spacing:-1px; margin-top: 44px;">₱49
+              </div>
+            </div>
+            <div class="rise" style="--i:4; display:grid; place-items:center; font-size: 40px; color: var(--soft);">=
+            </div>
+            <div class="card rise p-leave"
+              style="--i:4; padding: 24px 28px; background: var(--fill); box-shadow: none;">
+              <div class="tag" style="color: var(--ink)">Net modeled benefit</div>
+              <p style="font-size: 21px; margin-top: 12px;">per month</p>
+              <div class="tab" style="font-size: 46px; font-weight: 700; letter-spacing:-1px; margin-top: 44px;">₱123
+              </div>
+            </div>
+          </div>
+          <div class="rise"
+            style="--i:5; margin-top: 20px; display:flex; align-items:center; gap: 16px; flex-wrap: wrap;">
+            <span class="stadium mint tab" style="height: 52px; font-size: 22px;">ROI = (₱172 − ₱49) ÷ ₱49 = 251% per
+              month</span>
+            <span class="stadium outline tab" style="height: 52px; font-size: 20px;">Break-even: 1.4 min/day</span>
+          </div>
+        </div>
+        <p class="src rise foot" style="--i:6; font-size:16px;">All figures are assumptions, not pilot results. ₱94/h =
+          Metro Manila minimum wage ₱755/day ÷ 8 h. Minutes saved will be measured in the pilot with a time diary.
+          <b>Excluded:</b> grades and stress, which we can't measure or attribute.
+        </p>
+        <aside class="notes" data-time="0:25">
+          <p>Is ₱49 worth it? Here's an honest model, and every number on this slide is an assumption.</p>
+          <p>If PACE saves a student <strong>five minutes a school day</strong> of deciding and scrambling, that's 110
+            minutes a month. Valued at minimum wage, about ₱94 an hour, that's <strong>₱172</strong>. Minus the ₱49 fee,
+            that's ₱123 a month. <em class="cue">Pause.</em></p>
+          <p>Even more simply: Plus pays for itself if PACE saves just <strong>1.4 minutes a day</strong>. We'll measure
+            the real number in the pilot. We left out grades and stress because we can't measure them fairly.</p>
+          <p><em class="cue">Signpost:</em> “So how do the first students find us?”</p>
+        </aside>
+      </section>
+
+      <!-- ============ 9 · Go-to-market ============ -->
+      <section class="slide p-focus" data-label="Go-to-market" data-time="0:20">
+        <div class="head" style="margin-bottom: 28px;">
+          <div class="titles">
+            <div class="eyebrow rise" style="--i:0"><span class="chip p-focus" style="--s:32px"><span
+                  class="ms">campaign</span></span>Go-to-market</div>
+            <h1 class="rise" style="--i:1">First users come from our classroom, then the Play Store.</h1>
+          </div>
+          <img class="tuck breathe" src="assets/tuck/tuck_note.png" alt="">
+        </div>
+        <div class="body">
+          <div style="display:grid; grid-template-columns: 1fr 64px 1fr; gap: 0; align-items: stretch;">
+            <div class="card rise" style="--i:2; padding: 30px 32px 32px;">
+              <span class="stadium mint" style="height:36px; font-size:16px">01 · Weeks 1–10</span>
+              <div class="card-title" style="margin-top: 14px; font-size: 26px;"><span class="chip p-leave lg"><span
+                    class="ms">groups</span></span>Pilot in our classroom</div>
+              <p style="margin-top: 10px; font-size: 21px;">30 classmates, on their own phones. This also covers Google
+                Play's closed-testing step for new apps.</p>
+            </div>
+            <div class="rise" style="--i:3; display:grid; place-items:center; color: var(--soft);"><span class="ms"
+                style="font-size:40px">arrow_forward</span></div>
+            <div class="card rise" style="--i:3; padding: 30px 32px 32px;">
+              <span class="stadium fill-pastel p-morning" style="height:36px; font-size:16px">02 · After the
+                pilot</span>
+              <div class="card-title" style="margin-top: 14px; font-size: 26px;"><span class="chip p-morning lg"><span
+                    class="ms">storefront</span></span>Play Store listing</div>
+              <p style="margin-top: 10px; font-size: 21px;">Public listing for any Android student. Short videos with
+                Tuck to help students at other schools find it.</p>
+            </div>
+          </div>
+        </div>
+        <p class="src rise foot" style="--i:5; font-size:16px;"><b>Assumption:</b> reaching the first users costs about
+          ₱0 beyond our time (organic channels only).</p>
+        <aside class="notes" data-time="0:20">
+          <p>Two steps. First, <strong>our own classroom</strong>: 30 classmates, on their own phones; that's the pilot.
+          </p>
+          <p>After the pilot, we go straight to a <strong>public Play Store listing</strong>, with short videos
+            featuring Tuck so students at other schools can find it.</p>
+          <p><em class="cue">Signpost:</em> “What do students use today instead?”</p>
+        </aside>
+      </section>
+
+      <!-- ============ 10 · Alternatives ============ -->
+      <section class="slide p-calm" data-label="Alternatives" data-time="0:20">
+        <div class="head" style="margin-bottom: 24px;">
+          <div class="titles">
+            <div class="eyebrow rise" style="--i:0"><span class="chip p-calm" style="--s:32px"><span
+                  class="ms">grid_view</span></span>Alternatives</div>
+            <h1 class="rise" style="--i:1">Today students use alarms and lists. Neither plans the morning.</h1>
+          </div>
+          <img class="tuck sm" src="assets/tuck/tuck_default.png" alt="">
+        </div>
+        <div class="body">
+          <div class="group rise" style="--i:2; padding: 10px 14px;">
+            <table style="width:100%; border-collapse: collapse; font-size: 20px;">
+              <thead>
+                <tr style="text-align:left;">
+                  <th style="padding: 12px 12px; width: 30%"></th>
+                  <th class="tag" style="padding: 12px 12px">Works out when to start</th>
+                  <th class="tag" style="padding: 12px 12px">Late → one next step</th>
+                  <th class="tag" style="padding: 12px 12px">No streak guilt</th>
+                  <th class="tag" style="padding: 12px 12px">Free, offline, no account</th>
+                </tr>
+              </thead>
+              <tbody id="cmp"></tbody>
+            </table>
+          </div>
+        </div>
+        <p class="src rise foot" style="--i:3; font-size:16px;">✓ yes · ~ partly · – no. Our reading of public product
+          pages, Nov 2026. Tiimo's 500,000+ users show students want calm planners.</p>
+        <aside class="notes" data-time="0:20">
+          <p>What do students do today? <strong>Phone alarms</strong> ring at a time you guessed. <strong>Calendars and
+              to-do apps</strong> store what's due, not when to start. <strong>Visual planners</strong> like Tiimo look
+            calm, but you fill them in yourself.</p>
+          <p>PACE is the one that <strong>works out the morning for you</strong> and turns lateness into one next step.
+          </p>
+          <p><em class="cue">Signpost:</em> “Here's the team building it.”</p>
+        </aside>
+      </section>
+
+      <!-- ============ 11 · Team ============ -->
+      <section class="slide p-leave" data-label="Team" data-time="0:15">
+        <div class="head" style="margin-bottom: 24px;">
+          <div class="titles">
+            <div class="eyebrow rise" style="--i:0"><span class="chip p-leave" style="--s:32px"><span
+                  class="ms">groups</span></span>The team</div>
+            <h1 class="rise" style="--i:1" data-team="teamName"></h1>
+          </div>
+          <img class="tuck breathe sm" src="assets/tuck/tuck_proud.png" alt="">
+        </div>
+        <div class="body">
+          <div id="members" class="grid" style="grid-template-columns: repeat(4, 1fr); gap: 16px;"></div>
+        </div>
+        <div class="grid rise foot" style="--i:10; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="group" style="padding: 14px 20px; box-shadow:none; background: var(--mist);">
+            <div class="tag" style="color: var(--accent)">Skills we have</div>
+            <p style="font-size: 19px; margin-top: 4px;">Flutter app development, UI design, automated testing</p>
+          </div>
+          <div class="group" style="padding: 14px 20px; box-shadow:none; background: var(--mist);">
+            <div class="tag">Gaps we're filling</div>
+            <p style="font-size: 19px; margin-top: 4px;">User research and marketing, through the pilot; iOS, later</p>
+          </div>
+        </div>
+        <aside class="notes" data-time="0:15">
+          <p>We're <strong>main.dart</strong>: seven of us. Together we bring app development, design and testing;
+            that's how PACE got built.</p>
+          <p>Our gaps are user research and marketing. The pilot is how we close them.</p>
+          <p><em class="cue">Signpost:</em> “Which brings us to our ask.”</p>
+        </aside>
+      </section>
+
+      <!-- ============ 12 · Ask ============ -->
+      <section class="slide p-morning" data-label="Ask" data-time="0:25">
+        <div class="head" style="margin-bottom: 24px;">
+          <div class="titles">
+            <div class="eyebrow rise" style="--i:0"><span class="chip p-morning" style="--s:32px"><span
+                  class="ms">handshake</span></span>Our ask</div>
+            <h1 class="rise" style="--i:1">₱4,500 to run an 8-week pilot with our 30 classmates.</h1>
+          </div>
+          <img class="tuck breathe" src="assets/tuck/tuck_morning.png" alt="">
+        </div>
+        <div class="body">
+          <div style="display:grid; grid-template-columns: 1.3fr 1fr; gap: 24px; align-items: stretch;">
+            <div class="card rise" style="--i:2; padding: 18px 26px 20px;">
+              <div class="tag" style="padding-bottom: 6px;">Use of funds <span
+                  style="font-weight:500; text-transform:none; letter-spacing:0">· estimates</span></div>
+              <table class="tab" style="width:100%; border-collapse: collapse; font-size: 20px;">
+                <tr>
+                  <td style="padding: 12px 0;">Thank-you load, 30 classmates × ₱50</td>
+                  <td style="text-align:right; font-weight:600;">₱1,500</td>
+                </tr>
+                <tr style="border-top: 1px solid var(--line-soft)">
+                  <td style="padding: 12px 0;">Onboarding session + printed surveys</td>
+                  <td style="text-align:right; font-weight:600;">₱1,000</td>
+                </tr>
+                <tr style="border-top: 1px solid var(--line-soft)">
+                  <td style="padding: 12px 0;">Google Play developer account (US$25, one-time)</td>
+                  <td style="text-align:right; font-weight:600;">₱1,600</td>
+                </tr>
+                <tr style="border-top: 1px solid var(--line-soft)">
+                  <td style="padding: 12px 0;">Buffer, about 10%</td>
+                  <td style="text-align:right; font-weight:600;">₱400</td>
+                </tr>
+                <tr style="border-top: 2px solid var(--text)">
+                  <td style="padding: 12px 0; font-weight:700;">Total</td>
+                  <td style="text-align:right; font-weight:700; font-size: 26px;">₱4,500</td>
+                </tr>
+              </table>
+              <p class="src" style="margin-top: 10px; font-size: 16px;">No devices to buy: we test on our own and our
+                classmates' phones, which already cover several brands.</p>
+            </div>
+            <div class="card rise p-leave"
+              style="--i:3; padding: 22px 26px; background: var(--fill); box-shadow:none; display:flex; flex-direction:column;">
+              <div class="tag" style="color: var(--ink)">Milestone · by week 10 we report</div>
+              <ul style="list-style:none; margin-top: 10px; display:grid; gap: 10px;">
+                <li style="display:flex; gap:10px; font-size:20px;"><span class="ms bold"
+                    style="color: var(--ink)">check</span>30 classmates onboarded</li>
+                <li style="display:flex; gap:10px; font-size:20px;"><span class="ms bold"
+                    style="color: var(--ink)">check</span>% still using PACE in week 8</li>
+                <li style="display:flex; gap:10px; font-size:20px;"><span class="ms bold"
+                    style="color: var(--ink)">check</span>Late days a week vs baseline</li>
+                <li style="display:flex; gap:10px; font-size:20px;"><span class="ms bold"
+                    style="color: var(--ink)">check</span>% who pre-order Plus at ₱49</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="rise foot" style="--i:4; display:flex; align-items:center; gap: 14px;">
+          <span class="stadium mint" style="height:46px; font-size:19px;"><span class="ms">handshake</span>The
+            decision</span>
+          <p style="font-size: 21px;">Approve and fund the pilot in our classroom.</p>
+        </div>
+        <aside class="notes" data-time="0:25">
+          <p>Our ask: <strong>₱4,500 to run an 8-week pilot with our 30 classmates.</strong> <em class="cue">Pause.</em>
+          </p>
+          <p>We don't need to buy devices: our own and our classmates' phones already cover several brands. So the money
+            thanks each classmate with ₱50 of load for eight weeks of surveys, runs one onboarding session, and pays the
+            one-time Play Store fee.</p>
+          <p>By week 10 we'll report: 30 classmates onboarded, how many still use it, whether they're late less often,
+            and how many would pay.</p>
+          <p>So the decision we're asking for: <strong>approve and fund the pilot in our classroom.</strong> <em
+              class="cue">Stop. Then next slide.</em></p>
+        </aside>
+      </section>
+
+      <!-- ============ 13 · Close ============ -->
+      <section class="slide p-leave" data-label="Thank you" data-time="0:05">
+        <div style="display:flex; align-items:center; gap:72px; height:100%; padding: 0 40px;">
+          <img class="tuck breathe rise" style="--i:0; width: 380px; height: 380px;" src="assets/tuck/tuck_default.png"
+            alt="Tuck the turtle waving">
+          <div style="flex:1">
+            <h1 class="rise" style="--i:1; font-size: 72px;">Thank you.<br>Questions?</h1>
+            <p class="sub rise" style="--i:2; font-size: 28px;">Progress Always Comes Eventually.</p>
+            <div class="rise" style="--i:3; display:flex; flex-wrap:wrap; gap:12px; margin-top: 36px;">
+              <span class="stadium mint" style="height:48px; font-size:20px;"><span class="ms">groups</span><span
+                  data-team="teamName"></span></span>
+              <span class="stadium outline" style="height:48px; font-size:20px;"><span class="ms">android</span>Live
+                demo on request</span>
+            </div>
+            <p class="rise src" style="--i:4; margin-top: 16px; font-size: 18px;" data-team="memberNames"></p>
+          </div>
+        </div>
+        <aside class="notes" data-time="0:05">
+          <p>Thank you. <strong>We'd love your questions.</strong> <em class="cue">Stop talking and wait.</em></p>
+          <p>If there's time, offer the live demo: Today → tap a step → Deadlines → Just start → low-energy mode.</p>
+        </aside>
+      </section>
+
+    </main>
+  </div>
+
+  <nav id="chrome" aria-label="Slide controls">
+    <button id="prev" type="button" aria-label="Previous slide"><span class="ms">arrow_back</span></button>
+    <div id="where" aria-live="polite"><span id="lbl">PACE</span><span class="n" id="num">1 / 13</span></div>
+    <button id="next" type="button" aria-label="Next slide"><span class="ms">arrow_forward</span></button>
+    <span class="sep" aria-hidden="true"></span>
+    <button id="btn-notes" type="button" aria-label="Speaker notes (N)" aria-pressed="false"><span
+        class="ms">speaker_notes</span></button>
+    <button id="btn-theme" type="button" aria-label="Light or dark (T)"><span class="ms">contrast</span></button>
+    <button id="btn-full" type="button" aria-label="Full screen (F)"><span class="ms">fullscreen</span></button>
+  </nav>
+  <div id="npanel">
+    <div id="ntools" role="toolbar" aria-label="Notes controls">
+      <div class="tg" role="group" aria-label="Text size">
+        <button type="button" id="t-smaller" aria-label="Smaller text (−)" title="Smaller text (−)"><span
+            class="ms">text_decrease</span></button>
+        <span class="tval tab" id="t-size" aria-live="polite">21</span>
+        <button type="button" id="t-bigger" aria-label="Bigger text (+)" title="Bigger text (+)"><span
+            class="ms">text_increase</span></button>
+      </div>
+      <button type="button" id="t-space" aria-label="Line spacing (S)" title="Line spacing (S)"><span
+          class="ms">format_line_spacing</span></button>
+      <span class="tsep" aria-hidden="true"></span>
+      <button type="button" id="t-hl" aria-pressed="false"
+        aria-label="Highlight mode (H): select text to highlight, click a highlight to remove it"
+        title="Highlight (H): select text to highlight, click a highlight to remove it"><span
+          class="ms">ink_highlighter</span></button>
+      <button type="button" id="t-clear" aria-label="Clear highlights on this slide (Shift+H)"
+        title="Clear highlights on this slide (Shift+H)"><span class="ms">ink_eraser</span></button>
+      <button type="button" id="t-focus" aria-pressed="false"
+        aria-label="Reading focus (L): dims everything but one line, arrow keys move it"
+        title="Reading focus (L): dims everything but one line; ↑ ↓ move it"><span
+          class="ms">center_focus_strong</span></button>
+      <span class="tsep" aria-hidden="true"></span>
+      <button type="button" id="t-theme" aria-label="Light or dark (T)" title="Light or dark (T)"><span
+          class="ms">contrast</span></button>
+      <button type="button" id="t-blank" aria-pressed="false" aria-label="Cover the audience screen with Tuck (B)"
+        title="Cover the audience screen with Tuck (B)"><span class="ms">tv_off</span></button>
+      <button type="button" id="t-help" aria-label="Keyboard shortcuts (?)" title="Keyboard shortcuts (?)"><span
+          class="ms">keyboard</span></button>
+    </div>
+    <div id="notes" role="region" aria-label="Speaker notes"></div>
+  </div>
+  <div id="help" role="dialog" aria-label="Keyboard shortcuts" hidden>
+    <div class="hcard">
+      <div class="hhead"><span>Keyboard shortcuts</span><button type="button" id="help-x" aria-label="Close"><span
+            class="ms">close</span></button></div>
+      <dl>
+        <dt>← → · Space</dt>
+        <dd>Previous / next slide (both windows)</dd>
+        <dt>− · + · 0</dt>
+        <dd>Notes text smaller / bigger / reset</dd>
+        <dt>S</dt>
+        <dd>Line spacing: tight, normal, roomy</dd>
+        <dt>H</dt>
+        <dd>Highlight mode: select text to highlight, click a highlight to remove it</dd>
+        <dt>Shift + H</dt>
+        <dd>Clear highlights on this slide</dd>
+        <dt>L</dt>
+        <dd>Reading focus: dims all but one line</dd>
+        <dt>↑ ↓</dt>
+        <dd>In reading focus: move the line</dd>
+        <dt>P</dt>
+        <dd>Pause / resume the timers</dd>
+        <dt>R</dt>
+        <dd>Restart the timers</dd>
+        <dt>B</dt>
+        <dd>Cover the audience screen with an idling Tuck / bring the slides back</dd>
+        <dt>T</dt>
+        <dd>Light / dark (both windows change together)</dd>
+        <dt>?</dt>
+        <dd>This list</dd>
+      </dl>
+    </div>
+  </div>
+  <div id="hint">← → to move · N notes · T theme · F full screen</div>
+  <div id="pextra" aria-label="Presenter details">
+    <div class="pcards">
+      <div class="pcard">
+        <div class="tag">Presenting</div>
+        <div class="pbig" id="pwho">–</div>
+        <div class="src" id="phand">&nbsp;</div>
+      </div>
+      <div class="pcard">
+        <div class="tag">Next up</div>
+        <div class="pbig" id="pnext">–</div>
+      </div>
+      <div class="pcard">
+        <div class="tag">This slide</div>
+        <div class="ptime tab" id="pslide">0:00</div>
+        <div class="pbar" aria-hidden="true"><i id="pbar"></i></div>
+        <div class="src">of <span id="pplan">0:30</span> planned</div>
+      </div>
+      <div class="pcard">
+        <div class="tag">Total <span id="pstate"></span></div>
+        <div class="ptime tab" id="ptime">0:00</div>
+        <div class="src"><span id="ppace">On pace</span> · of <span id="ptotal">4:45</span></div>
+        <div class="tbtn">
+          <button type="button" id="t-pause" aria-label="Pause timers (P)" title="Pause timers (P)"><span
+              class="ms">pause</span></button>
+          <button type="button" id="t-reset" aria-label="Restart timers (R)" title="Restart timers (R)"><span
+              class="ms">restart_alt</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const TEAM = JSON.parse(document.getElementById('team').textContent);
+      const isPh = (v) => typeof v === 'string' && /^\[.*\]$/.test(v.trim());
+      const fill = (el, text) => {
+        el.textContent = '';
+        if (isPh(text)) { const p = document.createElement('em'); p.className = 'placeholder'; p.textContent = text; el.append(p); }
+        else el.append(text);
+      };
+
+      // ---- Team placeholders ----
+      const members = TEAM.members || [];
+      document.querySelectorAll('[data-team]').forEach((el) => {
+        const key = el.dataset.team;
+        if (key === 'memberNames') {
+          el.textContent = '';
+          members.forEach((m, i) => {
+            if (i) el.append(' · ');
+            const s = document.createElement('span'); fill(s, m.name); el.append(s);
+          });
+        } else fill(el, TEAM[key] ?? '');
+      });
+      const pastels = ['p-leave', 'p-morning', 'p-focus', 'p-evening', 'p-deadline', 'p-calm'];
+      const grid = document.getElementById('members');
+      members.forEach((m, i) => {
+        const card = document.createElement('div');
+        card.className = 'card rise'; card.style.cssText = `--i:${3 + i}; padding: 20px 22px 22px; min-height: 0`;
+        const initial = isPh(m.name) ? '' : m.name.trim().charAt(0).toUpperCase();
+        card.innerHTML = `<div class="chip lg ${pastels[i % pastels.length]}" style="font-size:24px; font-weight:700">${initial ? '' : '<span class="ms">person</span>'}</div>
+      <div class="t" style="font-size:21px; font-weight:600; margin-top:14px; line-height:1.25"></div>`;
+        if (initial) card.querySelector('.chip').textContent = initial;
+        fill(card.querySelector('.t'), m.name);
+        grid.append(card);
+      });
+
+      // ---- Comparison table ----
+      const rows = [
+        ['PACE', true, true, true, true],
+        ['Phone alarms', false, false, true, true],
+        ['Google Calendar', false, false, true, false],
+        ['To-do apps (Todoist)', false, false, false, false],
+        ['Visual planners (Tiimo, Structured)', false, false, true, 'partly'],
+      ];
+      const tb = document.getElementById('cmp');
+      rows.forEach(([name, ...cells], r) => {
+        const tr = document.createElement('tr');
+        tr.style.borderTop = r ? '1px solid var(--line-soft)' : '0';
+        if (!r) tr.style.background = 'var(--mint)';
+        const th = document.createElement('th');
+        th.scope = 'row';
+        th.style.cssText = `text-align:left; padding: 18px 12px; font-weight:${r ? 500 : 700}; font-size: 24px; ${!r ? 'border-radius: 18px 0 0 18px;' : ''}`;
+        th.textContent = name; tr.append(th);
+        cells.forEach((ok, c) => {
+          const td = document.createElement('td');
+          td.style.cssText = `padding: 18px 12px; ${!r && c === cells.length - 1 ? 'border-radius: 0 18px 18px 0;' : ''}`;
+          td.innerHTML = ok === 'partly'
+            ? '<span style="color: var(--soft); font-size: 26px; font-weight: 600" aria-label="partly">~</span>'
+            : ok
+              ? '<span class="ms bold" style="color: var(--accent); font-size: 28px" aria-label="yes">check</span>'
+              : '<span style="color: var(--soft); font-size: 22px" aria-label="no">–</span>';
+          tr.append(td);
+        });
+        tb.append(tr);
+      });
+
+      // ---- Deck ----
+      const slides = [...document.querySelectorAll('.slide')];
+      const stage = document.getElementById('stage');
+      const notes = document.getElementById('notes');
+      const chrome = document.getElementById('chrome');
+      const btnNotes = document.getElementById('btn-notes');
+      let cur = 0;
+      const isPresenter = new URLSearchParams(location.search).has('presenter');
+      if (isPresenter) document.body.classList.add('presenter');
+      let presenterWin = null;
+
+      const fit = () => {
+        const vp = document.getElementById('viewport');
+        const s = Math.min(vp.clientWidth / 1600, vp.clientHeight / 900);
+        stage.style.setProperty('--scale', s);
+      };
+      addEventListener('resize', fit); fit();
+
+      // ---- Presenter notes controls: text size, highlights, reading focus, timers, blank ----
+      const store = {
+        get(k, d) { try { const v = localStorage.getItem('pace-deck-' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+        set(k, v) { try { localStorage.setItem('pace-deck-' + k, JSON.stringify(v)); } catch (e) { } },
+      };
+      const LEADS = [1.4, 1.6, 1.9];
+      let nsize = store.get('nsize', 21);
+      let nlead = store.get('nlead', 1);
+      let focusOn = store.get('focus', false);
+      let hlMode = false, blanked = false, paused = false;
+      let hl = store.get('hl', {});          // { slideIndex: { len, r: [[from, to], ...] } }
+      let rd = 0, prevIdx = -1;
+      let totalMs = 0, slideMs = 0, lastTick = performance.now();
+      const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const $ = (id) => document.getElementById(id);
+
+      function renderNotes() {
+        const s = slides[cur];
+        const a = s.querySelector('aside.notes');
+        notes.innerHTML = `<h3>${cur + 1}. ${s.dataset.label}<span class="stadium mint time" style="height:28px; font-size:13px">${a.dataset.time}</span></h3>${a.innerHTML}`;
+        if (!isPresenter) return;
+        applyHighlights();
+        markReading(false);
+      }
+      function rerender() {
+        const top = notes.scrollTop;
+        renderNotes();
+        notes.style.scrollBehavior = 'auto'; notes.scrollTop = top; notes.style.scrollBehavior = '';
+      }
+
+      // Text size and spacing
+      function applyTextPrefs() {
+        document.documentElement.style.setProperty('--nsize', nsize + 'px');
+        document.documentElement.style.setProperty('--nlead', LEADS[nlead]);
+        $('t-size').textContent = nsize;
+        $('t-smaller').disabled = nsize <= 14;
+        $('t-bigger').disabled = nsize >= 48;
+        store.set('nsize', nsize); store.set('nlead', nlead);
+      }
+      const bump = (d) => { nsize = Math.max(14, Math.min(48, nsize + d)); applyTextPrefs(); markReading(true); };
+
+      // Highlights (saved per slide in this browser; dropped if the notes text changes)
+      function mergeRanges(rs) {
+        rs.sort((x, y) => x[0] - y[0]);
+        const out = [];
+        for (const r of rs) { const l = out[out.length - 1]; if (l && r[0] <= l[1]) l[1] = Math.max(l[1], r[1]); else out.push([r[0], r[1]]); }
+        return out;
+      }
+      function wrapRange(a, b, idx) {
+        const walker = document.createTreeWalker(notes, NodeFilter.SHOW_TEXT);
+        const hits = []; let pos = 0, n;
+        while ((n = walker.nextNode())) {
+          const e0 = pos + n.nodeValue.length;
+          if (e0 > a && pos < b) hits.push([n, Math.max(a, pos) - pos, Math.min(b, e0) - pos]);
+          pos = e0;
+        }
+        hits.forEach(([node, from, to]) => {
+          if (to <= from || !node.nodeValue.slice(from, to).trim()) return;
+          const mid = node.splitText(from); mid.splitText(to - from);
+          const m = document.createElement('mark'); m.className = 'hl'; m.dataset.r = idx;
+          mid.replaceWith(m); m.append(mid);
+        });
+      }
+      function applyHighlights() {
+        const rec = hl[cur];
+        if (!rec) return;
+        if (rec.len !== notes.textContent.length) { delete hl[cur]; store.set('hl', hl); return; }
+        rec.r.forEach(([a, b], idx) => wrapRange(a, b, idx));
+      }
+      function offsetIn(container, offset) {
+        const r = document.createRange(); r.selectNodeContents(notes); r.setEnd(container, offset);
+        return r.toString().length;
+      }
+      function highlightSelection() {
+        const sel = getSelection();
+        if (!sel || sel.isCollapsed || !sel.rangeCount) return false;
+        const rg = sel.getRangeAt(0);
+        if (!notes.contains(rg.commonAncestorContainer)) return false;
+        let a = offsetIn(rg.startContainer, rg.startOffset), b = offsetIn(rg.endContainer, rg.endOffset);
+        if (b < a) [a, b] = [b, a];
+        const txt = notes.textContent;
+        while (a < b && /\s/.test(txt[a])) a++;
+        while (b > a && /\s/.test(txt[b - 1])) b--;
+        if (b <= a) return false;
+        const rec = hl[cur] && hl[cur].len === txt.length ? hl[cur] : { len: txt.length, r: [] };
+        rec.r = mergeRanges([...rec.r, [a, b]]);
+        hl[cur] = rec; store.set('hl', hl);
+        sel.removeAllRanges();
+        rerender();
+        return true;
+      }
+      function clearHighlights() { delete hl[cur]; store.set('hl', hl); rerender(); }
+      function setHl(v) { hlMode = v; document.body.classList.toggle('hlmode', v); $('t-hl').setAttribute('aria-pressed', String(v)); }
+
+      // Reading focus: dim everything except one line; arrow keys move it
+      const blocks = () => [...notes.querySelectorAll('p, li')];
+      function markReading(scroll) {
+        const bl = blocks();
+        bl.forEach((el, i) => el.classList.toggle('rd', focusOn && i === rd));
+        if (focusOn && scroll && bl[rd]) bl[rd].scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' });
+      }
+      function moveReading(d) { rd = Math.max(0, Math.min(blocks().length - 1, rd + d)); markReading(true); }
+      function setFocus(v) {
+        focusOn = v; store.set('focus', v);
+        document.body.classList.toggle('focusmode', v);
+        $('t-focus').setAttribute('aria-pressed', String(v));
+        markReading(true);
+      }
+
+      // Blank the audience screen
+      function setBlank(v, remote) {
+        blanked = v;
+        document.body.classList.toggle('blanked', v && !isPresenter);
+        $('t-blank').setAttribute('aria-pressed', String(v));
+        const b = $('pbanner'); if (b) b.hidden = !v;
+        if (remote) return;
+        if (isPresenter) window.opener?.postMessage({ type: 'blank', on: v }, '*');
+        else if (presenterWin && !presenterWin.closed) presenterWin.postMessage({ type: 'blank', on: v }, '*');
+      }
+
+      // Timers, per-slide planned time, pace, hand-offs
+      const planOf = (i) => secs(slides[i]?.dataset.time);
+      function presenterOf(n) {
+        for (const m of members) {
+          for (const part of (m.presents || '').match(/\d+\s*[–-]\s*\d+|\d+/g) || []) {
+            const [lo, hi] = part.split(/\s*[–-]\s*/).map(Number);
+            if (n >= lo && n <= (hi || lo)) return m.name;
+          }
+        }
+        return '';
+      }
+      function renderTimes() {
+        if (!isPresenter) return;
+        const plan = planOf(cur) * 1000;
+        $('ptime').textContent = fmt(Math.floor(totalMs / 1000));
+        $('pslide').textContent = fmt(Math.floor(slideMs / 1000));
+        const bar = $('pbar');
+        bar.style.width = Math.min(100, plan ? slideMs / plan * 100 : 0) + '%';
+        bar.classList.toggle('over', plan > 0 && slideMs > plan);
+        let before = 0; for (let i = 0; i < cur; i++) before += planOf(i) * 1000;
+        const diff = Math.round((totalMs - (before + Math.min(slideMs, plan))) / 1000);
+        $('ppace').textContent = Math.abs(diff) < 5 ? 'On pace' : `${fmt(Math.abs(diff))} ${diff > 0 ? 'behind' : 'ahead'}`;
+      }
+      function updatePresenterInfo() {
+        const n = cur + 1, who = presenterOf(n), nxt = presenterOf(n + 1), nx = slides[cur + 1];
+        $('pwho').textContent = who || '–';
+        $('phand').textContent = !nx ? 'Last slide' : (nxt && nxt !== who ? `Hand off to ${nxt} next` : ' ');
+        $('pnext').textContent = nx ? (nx.querySelector('h1')?.textContent.trim() || nx.dataset.label) : 'End. Questions';
+        $('pplan').textContent = slides[cur].dataset.time;
+        renderTimes();
+      }
+      function resetTimers() { totalMs = 0; slideMs = 0; lastTick = performance.now(); renderTimes(); }
+      function setPaused(v) {
+        paused = v;
+        $('t-pause').innerHTML = `<span class="ms">${v ? 'play_arrow' : 'pause'}</span>`;
+        $('t-pause').setAttribute('aria-label', v ? 'Resume timers (P)' : 'Pause timers (P)');
+        $('pstate').textContent = v ? '· paused' : '';
+      }
+      function toggleHelp(open) { $('help').hidden = !open; }
+
+      // Presenter-window keys. Returns true when the key was handled here.
+      function presenterKeys(e) {
+        if (e.metaKey || e.ctrlKey || e.altKey) return false;
+        const k = e.key;
+        if (!$('help').hidden) { if (k === 'Escape' || k === '?') { toggleHelp(false); e.preventDefault(); return true; } return false; }
+        if (k === '-' || k === '_') bump(-2);
+        else if (k === '+' || k === '=') bump(2);
+        else if (k === '0') { nsize = 21; applyTextPrefs(); markReading(true); }
+        else if (k === 's' || k === 'S') { nlead = (nlead + 1) % LEADS.length; applyTextPrefs(); markReading(true); }
+        else if (k === 'H') clearHighlights();
+        else if (k === 'h') setHl(!hlMode);
+        else if (k === 'l' || k === 'L') setFocus(!focusOn);
+        else if (focusOn && (k === 'ArrowDown' || k === 'ArrowUp')) moveReading(k === 'ArrowDown' ? 1 : -1);
+        else if (k === 'p' || k === 'P') setPaused(!paused);
+        else if (k === 'r' || k === 'R') resetTimers();
+        else if (k === 'b' || k === 'B') setBlank(!blanked);
+        else if (k === '?') toggleHelp(true);
+        else return false;
+        e.preventDefault();
+        return true;
+      }
+      function initPresenterControls() {
+        $('pextra').insertAdjacentHTML('afterbegin', '<div id="pbanner" hidden><span class="stadium fill-pastel p-morning">The audience screen shows Tuck. Press B to bring the slides back.</span></div>');
+        const on = (id, fn) => $(id).addEventListener('click', fn);
+        on('t-smaller', () => bump(-2)); on('t-bigger', () => bump(2));
+        on('t-space', () => { nlead = (nlead + 1) % LEADS.length; applyTextPrefs(); markReading(true); });
+        on('t-hl', () => setHl(!hlMode)); on('t-clear', clearHighlights);
+        on('t-focus', () => setFocus(!focusOn));
+        on('t-theme', toggleTheme); on('t-blank', () => setBlank(!blanked));
+        on('t-help', () => toggleHelp(true)); on('help-x', () => toggleHelp(false));
+        on('t-pause', () => setPaused(!paused)); on('t-reset', resetTimers);
+        $('help').addEventListener('click', (e) => { if (e.target === $('help')) toggleHelp(false); });
+        // Keep the keyboard for slides: after a mouse click, a button must not keep focus
+        document.querySelectorAll('#ntools button, #pextra button, #chrome button').forEach((b) =>
+          b.addEventListener('click', (e) => { if (e.detail) b.blur(); }));
+        // Highlighting and the reading line live in the notes panel
+        notes.addEventListener('mouseup', () => { if (hlMode) highlightSelection(); });
+        notes.addEventListener('click', (e) => {
+          const mk = e.target.closest('mark.hl');
+          if (hlMode && mk) {
+            const rec = hl[cur];
+            if (rec) { rec.r.splice(Number(mk.dataset.r), 1); if (!rec.r.length) delete hl[cur]; store.set('hl', hl); rerender(); }
+            return;
+          }
+          if (focusOn && !hlMode && getSelection()?.isCollapsed) {
+            const blk = e.target.closest('p, li'); const i = blk ? blocks().indexOf(blk) : -1;
+            if (i >= 0) { rd = i; markReading(false); }
+          }
+        });
+        document.body.classList.toggle('focusmode', focusOn);
+        $('t-focus').setAttribute('aria-pressed', String(focusOn));
+        applyTextPrefs();
+        setInterval(() => {
+          const now = performance.now(), dt = now - lastTick; lastTick = now;
+          if (!paused) { totalMs += dt; slideMs += dt; }
+          renderTimes();
+        }, 250);
+      }
+
+      const show = (i, silent = false) => {
+        cur = Math.max(0, Math.min(slides.length - 1, i));
+        slides.forEach((s, j) => {
+          s.classList.toggle('active', j === cur);
+          s.setAttribute('aria-hidden', j === cur ? 'false' : 'true');
+        });
+        const s = slides[cur];
+        document.getElementById('lbl').textContent = s.dataset.label;
+        document.getElementById('num').textContent = `${cur + 1} / ${slides.length}`;
+        document.getElementById('prev').disabled = cur === 0;
+        document.getElementById('next').disabled = cur === slides.length - 1;
+        const a = s.querySelector('aside.notes');
+        if (cur !== prevIdx) { rd = 0; slideMs = 0; prevIdx = cur; }
+        renderNotes();
+        if (location.hash !== '#' + (cur + 1)) history.replaceState(null, '', '#' + (cur + 1));
+        if (isPresenter) updatePresenterInfo();
+        if (!silent) {
+          // Keep the other window in step. Messages only, so it works from file://
+          if (isPresenter) window.opener?.postMessage({ type: 'go', n: cur }, '*');
+          else if (presenterWin && !presenterWin.closed) presenterWin.postMessage({ type: 'slide', n: cur }, '*');
+        }
+      };
+      const toggleNotes = () => {
+        const open = notes.classList.toggle('open');
+        btnNotes.setAttribute('aria-pressed', String(open));
+      };
+      // Light/dark is shared by both windows: change it in either and the other follows.
+      const sendToOther = (msg) => {
+        if (isPresenter) window.opener?.postMessage(msg, '*');
+        else if (presenterWin && !presenterWin.closed) presenterWin.postMessage(msg, '*');
+      };
+      const applyTheme = (t) => {
+        const root = document.documentElement;
+        if (root.dataset.theme === t) return;
+        // Suppress transitions for the swap so colours don't smear.
+        const css = document.createElement('style');
+        css.textContent = '*,*::before,*::after{transition:none!important}';
+        document.head.append(css);
+        root.dataset.theme = t;
+        getComputedStyle(root).opacity;
+        requestAnimationFrame(() => requestAnimationFrame(() => css.remove()));
+        try { localStorage.setItem('pace-deck-theme', t); } catch (e) { }
+      };
+      const toggleTheme = () => {
+        const root = document.documentElement;
+        const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+        const t = dark ? 'light' : 'dark';
+        applyTheme(t);
+        sendToOther({ type: 'theme', t });
+      };
+      const toggleFull = () => {
+        if (document.fullscreenElement) document.exitFullscreen?.();
+        else document.documentElement.requestFullscreen?.();
+      };
+      try { const t = localStorage.getItem('pace-deck-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) { }
+      const qs = new URLSearchParams(location.search);
+      if (qs.has('theme')) document.documentElement.dataset.theme = qs.get('theme');
+      if (qs.has('still')) document.documentElement.classList.add('still');
+
+      document.getElementById('prev').onclick = () => show(cur - 1);
+      document.getElementById('next').onclick = () => show(cur + 1);
+      btnNotes.onclick = toggleNotes;
+      document.getElementById('btn-theme').onclick = toggleTheme;
+      document.getElementById('btn-full').onclick = toggleFull;
+
+      addEventListener('keydown', (e) => {
+        if (isPresenter && presenterKeys(e)) return;
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const k = e.key;
+        if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(k)) { if (e.target.closest?.('button') && k !== 'ArrowRight' && k !== 'PageDown') return; e.preventDefault(); show(cur + 1); }
+        else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(k)) { e.preventDefault(); show(cur - 1); }
+        else if (k === 'Home') show(0);
+        else if (k === 'End') show(slides.length - 1);
+        else if (k === 'p' || k === 'P') openPresenter();
+        else if (k === 'c' || k === 'C') document.body.classList.toggle('tools');
+        else if (k === 'r' || k === 'R') resetTimers();
+        else if (k === 'b' || k === 'B') setBlank(!blanked);
+        else if ((k === 'n' || k === 'N') && document.body.classList.contains('tools')) toggleNotes();
+        else if (k === 't' || k === 'T') toggleTheme();
+        else if (k === 'f' || k === 'F') toggleFull();
+        wake();
+      });
+      stage.addEventListener('click', (e) => {
+        if (e.target.closest('a,button')) return;
+        show(cur + (e.clientX < innerWidth / 3 ? -1 : 1));
+      });
+      // Swipe on touch
+      let x0 = null;
+      addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+      addEventListener('touchend', (e) => {
+        if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null;
+        if (Math.abs(dx) > 50) show(cur + (dx < 0 ? 1 : -1));
+      });
+
+      // Controls fade out while presenting, back on any movement.
+      let idleT;
+      const wake = () => { chrome.classList.remove('idle'); clearTimeout(idleT); idleT = setTimeout(() => chrome.classList.add('idle'), 2600); };
+      addEventListener('mousemove', wake); addEventListener('touchstart', wake, { passive: true }); wake();
+      setTimeout(() => document.getElementById('hint').classList.add('gone'), 3500);
+
+      // ---- Presenter window ----
+      const secs = (t) => { const [m, sc] = (t || '0:0').split(':'); return +m * 60 + +sc; };
+      const fmt = (n) => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, '0')}`;
+      function openPresenter() {
+        if (isPresenter) return;
+        if (presenterWin && !presenterWin.closed) { presenterWin.focus(); return; }
+        const base = location.href.split('#')[0].split('?')[0];
+        presenterWin = window.open(`${base}?presenter#${cur + 1}`, 'pace-presenter', 'popup,width=1240,height=800');
+      }
+      if (isPresenter) {
+        document.title = 'PACE Presenter';
+        document.getElementById('ptotal').textContent = fmt(slides.reduce((a, s) => a + secs(s.dataset.time), 0));
+        initPresenterControls();
+        window.opener?.postMessage({ type: 'ready' }, '*');
+      }
+      addEventListener('message', (e) => {
+        const d = e.data;
+        if (!d || typeof d !== 'object') return;
+        if (d.type === 'ready' && !isPresenter) {
+          presenterWin = e.source;
+          presenterWin.postMessage({ type: 'slide', n: cur }, '*');
+          presenterWin.postMessage({ type: 'blank', on: blanked }, '*');
+          const th = document.documentElement.dataset.theme;
+          if (th) presenterWin.postMessage({ type: 'theme', t: th }, '*');
+        } else if (d.type === 'go' && !isPresenter && e.source === presenterWin) show(d.n, true);
+        else if (d.type === 'slide' && isPresenter && e.source === window.opener) show(d.n, true);
+        else if (d.type === 'blank' && e.source === (isPresenter ? window.opener : presenterWin)) setBlank(!!d.on, true);
+        else if (d.type === 'theme' && (d.t === 'light' || d.t === 'dark') && e.source === (isPresenter ? window.opener : presenterWin)) applyTheme(d.t);
+      });
+
+      addEventListener('hashchange', () => show(parseInt(location.hash.slice(1), 10) - 1 || 0));
+      show((parseInt(location.hash.slice(1), 10) || 1) - 1);
+    })();
+  </script>
+</body>
+
+</html>

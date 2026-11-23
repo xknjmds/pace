@@ -1,0 +1,111 @@
+<template>
+  <style>
+    @font-face { font-family: "Figtree"; font-weight: 400; src: url("assets/fonts/Figtree-Regular.ttf"); }
+    @font-face { font-family: "Figtree"; font-weight: 500; src: url("assets/fonts/Figtree-Medium.ttf"); }
+    @font-face { font-family: "Figtree"; font-weight: 600; src: url("assets/fonts/Figtree-SemiBold.ttf"); }
+    @font-face { font-family: "Figtree"; font-weight: 700; src: url("assets/fonts/Figtree-Bold.ttf"); }
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Figtree", sans-serif; }
+    #mo-ground { position: absolute; inset: 0; background: #f3eee6; }
+    #mo-date {
+      position: absolute; left: 720px; top: 300px; transform-origin: 50% 50%;
+      font-size: 44px; font-weight: 500; color: #64666c; white-space: nowrap;
+    }
+    #mo-date span { display: inline-block; margin-right: 0.24em; }
+    #mo-clock {
+      position: absolute; left: 720px; top: 540px; display: flex; align-items: center;
+      font-size: 400px; font-weight: 700; color: #1c2622; letter-spacing: -0.02em; line-height: 1;
+    }
+    .mo-slot { display: block; width: 0.6em; height: 1em; overflow: hidden; text-align: center; }
+    .mo-strip { display: block; }
+    .mo-strip span { display: block; height: 1em; line-height: 1em; }
+    .mo-colon { display: block; width: 0.28em; text-align: center; transform: translateY(-0.06em); }
+    #mo-tuck { position: absolute; left: 1290px; top: 300px; width: 560px; height: 560px; }
+    #mo-tuck img { position: absolute; inset: 0; width: 100%; height: 100%; }
+    #mo-tuck-rest { opacity: 0; }
+    #mo-snooze { position: absolute; left: 250px; top: 790px; width: 900px; height: 200px; }
+    .mo-sn {
+      position: absolute; top: 0; font-size: 56px; font-weight: 600; color: #8a8378; white-space: nowrap;
+    }
+  </style>
+  <div data-hf-id="hf-0ghl" id="root" data-composition-id="morning" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-z94f" id="mo-ground"></div>
+    <div data-hf-id="hf-roca" id="mo-date"><span data-hf-id="hf-v78r">Monday,</span><span data-hf-id="hf-0jg2">16</span><span data-hf-id="hf-ma2z">November</span></div>
+    <div data-hf-id="hf-n0mx" id="mo-clock" data-layout-allow-overflow></div>
+    <div data-hf-id="hf-wwjk" id="mo-snooze">
+      <div data-hf-id="hf-jaju" class="mo-sn" id="mo-sn1" style="left: 0px">Snooze</div>
+      <div data-hf-id="hf-yzb4" class="mo-sn" id="mo-sn2" style="left: 250px">Snooze</div>
+      <div data-hf-id="hf-s4nh" class="mo-sn" id="mo-sn3" style="left: 500px">Snooze</div>
+    </div>
+    <div data-hf-id="hf-6jpl" id="mo-tuck">
+      <img data-hf-id="hf-78la" id="mo-tuck-morning" src="assets/img/tuck_morning.png" alt="Tuck stretching" />
+      <img data-hf-id="hf-niqx" id="mo-tuck-rest" src="assets/img/tuck_resting.png" alt="Tuck resting" />
+    </div>
+  </div>
+  <script>
+    (function () {
+      const FS = 400;
+      // Clock states: a fast spin into 06:30, then the morning slipping by to 07:48.
+      const states = ["  :  ", "  :  ", "06:30",
+        "06:33", "06:37", "06:41", "06:45", "06:50", "06:54", "06:58", "07:03",
+        "07:09", "07:14", "07:20", "07:26", "07:32", "07:38", "07:43", "07:48"];
+      // Flip times follow the onsets of the split-flap sound placed at 2.0 s.
+      const onsets = [0.115, 0.361, 0.491, 0.606, 0.742, 0.857, 0.977, 1.098, 1.223,
+        1.343, 1.468, 1.589, 1.709, 1.824, 2.075, 2.315];
+      const clock = document.getElementById("mo-clock");
+      const strips = [];
+      for (let i = 0; i < 5; i++) {
+        if (i === 2) {
+          const c = document.createElement("span");
+          c.className = "mo-colon"; c.textContent = ":"; clock.appendChild(c); strips.push(null); continue;
+        }
+        const slot = document.createElement("span"); slot.className = "mo-slot";
+        const strip = document.createElement("span"); strip.className = "mo-strip";
+        states.forEach((s) => { const d = document.createElement("span"); d.textContent = s[i]; strip.appendChild(d); });
+        slot.appendChild(strip); clock.appendChild(slot); strips.push(strip);
+      }
+
+      const tl = gsap.timeline({ paused: true });
+      gsap.set(clock, { xPercent: -50, yPercent: -50 });
+      gsap.set("#mo-date", { xPercent: -50 });
+
+      // Hook: the digits are already spinning on frame 0 and land on 06:30.
+      strips.forEach((s, i) => {
+        if (!s) return;
+        tl.fromTo(s, { y: -1.55 * FS + i * 0.04 * FS, filter: "blur(4px)" },
+          { y: -2 * FS, filter: "blur(0px)", duration: 0.42 + i * 0.05, ease: "power3.out" }, 0);
+      });
+      tl.fromTo("#mo-date span", { color: "#d8d2c8" },
+        { color: "#64666c", duration: 0.25, stagger: 0.08, ease: "power2.out" }, 0.35);
+      // Tuck stretches into the morning: a soft hop in.
+      tl.fromTo("#mo-tuck", { y: 90, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "elastic.out(1, 0.6)" }, 0.12);
+
+      // Tension: Tuck tucks in and sleeps; the minutes slip by on the flap sound.
+      tl.to("#mo-tuck", { y: -26, duration: 0.14, ease: "power2.out" }, 2.0);
+      tl.set("#mo-tuck-morning", { opacity: 0 }, 2.14);
+      tl.set("#mo-tuck-rest", { opacity: 1 }, 2.14);
+      tl.to("#mo-tuck", { y: 0, duration: 0.3, ease: "bounce.out" }, 2.14);
+      for (let k = 3; k < states.length; k++) {
+        const t = 2.0 + onsets[k - 3] - 0.07;
+        strips.forEach((s, i) => {
+          if (!s) return;
+          if (states[k][i] !== states[k - 1][i]) {
+            tl.to(s, { y: -k * FS, duration: 0.07, ease: "power2.in" }, t);
+          } else {
+            tl.set(s, { y: -k * FS }, t);
+          }
+        });
+      }
+      ["#mo-sn1", "#mo-sn2", "#mo-sn3"].forEach((id, n) => {
+        tl.fromTo(id, { opacity: 0, filter: "blur(8px)", scale: 1.15 },
+          { opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.18, ease: "power3.out" }, 2.55 + n * 0.55);
+      });
+
+      // Sweep: everything but the clock whips off left; the ground turns to the app's page.
+      tl.to(["#mo-tuck", "#mo-snooze", "#mo-date"], {
+        x: -1500, filter: "blur(18px)", duration: 0.38, ease: "power3.in", stagger: 0.04,
+      }, 4.9);
+      tl.to("#mo-ground", { backgroundColor: "#faf8f5", duration: 0.4, ease: "power2.inOut" }, 5.05);
+      window.__timelines["morning"] = tl;
+    })();
+  </script>
+</template>

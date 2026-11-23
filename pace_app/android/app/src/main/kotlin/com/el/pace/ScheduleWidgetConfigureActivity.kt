@@ -11,8 +11,8 @@ import android.widget.TextView
 import es.antonborri.home_widget.HomeWidgetPlugin
 
 /**
- * Picks how one schedule widget looks: list, time blocks, now and next, or
- * the day strip. Android opens it when the widget is placed (before
+ * Picks how one schedule widget looks: list, time blocks (today or the
+ * week), now and next, or the day strip. Android opens it when the widget is placed (before
  * Android 12) or reconfigured (press and hold the widget). Native, so it
  * opens instantly without starting Flutter. Backing out keeps the widget
  * with its current (or the default list) layout.
@@ -73,6 +73,10 @@ class ScheduleWidgetConfigureActivity : Activity() {
                 ScheduleWidgetLayout.TIMELINE,
                 R.string.schedule_widget_layout_timeline,
                 R.string.schedule_widget_layout_timeline_hint),
+            Triple(
+                ScheduleWidgetLayout.WEEK,
+                R.string.schedule_widget_layout_week,
+                R.string.schedule_widget_layout_week_hint),
             Triple(
                 ScheduleWidgetLayout.NOW_NEXT,
                 R.string.schedule_widget_layout_now_next,

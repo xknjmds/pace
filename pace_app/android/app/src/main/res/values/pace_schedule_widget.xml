@@ -13,6 +13,9 @@
     <string name="schedule_widget_next">Next · %1$s %2$s</string>
     <string name="schedule_widget_nothing_next">Nothing after this.</string>
     <string name="schedule_widget_rest">Rest of the day is yours</string>
+    <string name="schedule_widget_title_week">THIS WEEK</string>
+    <string name="schedule_widget_none_week">No classes this week. The time is yours.</string>
+    <string name="schedule_widget_week_description">This week\'s timeline: %1$s</string>
     <string name="schedule_widget_timeline_description">Today\'s timeline: %1$s</string>
 
     <!-- Layout picker, shown when a schedule widget is placed or reconfigured. -->
@@ -20,8 +23,10 @@
     <string name="schedule_widget_pick_hint">You can change it later: press and hold the widget.</string>
     <string name="schedule_widget_layout_list">List</string>
     <string name="schedule_widget_layout_list_hint">Times and classes, one per row</string>
-    <string name="schedule_widget_layout_timeline">Time blocks</string>
+    <string name="schedule_widget_layout_timeline">Time blocks · today</string>
     <string name="schedule_widget_layout_timeline_hint">Blocks sized by how long they last, with a now line</string>
+    <string name="schedule_widget_layout_week">Time blocks · week</string>
+    <string name="schedule_widget_layout_week_hint">Every class this week as blocks, today highlighted</string>
     <string name="schedule_widget_layout_now_next">Now and next</string>
     <string name="schedule_widget_layout_now_next_hint">What is on now, large, and what comes after</string>
     <string name="schedule_widget_layout_strip">Day strip</string>

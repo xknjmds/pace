@@ -15,8 +15,8 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Draws the timeline and progress-strip layouts as bitmaps. RemoteViews
- * cannot size views by duration before Android 12, so these two are drawn
+ * Draws the timeline, week and progress-strip layouts as bitmaps. RemoteViews
+ * cannot size views by duration before Android 12, so these are drawn
  * on a Canvas at the widget's real size. Colours come from the widget
  * palette (values/ and values-night/pace_widget.xml); the block under way
  * is mint, never an alarm colour.
@@ -85,14 +85,7 @@ class ScheduleWidgetRenderer(private val context: Context) {
       n++
     }
 
-    // Side-by-side columns for overlaps (greedy, at most two).
-    val columns = IntArray(items.size)
-    val lastEnd = longArrayOf(Long.MIN_VALUE, Long.MIN_VALUE)
-    items.forEachIndexed { i, it ->
-      val col = if (it.start >= lastEnd[0]) 0 else 1
-      columns[i] = col
-      lastEnd[col] = max(lastEnd[col], it.end)
-    }
+    val columns = overlapColumns(items)
     val twoCols = columns.any { it == 1 }
     val left = railW + dp(4f)
     val fullW = bmp.width - left
@@ -142,6 +135,119 @@ class ScheduleWidgetRenderer(private val context: Context) {
       c.drawCircle(railW - dp(2f), yy, dp(4f), paint(accent))
     }
     return bmp
+  }
+
+  /**
+   * The week as columns, one per day, on a shared hour rail. Blocks are
+   * as tall as they are long; today's column has a faint fill and the now
+   * line. Earlier days read as done, never as missed.
+   */
+  fun week(week: ScheduleWeek, widthDp: Int, heightDp: Int): Bitmap {
+    val bmp = bitmap(widthDp, heightDp)
+    val all = week.items
+    if (all.isEmpty() || week.days.isEmpty()) return bmp
+    val c = Canvas(bmp)
+    val railW = dp(36f)
+    val pad = dp(1.5f)
+    val headP = textPaint(alpha(text, .6f), 11f)
+    val headToday = textPaint(accent, 11f, bold = true)
+    val headH = headP.textSize + dp(6f)
+    val top = headH + dp(4f)
+    val bottom = bmp.height - dp(4f)
+
+    // Shared span: earliest start to latest end by time of day.
+    fun minuteOf(t: Long, midnight: Long) = (t - midnight) / MINUTE
+    val fromMin =
+        week.days.flatMap { d -> d.items.map { minuteOf(it.start, d.midnight).coerceAtLeast(0L) } }.min() / 60 * 60
+    val toMinRaw =
+        week.days.flatMap { d -> d.items.map { minuteOf(it.end, d.midnight).coerceAtMost(1440L) } }.max()
+    val toMin = ((toMinRaw + 59) / 60 * 60).coerceAtLeast(fromMin + 60)
+    val span = (toMin - fromMin).toFloat()
+    fun y(minute: Long) = top + (bottom - top) * ((minute - fromMin) / span)
+
+    // Hour labels and guides, thinned when they would crowd.
+    val label = textPaint(alpha(text, .55f), 10f)
+    val guide = paint(alpha(text, .08f)).apply { strokeWidth = dp(1f) }
+    val hourPx = (bottom - top) * (60f / span)
+    val every = if (hourPx >= sp(14f)) 1 else if (hourPx * 2 >= sp(14f)) 2 else 3
+    var m = fromMin
+    var n = 0
+    while (m <= toMin) {
+      val yy = y(m)
+      c.drawLine(railW, yy, bmp.width.toFloat(), yy, guide)
+      if (n % every == 0) {
+        c.drawText("%02d:%02d".format(m / 60, m % 60), 0f, min(yy + label.textSize / 3f, bottom), label)
+      }
+      m += 60
+      n++
+    }
+
+    val left = railW + dp(2f)
+    val dayW = (bmp.width - left) / week.days.size
+    val radius = dp(6f)
+    val titleP = textPaint(text, 11f, bold = true)
+    week.days.forEachIndexed { di, d ->
+      val x0 = left + di * dayW
+      if (d.isToday) {
+        c.drawRoundRect(
+            RectF(x0 + pad, 0f, x0 + dayW - pad, bottom), radius, radius, paint(alpha(accent, .08f)))
+      }
+      val name = dayName(d.midnight)
+      val hp = if (d.isToday) headToday else headP
+      val shown = ellipsize(name, hp, dayW - dp(4f))
+      c.drawText(shown, x0 + (dayW - hp.measureText(shown)) / 2f, headP.textSize + dp(2f), hp)
+
+      val columns = overlapColumns(d.items)
+      val twoCols = columns.any { it == 1 }
+      val colW = if (twoCols) (dayW - 3 * pad) / 2f else dayW - 2 * pad
+      d.items.forEachIndexed { i, it ->
+        val past = it.end <= week.now
+        val isNow = week.now >= it.start && week.now < it.end
+        val bx = x0 + pad + columns[i] * (colW + pad)
+        val r =
+            RectF(
+                bx,
+                y(minuteOf(it.start, d.midnight).coerceAtLeast(fromMin.toLong())) + pad,
+                bx + colW,
+                y(minuteOf(it.end, d.midnight).coerceAtMost(toMin.toLong())) - pad)
+        if (r.height() < dp(3f)) r.bottom = r.top + dp(3f)
+        val fill =
+            when {
+              isNow -> nowFill
+              past -> alpha(text, .05f)
+              else -> alpha(text, .10f)
+            }
+        c.drawRoundRect(r, radius, radius, paint(fill))
+        val inner = r.width() - dp(6f)
+        if (inner < dp(14f) || r.height() < titleP.textSize + dp(4f)) return@forEachIndexed
+        titleP.color = alpha(text, if (past) .5f else 1f)
+        c.drawText(
+            ellipsize(it.title, titleP, inner), r.left + dp(3f), r.top + dp(2f) + titleP.textSize, titleP)
+      }
+
+      if (d.isToday) {
+        val nowMin = minuteOf(week.now, d.midnight)
+        if (nowMin in fromMin..toMin) {
+          val yy = y(nowMin)
+          val line = paint(accent).apply { strokeWidth = dp(2f) }
+          c.drawLine(x0, yy, x0 + dayW, yy, line)
+          c.drawCircle(x0 + dp(2f), yy, dp(3f), paint(accent))
+        }
+      }
+    }
+    return bmp
+  }
+
+  /** Side-by-side columns for overlaps (greedy, at most two). */
+  private fun overlapColumns(items: List<ScheduleItem>): IntArray {
+    val columns = IntArray(items.size)
+    val lastEnd = longArrayOf(Long.MIN_VALUE, Long.MIN_VALUE)
+    items.forEachIndexed { i, it ->
+      val col = if (it.start >= lastEnd[0]) 0 else 1
+      columns[i] = col
+      lastEnd[col] = max(lastEnd[col], it.end)
+    }
+    return columns
   }
 
   /**
@@ -210,9 +316,14 @@ class ScheduleWidgetRenderer(private val context: Context) {
 
   companion object {
     private const val HOUR = 3_600_000L
+    private const val MINUTE = 60_000L
 
     /** Keeps a full-size bitmap well inside the RemoteViews memory budget. */
     private const val MAX_PX = 1200
+
+    /** Short weekday name in the phone's language, like "Mon". */
+    fun dayName(t: Long): String =
+        java.text.SimpleDateFormat("EEE", java.util.Locale.getDefault()).format(java.util.Date(t))
 
     fun hm(t: Long): String {
       val c = Calendar.getInstance().apply { timeInMillis = t }

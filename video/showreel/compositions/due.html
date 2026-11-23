@@ -1,0 +1,49 @@
+<template>
+  <style>
+    @font-face { font-family: "Figtree"; font-weight: 700; src: url("assets/fonts/Figtree-Bold.ttf"); }
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Figtree", sans-serif; }
+    #du-world { position: absolute; inset: 0; background: #f3eee6; }
+    .du-phone {
+      position: absolute; width: 444px; height: 933px; border-radius: 60px; background: #1c2622; padding: 12px;
+      box-shadow: 0 40px 80px rgba(28, 38, 34, 0.16), 0 6px 18px rgba(28, 38, 34, 0.1);
+    }
+    .du-phone img { display: block; width: 420px; height: 909px; border-radius: 48px; }
+    #du-phone { left: 1180px; top: 74px; }
+    #du-title {
+      position: absolute; left: 150px; top: 300px; font-size: 132px; font-weight: 700; color: #1c2622;
+      letter-spacing: -0.02em; line-height: 1.05; white-space: nowrap;
+    }
+    #du-title span { display: inline-block; margin-right: 0.22em; }
+    #du-w1 { color: #35665a; }
+    #du-card {
+      position: absolute; left: 150px; top: 560px; width: 860px; height: 158px; transform-origin: 0 0;
+      border-radius: 52px; box-shadow: 0 30px 60px rgba(124, 92, 30, 0.16), 0 8px 18px rgba(28, 38, 34, 0.08);
+    }
+    #du-card { opacity: 0; }
+    #du-card img { display: block; width: 860px; height: 158px; }
+  </style>
+  <div data-hf-id="hf-hprj" id="root" data-composition-id="due" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-f4p7" id="du-world">
+      <div data-hf-id="hf-ico2" class="du-phone" id="du-phone"><img data-hf-id="hf-mlne" src="assets/screens/deadlines.png" alt="PACE Deadlines screen" /></div>
+      <div data-hf-id="hf-cm7d" id="du-title"><span data-hf-id="hf-x73p" id="du-w1">Gently</span><span data-hf-id="hf-kxyk" id="du-w2">in</span><span data-hf-id="hf-ym74" id="du-w3">order.</span></div>
+      <div data-hf-id="hf-fton" id="du-card"><img data-hf-id="hf-5viq" src="assets/screens/crop_lab_card.png" alt="Lab report, due today 20:00, Chemistry" /></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // Iris opens out of the Leave dot on the previous timeline (1049, 749).
+      tl.fromTo("#du-world", { clipPath: "circle(0px at 1049px 749px)" },
+        { clipPath: "circle(2300px at 1049px 749px)", duration: 0.55, ease: "power2.in" }, 0);
+      tl.fromTo("#du-phone", { y: 60, scale: 1.04 }, { y: 0, scale: 1, duration: 0.8, ease: "expo.out" }, 0.25);
+      // Title: each word darkens from light grey to ink, no movement.
+      tl.fromTo(["#du-w2", "#du-w3"], { color: "#ddd6cb" }, { color: "#1c2622", duration: 0.22, stagger: 0.09, ease: "power2.out" }, 0.62);
+      tl.fromTo("#du-w1", { color: "#ddd6cb" }, { color: "#35665a", duration: 0.22, ease: "power2.out" }, 0.53);
+      // The Lab report card lifts out of the phone: (1208, 411, w 387.7) to (150, 560, w 860).
+      tl.set("#du-card", { opacity: 1 }, 1.2);
+      tl.fromTo("#du-card", { x: 1208.2 - 150, y: 410.9 - 560, scale: 0.4508 },
+        { x: 0, y: 0, scale: 1, duration: 0.55, ease: "expo.inOut" }, 1.2);
+      window.__timelines["due"] = tl;
+    })();
+  </script>
+</template>

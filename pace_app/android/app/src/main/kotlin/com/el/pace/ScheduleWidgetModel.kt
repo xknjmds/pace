@@ -7,7 +7,8 @@ enum class ScheduleWidgetLayout(val key: String) {
   LIST("list"),
   TIMELINE("timeline"),
   NOW_NEXT("now_next"),
-  STRIP("strip");
+  STRIP("strip"),
+  WEEK("week");
 
   companion object {
     fun fromKey(key: String?): ScheduleWidgetLayout = entries.firstOrNull { it.key == key } ?: LIST
@@ -73,4 +74,26 @@ class ScheduleDay(val items: List<ScheduleItem>, val now: Long, val lowEnergy: B
 
   /** Whether [item] is under way. */
   fun isNow(item: ScheduleItem): Boolean = now >= item.start && now < item.end
+}
+
+/** One day of the week view: its weekday (Monday = 1), midnight and blocks. */
+data class WeekDay(
+    val weekday: Int,
+    val midnight: Long,
+    val items: List<ScheduleItem>,
+    val isToday: Boolean,
+)
+
+/**
+ * The current week for the week layout. Pure. Monday to Friday always
+ * show; Saturday and Sunday only when something is on.
+ */
+class ScheduleWeek(allDays: List<WeekDay>, val now: Long, val lowEnergy: Boolean) {
+  val days: List<WeekDay> = allDays.filter { it.weekday <= 5 || it.items.isNotEmpty() }
+
+  /** Nothing scheduled on any day this week. */
+  val empty: Boolean get() = days.all { it.items.isEmpty() }
+
+  /** Every block this week, in day order. */
+  val items: List<ScheduleItem> get() = days.flatMap { it.items }
 }

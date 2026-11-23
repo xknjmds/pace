@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// What this device can do. PACE runs everywhere Flutter does (Android,
-/// web, desktop). Scheduled reminders, notification buttons, home-screen
-/// widgets, reading a schedule photo and the app gate exist only on
-/// Android; calendar sync works on Android and the web.
+/// What this device can do. PACE runs everywhere Flutter does (Android, iOS,
+/// web, desktop). Reminders and schedule photo import run on Android and iOS;
+/// home-screen widgets, persistent notification capture and the app gate exist
+/// only on Android; calendar sync works on Android, iOS and the web.
 class PlatformFeatures {
   const PlatformFeatures({
     required this.reminders,
@@ -12,6 +12,8 @@ class PlatformFeatures {
     this.scheduleImport = false,
     this.appBlocking = false,
     this.calendarSync = false,
+    this.androidReminderChecks = false,
+    this.persistentCapture = false,
   });
 
   /// Features of the device the app is running on right now. Calendar
@@ -20,15 +22,19 @@ class PlatformFeatures {
   factory PlatformFeatures.current() {
     final base = kIsWeb
         ? web
-        : defaultTargetPlatform == TargetPlatform.android
-        ? android
-        : elsewhere;
+        : switch (defaultTargetPlatform) {
+            TargetPlatform.android => android,
+            TargetPlatform.iOS => ios,
+            _ => elsewhere,
+          };
     if (calendarConfigured || !base.calendarSync) return base;
     return PlatformFeatures(
       reminders: base.reminders,
       homeWidget: base.homeWidget,
       scheduleImport: base.scheduleImport,
       appBlocking: base.appBlocking,
+      androidReminderChecks: base.androidReminderChecks,
+      persistentCapture: base.persistentCapture,
     );
   }
 
@@ -42,6 +48,15 @@ class PlatformFeatures {
     scheduleImport: true,
     appBlocking: true,
     calendarSync: true,
+    androidReminderChecks: true,
+    persistentCapture: true,
+  );
+  static const ios = PlatformFeatures(
+    reminders: true,
+    homeWidget: false,
+    scheduleImport: true,
+    appBlocking: false,
+    calendarSync: true,
   );
   static const web = PlatformFeatures(
     reminders: false,
@@ -53,7 +68,7 @@ class PlatformFeatures {
     homeWidget: false,
   );
 
-  /// Scheduled notifications with buttons (wake, leave, deadlines, ...).
+  /// Scheduled notifications (wake, leave, deadlines, ...).
   final bool reminders;
 
   /// Home-screen widgets (quick capture, today's classes).
@@ -67,6 +82,12 @@ class PlatformFeatures {
 
   /// Read-only Google Calendar.
   final bool calendarSync;
+
+  /// Android-only exact alarm, battery optimisation, and OEM auto-start checks.
+  final bool androidReminderChecks;
+
+  /// Android-only ongoing notification with inline reply for quick capture.
+  final bool persistentCapture;
 }
 
 /// Overridable in tests to render either version of a screen.
@@ -74,8 +95,6 @@ final platformFeaturesProvider = Provider<PlatformFeatures>(
   (_) => PlatformFeatures.current(),
 );
 
-/// Platforms PACE does not build for at all (no iOS folder exists).
+/// Platforms PACE does not build for at all.
 bool get isUnsupportedPlatform =>
-    !kIsWeb &&
-    (defaultTargetPlatform == TargetPlatform.iOS ||
-        defaultTargetPlatform == TargetPlatform.fuchsia);
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.fuchsia;

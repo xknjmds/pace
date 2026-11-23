@@ -90,14 +90,16 @@ class ScheduleService {
     await publishWidget();
   }
 
-  /// Sends the week's blocks, the next week of calendar events and the
+  /// Sends the week's blocks, calendar events from this Monday to a week
+  /// ahead (the week layout shows the days already past) and the
   /// low-energy flag to the widget.
   Future<void> publishWidget() async {
     final settings = await db.settingsDao.get();
     final blocks = await db.classBlocksDao.getAll();
     final t = now();
+    final monday = DateTime(t.year, t.month, t.day - (t.weekday - 1));
     final events = await db.calendarEventsDao.between(
-      t.subtract(const Duration(days: 1)),
+      monday,
       t.add(const Duration(days: 8)),
     );
     await widget.publishSchedule(

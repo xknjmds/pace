@@ -34,12 +34,22 @@ class LocalNotificationGateway implements NotificationGateway {
         AndroidFlutterLocalNotificationsPlugin
       >();
 
+  IOSFlutterLocalNotificationsPlugin? get _ios => _plugin
+      .resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin
+      >();
+
   @override
   Future<void> initialize() async {
     await _setLocalTimeZone();
     await _plugin.initialize(
       settings: const InitializationSettings(
         android: AndroidInitializationSettings('ic_stat_pace'),
+        iOS: DarwinInitializationSettings(
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        ),
       ),
       onDidReceiveNotificationResponse: (r) => _responses.add(
         ReminderResponse(
@@ -97,18 +107,44 @@ class LocalNotificationGateway implements NotificationGateway {
   @override
   Future<NotificationPermissions> permissions() async {
     final android = _android;
-    return NotificationPermissions(
-      notificationsGranted: await android?.areNotificationsEnabled() ?? false,
-      exactAlarmsAllowed:
-          await android?.canScheduleExactNotifications() ?? false,
-      batteryUnrestricted:
-          await Permission.ignoreBatteryOptimizations.isGranted,
-    );
+    if (android != null) {
+      return NotificationPermissions(
+        notificationsGranted: await android.areNotificationsEnabled() ?? false,
+        exactAlarmsAllowed:
+            await android.canScheduleExactNotifications() ?? false,
+        batteryUnrestricted:
+            await Permission.ignoreBatteryOptimizations.isGranted,
+      );
+    }
+    final ios = _ios;
+    if (ios != null) {
+      final status = await ios.checkPermissions();
+      return NotificationPermissions(
+        notificationsGranted: status?.isEnabled ?? false,
+        exactAlarmsAllowed: true,
+        batteryUnrestricted: true,
+      );
+    }
+    return NotificationPermissions.none;
   }
 
   @override
-  Future<bool> requestNotificationPermission() async =>
-      await _android?.requestNotificationsPermission() ?? false;
+  Future<bool> requestNotificationPermission() async {
+    final android = _android;
+    if (android != null) {
+      return await android.requestNotificationsPermission() ?? false;
+    }
+    final ios = _ios;
+    if (ios != null) {
+      return await ios.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          ) ??
+          false;
+    }
+    return false;
+  }
 
   @override
   Future<bool> requestExactAlarmPermission() async =>
@@ -120,7 +156,12 @@ class LocalNotificationGateway implements NotificationGateway {
 
   @override
   Future<void> openNotificationSettings() async {
-    await _android?.openAppNotificationSettings();
+    final android = _android;
+    if (android != null) {
+      await android.openAppNotificationSettings();
+      return;
+    }
+    await openAppSettings();
   }
 
   @override
@@ -132,7 +173,10 @@ class LocalNotificationGateway implements NotificationGateway {
     String? payload,
     List<ReminderAction> actions = const [],
   }) async {
-    final exact = await _android?.canScheduleExactNotifications() ?? false;
+    final android = _android;
+    final exact = android == null
+        ? true
+        : await android.canScheduleExactNotifications() ?? false;
     final mode = exact ? ScheduleMode.exact : ScheduleMode.inexact;
     await _plugin.zonedSchedule(
       id: id,
@@ -151,6 +195,11 @@ class LocalNotificationGateway implements NotificationGateway {
           // Expands to show the whole body (the wake reminder's verse).
           styleInformation: BigTextStyleInformation(body),
           actions: _androidActions(actions),
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
         ),
       ),
       androidScheduleMode: switch (mode) {
@@ -185,26 +234,29 @@ class LocalNotificationGateway implements NotificationGateway {
     required String body,
     required String payload,
     List<ReminderAction> actions = const [],
-  }) => _plugin.show(
-    id: id,
-    title: title,
-    body: body,
-    payload: payload,
-    notificationDetails: NotificationDetails(
-      android: AndroidNotificationDetails(
-        NotificationChannels.capture,
-        NotificationChannels.captureName,
-        channelDescription: NotificationChannels.captureDescription,
-        importance: Importance.low,
-        priority: Priority.low,
-        ongoing: true,
-        autoCancel: false,
-        silent: true,
-        showWhen: false,
-        actions: _androidActions(actions),
+  }) async {
+    if (_android == null) return;
+    await _plugin.show(
+      id: id,
+      title: title,
+      body: body,
+      payload: payload,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          NotificationChannels.capture,
+          NotificationChannels.captureName,
+          channelDescription: NotificationChannels.captureDescription,
+          importance: Importance.low,
+          priority: Priority.low,
+          ongoing: true,
+          autoCancel: false,
+          silent: true,
+          showWhen: false,
+          actions: _androidActions(actions),
+        ),
       ),
-    ),
-  );
+    );
+  }
 
   @override
   Future<void> cancel(int id) => _plugin.cancel(id: id);

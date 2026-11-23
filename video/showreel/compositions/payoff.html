@@ -1,0 +1,81 @@
+<template>
+  <style>
+    @font-face { font-family: "Figtree"; font-weight: 600; src: url("assets/fonts/Figtree-SemiBold.ttf"); }
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Figtree", sans-serif; }
+    #pf-ground { position: absolute; inset: 0; background: #e6eef2; }
+    #pf-night { position: absolute; inset: 0; background: #1c2622; }
+    #pf-strip { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 552px 540px; }
+    .pf-phone {
+      position: absolute; top: 74px; width: 444px; height: 933px; border-radius: 60px; background: #1c2622; padding: 12px;
+      box-shadow: 0 40px 80px rgba(28, 38, 34, 0.16), 0 6px 18px rgba(28, 38, 34, 0.1);
+    }
+    .pf-phone img { display: block; width: 420px; height: 909px; border-radius: 48px; }
+    #pf-p0 { left: -1212px; }
+    #pf-p1 { left: -698px; }
+    #pf-p2 { left: -184px; }
+    #pf-p3 { left: 330px; }
+    #pf-p4 { left: 844px; }
+    #pf-p5 { left: 1358px; }
+    #pf-dark { position: absolute; left: 12px; top: 12px; }
+    #pf-tuck-focus { position: absolute; left: 1130px; top: 250px; width: 600px; height: 600px; }
+    #pf-tuck { position: absolute; left: 1150px; top: 300px; width: 600px; height: 600px; }
+    #pf-tuck img, #pf-tuck-focus img { position: absolute; inset: 0; width: 100%; height: 100%; }
+    #pf-tuck-rest { opacity: 0; }
+    #pf-label {
+      position: absolute; left: 1180px; top: 250px; font-size: 64px; font-weight: 600; color: #9cc3b4; white-space: nowrap;
+    }
+    #pf-label span { display: inline-block; margin-right: 0.22em; }
+  </style>
+  <div data-hf-id="hf-s4vk" id="root" data-composition-id="payoff" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-8t1x" id="pf-ground"></div>
+    <div data-hf-id="hf-iiri" id="pf-night"></div>
+    <div data-hf-id="hf-xch4" id="pf-tuck-focus"><img data-hf-id="hf-jhzq" src="assets/img/tuck_focus.png" alt="Tuck reading" /></div>
+    <div data-hf-id="hf-hp6r" id="pf-strip" data-layout-allow-overflow>
+      <div data-hf-id="hf-q306" class="pf-phone" id="pf-p0"><img data-hf-id="hf-psfp" src="assets/screens/today.png" alt="Today" /></div>
+      <div data-hf-id="hf-u147" class="pf-phone" id="pf-p1"><img data-hf-id="hf-ripp" src="assets/screens/schedule.png" alt="Class schedule" /></div>
+      <div data-hf-id="hf-ld8c" class="pf-phone" id="pf-p2"><img data-hf-id="hf-zlql" src="assets/screens/deadlines.png" alt="Deadlines" /></div>
+      <div data-hf-id="hf-m4w5" class="pf-phone" id="pf-p3"><img data-hf-id="hf-8hrz" src="assets/screens/focus.png" alt="Just start" /></div>
+      <div data-hf-id="hf-4wlu" class="pf-phone" id="pf-p4"><img data-hf-id="hf-z84d" src="assets/screens/review.png" alt="Review" /></div>
+      <div data-hf-id="hf-8upv" class="pf-phone" id="pf-p5">
+        <img data-hf-id="hf-ak6v" src="assets/screens/lowenergy.png" alt="Today in low-energy mode" />
+        <img data-hf-id="hf-3dhj" id="pf-dark" src="assets/screens/lowenergy-dark.png" alt="Today in low-energy mode, evening" />
+      </div>
+    </div>
+    <div data-hf-id="hf-h8za" id="pf-label"><span data-hf-id="hf-uzx0">Low-energy</span><span data-hf-id="hf-r37i">mode</span></div>
+    <div data-hf-id="hf-vjzz" id="pf-tuck">
+      <img data-hf-id="hf-zx4u" id="pf-tuck-eve" src="assets/img/tuck_evening.png" alt="Tuck in a blanket" />
+      <img data-hf-id="hf-aqj2" id="pf-tuck-rest" src="assets/img/tuck_resting.png" alt="Tuck resting in its shell" />
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.to("#pf-tuck-focus", { x: 500, opacity: 0, filter: "blur(10px)", duration: 0.35, ease: "power3.in" }, 0);
+      // Pull back: the whole day appears as one strip of real screens.
+      tl.fromTo("#pf-strip", { scale: 1, x: 0 }, { scale: 0.55, x: 549, duration: 1.1, ease: "power2.inOut" }, 0.15);
+      tl.to("#pf-ground", { backgroundColor: "#faf8f5", duration: 0.8, ease: "power2.inOut" }, 0.15);
+
+      // Evening: the ground floods to Ink and the app switches to its dark, low-energy Today.
+      tl.to(["#pf-p0", "#pf-p1", "#pf-p2", "#pf-p3", "#pf-p4"], {
+        opacity: 0, filter: "blur(10px)", y: 40, duration: 0.28, stagger: 0.04, ease: "power2.in",
+      }, 1.35);
+      tl.fromTo("#pf-night", { clipPath: "circle(0px at 1400px 540px)" }, { clipPath: "circle(1700px at 1400px 540px)", duration: 0.55, ease: "power2.in" }, 1.35);
+      tl.fromTo("#pf-dark", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.inOut" }, 1.45);
+      tl.to("#pf-p5", { backgroundColor: "#0e1311", boxShadow: "0 0 0 2px rgba(156,195,180,0.18), 0 40px 80px rgba(0,0,0,0.3)", duration: 0.4 }, 1.45);
+      // Phone 5 centre in the strip: (1580, 540). Bring it to (620, 540) at 0.92.
+      tl.to("#pf-strip", { scale: 0.92, x: 620 - 552 - (1580 - 552) * 0.92, duration: 0.75, ease: "power3.inOut" }, 1.5);
+
+      // Tuck settles in for the night, then tucks into its shell.
+      tl.fromTo("#pf-tuck", { opacity: 0, y: 120 }, { opacity: 1, y: 0, duration: 0.7, ease: "elastic.out(1, 0.6)" }, 2.0);
+      tl.fromTo("#pf-label span", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.16, stagger: 0.08, ease: "power3.out" }, 2.25);
+      tl.to("#pf-tuck", { y: -26, duration: 0.14, ease: "power2.out" }, 2.85);
+      tl.set("#pf-tuck-eve", { opacity: 0 }, 2.99);
+      tl.set("#pf-tuck-rest", { opacity: 1 }, 2.99);
+      tl.to("#pf-tuck", { y: 0, duration: 0.3, ease: "bounce.out" }, 2.99);
+
+      // Hand-off: the phone and label leave; Tuck stays for the claim.
+      tl.to(["#pf-strip", "#pf-label"], { opacity: 0, filter: "blur(10px)", duration: 0.22, ease: "power2.in" }, 3.5);
+      window.__timelines["payoff"] = tl;
+    })();
+  </script>
+</template>

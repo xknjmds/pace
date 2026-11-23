@@ -1,0 +1,80 @@
+<template>
+  <style>
+    @font-face { font-family: "Figtree"; font-weight: 500; src: url("assets/fonts/Figtree-Medium.ttf"); }
+    @font-face { font-family: "Figtree"; font-weight: 600; src: url("assets/fonts/Figtree-SemiBold.ttf"); }
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Figtree", sans-serif; }
+    #fo-world { position: absolute; inset: 0; background: #e6eef2; }
+    #fo-ring { position: absolute; left: 960px; top: 430px; width: 560px; height: 560px; transform-origin: 50% 50%; }
+    #fo-ring svg { position: absolute; inset: 0; }
+    #fo-num {
+      position: absolute; left: 0; top: 178px; width: 560px; height: 160px; overflow: hidden; text-align: center;
+      font-size: 160px; font-weight: 500; color: #365d73; line-height: 160px; letter-spacing: -0.02em;
+    }
+    #fo-numstrip span { display: block; height: 160px; }
+    #fo-min { position: absolute; left: 0; top: 340px; width: 560px; text-align: center; font-size: 42px; font-weight: 500; color: #64666c; }
+    #fo-copy {
+      position: absolute; left: 960px; top: 772px; white-space: nowrap;
+      font-size: 68px; font-weight: 600; color: #26282c; letter-spacing: -0.01em;
+    }
+    #fo-copy span { display: inline-block; margin-right: 0.24em; }
+    .fo-phone {
+      position: absolute; width: 444px; height: 933px; border-radius: 60px; background: #1c2622; padding: 12px;
+      box-shadow: 0 40px 80px rgba(28, 38, 34, 0.16), 0 6px 18px rgba(28, 38, 34, 0.1);
+    }
+    .fo-phone img { display: block; width: 420px; height: 909px; border-radius: 48px; }
+    #fo-phone { left: 330px; top: 74px; opacity: 0; }
+    #fo-tuck { opacity: 0; }
+    #fo-tuck { position: absolute; left: 1130px; top: 250px; width: 600px; height: 600px; }
+    #fo-tuck img { width: 100%; height: 100%; display: block; }
+  </style>
+  <div data-hf-id="hf-osxh" id="root" data-composition-id="focus" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-gdzf" id="fo-world">
+      <div data-hf-id="hf-lw4i" class="fo-phone" id="fo-phone"><img data-hf-id="hf-o558" src="assets/screens/focus.png" alt="PACE Just start screen" /></div>
+      <div data-hf-id="hf-62xe" id="fo-tuck"><img data-hf-id="hf-uggq" src="assets/img/tuck_focus.png" alt="Tuck reading a book" /></div>
+      <div data-hf-id="hf-an04" id="fo-ring" data-layout-allow-overflow>
+        <svg data-hf-id="hf-bx5e" viewBox="0 0 560 560" width="560" height="560">
+          <circle data-hf-id="hf-31sn" cx="280" cy="280" r="169" fill="#faf8f5" />
+          <circle data-hf-id="hf-yey6" id="fo-arc" cx="280" cy="280" r="214.5" fill="none" stroke="#a7bcc7" stroke-width="91"
+            transform="rotate(-90 280 280)" stroke-dasharray="1347.7" stroke-dashoffset="1347.7" />
+        </svg>
+        <div data-hf-id="hf-pyqz" id="fo-num"><div data-hf-id="hf-tbmv" id="fo-numstrip"></div></div>
+        <div data-hf-id="hf-ni8s" id="fo-min">minutes</div>
+      </div>
+      <div data-hf-id="hf-364e" id="fo-copy">
+        <span data-hf-id="hf-m3hs">Ten</span><span data-hf-id="hf-ws0s">minutes.</span><span data-hf-id="hf-x3t6">Then</span><span data-hf-id="hf-920g">you</span><span data-hf-id="hf-nv5l">decide.</span>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const strip = document.getElementById("fo-numstrip");
+      for (let n = 1; n <= 10; n++) { const s = document.createElement("span"); s.textContent = String(n); strip.appendChild(s); }
+      const tl = gsap.timeline({ paused: true });
+      gsap.set("#fo-ring", { xPercent: -50, yPercent: -50 });
+      gsap.set("#fo-copy", { xPercent: -50 });
+
+      // The Lab report's empty circle grows into the Focus world (213, 638).
+      tl.fromTo("#fo-world", { clipPath: "circle(28px at 213px 638px)" },
+        { clipPath: "circle(2400px at 213px 638px)", duration: 0.55, ease: "power2.in" }, 0);
+
+      // The ring draws itself in while the count rolls up to 10.
+      tl.fromTo("#fo-ring", { scale: 0.6 }, { scale: 1, duration: 0.8, ease: "expo.out" }, 0.2);
+      tl.fromTo("#fo-arc", { attr: { "stroke-dashoffset": 1347.7 } },
+        { attr: { "stroke-dashoffset": 0 }, duration: 0.95, ease: "power2.inOut" }, 0.3);
+      tl.fromTo("#fo-numstrip", { y: 0 }, { y: -9 * 160, duration: 0.85, ease: "power2.inOut" }, 0.4);
+      tl.fromTo("#fo-min", { opacity: 0 }, { opacity: 1, duration: 0.2 }, 1.1);
+      tl.fromTo("#fo-copy span", { color: "#c9d3d9" }, { color: "#26282c", duration: 0.2, stagger: 0.1, ease: "power2.out" }, 1.35);
+
+      // The ring carries back into its real place on the Focus screen.
+      // Phone ring centre (551, 408), outer radius 90.8 vs 260 here.
+      tl.to("#fo-copy", { opacity: 0, filter: "blur(8px)", duration: 0.2, ease: "power2.in" }, 2.55);
+      tl.fromTo("#fo-phone", { opacity: 0, scale: 1.06 }, { opacity: 1, scale: 1, duration: 0.4, ease: "power2.out" }, 2.82);
+      tl.to("#fo-ring", { x: 551.3 - 960, y: 407.6 - 430, scale: 0.349, duration: 0.65, ease: "expo.inOut" }, 2.55);
+      tl.to("#fo-ring", { opacity: 0, duration: 0.12 }, 3.2);
+      tl.set("#fo-tuck", { opacity: 1 }, 2.95);
+      tl.fromTo("#fo-tuck", { y: 120 }, { y: 0, duration: 0.7, ease: "elastic.out(1, 0.6)" }, 2.95);
+      tl.fromTo("#fo-tuck img", { opacity: 0 }, { opacity: 1, duration: 0.15 }, 2.95);
+      window.__timelines["focus"] = tl;
+    })();
+  </script>
+</template>

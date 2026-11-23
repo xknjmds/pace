@@ -89,7 +89,7 @@ class NoDeviceSettings implements DeviceSettings {
 }
 
 final deviceSettingsProvider = Provider<DeviceSettings>(
-  (ref) => ref.watch(platformFeaturesProvider).reminders
+  (ref) => ref.watch(platformFeaturesProvider).androidReminderChecks
       ? const ChannelDeviceSettings()
       : const NoDeviceSettings(),
 );

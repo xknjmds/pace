@@ -1,0 +1,65 @@
+<template>
+  <style>
+    @font-face { font-family: "Figtree"; font-weight: 400; src: url("assets/fonts/Figtree-Regular.ttf"); }
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Figtree", sans-serif; }
+    #ec-ground { position: absolute; inset: 0; background: #1c2622; }
+    #ec-sand { position: absolute; inset: 0; background: #f3eee6; }
+    #ec-mark { position: absolute; left: 790px; top: 340px; width: 340px; height: 340px; }
+    #ec-bodyclip { position: absolute; inset: 0; overflow: hidden; }
+    .ec-layer { position: absolute; left: 0; top: 0; width: 340px; height: 340px; }
+    #ec-word { position: absolute; left: 933px; top: 412px; width: 423px; height: 190px; }
+    #ec-word path { opacity: 0; fill: none; stroke: #35665a; stroke-width: 22; stroke-linecap: round; stroke-linejoin: round; }
+    #ec-tag {
+      position: absolute; left: 960px; top: 728px; white-space: nowrap;
+      font-size: 50px; font-weight: 400; color: #26282c; letter-spacing: 0.005em;
+    }
+  </style>
+  <div data-hf-id="hf-32ii" id="root" data-composition-id="endcard" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-bx2z" id="ec-ground"></div>
+    <div data-hf-id="hf-zomo" id="ec-sand"></div>
+    <div data-hf-id="hf-5kia" id="ec-mark" data-layout-allow-overflow="">
+      <div data-hf-id="hf-ngi4" id="ec-bodyclip"><img data-hf-id="hf-s5xc" class="ec-layer" id="ec-body" src="assets/img/icon_body.png" alt="Tuck"></div>
+      <img data-hf-id="hf-8407" class="ec-layer" id="ec-st3" src="assets/img/stone3.png" alt="">
+      <img data-hf-id="hf-0ey3" class="ec-layer" id="ec-st2" src="assets/img/stone2.png" alt="">
+      <img data-hf-id="hf-tfir" class="ec-layer" id="ec-st1" src="assets/img/stone1.png" alt="">
+    </div>
+    <svg data-hf-id="hf-67n1" id="ec-word" viewBox="0 0 570 256" width="423" height="190" aria-label="PACE">
+      <path data-hf-id="hf-1t6v" class="ec-p" d="M11 192 V75 H60 A33 33 0 0 1 60 141 H11" />
+      <path data-hf-id="hf-cm6s" class="ec-p" d="M153 192 L201.46 75 L249.93 192 M170.40 150 H232.53" />
+      <path data-hf-id="hf-dz4z" class="ec-p" d="M408.35 91.07 A60.0 60.0 0 1 0 408.35 175.93" />
+      <path data-hf-id="hf-kyl7" class="ec-p" d="M547.93 75 H481.93 V192 H547.93 M481.93 133.5 H535.93" />
+    </svg>
+    <div data-hf-id="hf-a8w0" id="ec-tag">Progress Always Comes Eventually</div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      gsap.set("#ec-tag", { xPercent: -50 });
+      const paths = document.querySelectorAll("#ec-word .ec-p");
+      paths.forEach((p) => { const L = p.getTotalLength(); p.style.strokeDasharray = L + " " + L; p.dataset.len = L; });
+
+      // Home again: the ground floods back to Sand.
+      tl.fromTo("#ec-sand", { clipPath: "circle(0px at 960px 540px)" }, { clipPath: "circle(1150px at 960px 540px)", duration: 0.4, ease: "power2.in" }, 0);
+
+      // Three stones, one small thing at a time, stacked bottom-up.
+      [["#ec-st3", 0.35], ["#ec-st2", 0.55], ["#ec-st1", 0.75]].forEach(([id, land]) => {
+        tl.fromTo(id, { y: -760 }, { y: 0, duration: 0.3, ease: "power2.in" }, land - 0.3);
+        tl.to(id, { y: -12, duration: 0.07, ease: "power2.out" }, land);
+        tl.to(id, { y: 0, duration: 0.09, ease: "power2.in" }, land + 0.07);
+      });
+      // Tuck rises up under the cairn.
+      tl.fromTo("#ec-body", { y: 340 }, { y: 0, duration: 0.45, ease: "expo.out" }, 0.82);
+
+      // Lockup: the mark slides left and the wordmark draws its strokes.
+      tl.to("#ec-mark", { x: -227, duration: 0.5, ease: "power3.inOut" }, 1.15);
+      paths.forEach((p, i) => {
+        const L = +p.dataset.len;
+        tl.set(p, { opacity: 1 }, 1.28 + i * 0.09);
+        tl.fromTo(p, { strokeDashoffset: L }, { strokeDashoffset: 0, duration: 0.42, ease: "power2.inOut" }, 1.28 + i * 0.09);
+      });
+      tl.fromTo("#ec-tag", { clipPath: "inset(0px 100% 0px 0px)" },
+        { clipPath: "inset(0px 0% 0px 0px)", duration: 0.45, ease: "power3.inOut" }, 1.62);
+      window.__timelines["endcard"] = tl;
+    })();
+  </script>
+</template>
